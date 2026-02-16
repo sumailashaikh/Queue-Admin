@@ -25,8 +25,8 @@ export interface DashboardBusiness {
 
 export const adminService = {
     async getAllUsers(params: { search?: string, role?: string, page?: number } = {}) {
-        const result = await api.get<{ data: DashboardUser[], pagination: any }>('/admin/users', { params });
-        return result.data;
+        const result = await api.get<DashboardUser[]>('/admin/users', { params });
+        return result as any;
     },
 
     async getAllBusinesses() {
@@ -41,6 +41,11 @@ export const adminService = {
 
     async updateUserStatus(userId: string, status: string, is_verified?: boolean) {
         const result = await api.patch(`/admin/users/${userId}/status`, { status, is_verified });
+        return result.data;
+    },
+
+    async inviteAdmin(phone: string) {
+        const result = await api.post('/admin/invite', { phone });
         return result.data;
     }
 };

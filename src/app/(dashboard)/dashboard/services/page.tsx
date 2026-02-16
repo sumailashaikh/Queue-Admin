@@ -11,7 +11,7 @@ import {
     AlertCircle,
     LayoutGrid,
     Search,
-    Briefcase,
+    Sparkles,
     Settings2,
     ShieldCheck
 } from "lucide-react";
@@ -151,7 +151,7 @@ export default function ServicesPage() {
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <div className="relative">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <Briefcase className="h-4 w-4 text-primary/80 absolute -bottom-1 -right-1 animate-pulse" />
+                    <Sparkles className="h-4 w-4 text-primary/80 absolute -bottom-1 -right-1 animate-pulse" />
                 </div>
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Offerings...</p>
             </div>
@@ -164,7 +164,7 @@ export default function ServicesPage() {
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-10">
                 <div className="space-y-4">
                     <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-sky-50 rounded-full border border-sky-100">
-                        <Briefcase className="h-3.5 w-3.5 text-primary" />
+                        <Sparkles className="h-3.5 w-3.5 text-primary" />
                         <span className="text-[10px] font-black text-sky-700 uppercase tracking-widest">Business Offerings Management</span>
                     </div>
                     <div className="space-y-1">
@@ -222,7 +222,7 @@ export default function ServicesPage() {
                             <div className="relative space-y-6">
                                 <div className="flex justify-between items-start">
                                     <div className="h-10 w-10 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                                        <Briefcase className="h-5 w-5" />
+                                        <Sparkles className="h-5 w-5" />
                                     </div>
                                     <button
                                         onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name })}
@@ -359,7 +359,7 @@ export default function ServicesPage() {
                                         <Loader2 className="h-5 w-5 animate-spin" />
                                     ) : (
                                         <>
-                                            <Briefcase className="h-5 w-5" />
+                                            <Sparkles className="h-5 w-5" />
                                             Activate Service
                                         </>
                                     )}
