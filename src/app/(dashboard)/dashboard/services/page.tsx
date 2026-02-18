@@ -179,13 +179,13 @@ export default function ServicesPage() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     <div className="relative group w-full sm:w-72">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                        <Search className="absolute left-6 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <input
                             type="text"
                             placeholder="Find a service..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-900 dark:text-white focus:ring-4 focus:ring-primary/5 focus:border-primary outline-none transition-all shadow-sm"
+                            className="w-full pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-3xl text-sm font-semibold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all shadow-sm placeholder:text-slate-400 placeholder:font-medium"
                         />
                     </div>
                     <button

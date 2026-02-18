@@ -16,15 +16,25 @@ import {
     Layout,
     Users,
     IndianRupee,
-    Check,
+    Copy,
+    Share2,
+    RotateCcw,
+    Play,
+    ChevronRight,
+    CheckCircle2,
     Phone,
-    Share2
+    Monitor,
+    Bell,
+    Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { queueService, QueueEntry, Queue } from "@/services/queueService";
 import { businessService } from "@/services/businessService";
 import { supabase } from "@/lib/supabase";
+import { QRCodeSVG } from "qrcode.react";
+
+// Local types have been replaced by imports from @/services/queueService
 
 export default function LiveQueuePage() {
     const { business } = useAuth();
@@ -38,6 +48,7 @@ export default function LiveQueuePage() {
     // Management State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -77,18 +88,30 @@ export default function LiveQueuePage() {
         }
     }, []);
 
-    const fetchEntries = useCallback(async () => {
-        if (!selectedQueue?.id) return;
+    const fetchEntries = useCallback(async (queueId: string) => {
         setEntriesLoading(true);
         try {
-            const data = await queueService.getQueueEntriesToday(selectedQueue.id);
+            const data = await queueService.getQueueEntriesToday(queueId);
             setEntries(data);
-        } catch (error) {
-            console.error("Failed to fetch queue entries:", error);
+        } catch (error: any) {
+            console.error("Failed to fetch entries:", error);
         } finally {
             setEntriesLoading(false);
         }
-    }, [selectedQueue?.id]);
+    }, []);
+
+    const handleNextCustomer = async () => {
+        if (!selectedQueue) return;
+        setIsSubmitting(true);
+        try {
+            await queueService.nextEntry(selectedQueue.id);
+            await fetchEntries(selectedQueue.id);
+        } catch (error: any) {
+            setError(error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     useEffect(() => {
         console.log("Mounting LiveQueuePage - fetching initial data");
@@ -97,7 +120,7 @@ export default function LiveQueuePage() {
 
     useEffect(() => {
         if (selectedQueue?.id) {
-            fetchEntries();
+            fetchEntries(selectedQueue.id);
         }
     }, [selectedQueue?.id, fetchEntries]); // Re-fetch only when ID actually changes
 
@@ -116,7 +139,7 @@ export default function LiveQueuePage() {
                     filter: `queue_id=eq.${selectedQueue.id}`
                 },
                 () => {
-                    fetchEntries();
+                    fetchEntries(selectedQueue.id);
                 }
             )
             .subscribe();
@@ -206,7 +229,7 @@ export default function LiveQueuePage() {
         setIsDeleting(true);
         try {
             await queueService.resetQueueEntries(selectedQueue.id);
-            await fetchEntries();
+            await fetchEntries(selectedQueue.id);
             setIsResetModalOpen(false);
         } catch (err) {
             console.error("Reset failed:", err);
@@ -270,17 +293,17 @@ export default function LiveQueuePage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div className="space-y-2">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-4">
                     <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
                         Live Queue
                         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                     </h1>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         <div className="relative">
                             <button
                                 onClick={() => setIsQueueDropdownOpen(!isQueueDropdownOpen)}
-                                className="group flex items-center gap-3 px-4 py-2 bg-white border-2 border-slate-100 rounded-2xl text-primary text-sm font-black hover:border-primary/20 hover:bg-slate-50 transition-all shadow-sm"
+                                className="group flex items-center gap-3 px-4 py-2 bg-white border-2 border-slate-100 rounded-2xl text-primary text-xs font-bold hover:border-primary/20 hover:bg-slate-50 transition-all shadow-sm"
                             >
                                 <Layout className="h-4 w-4" />
                                 {selectedQueue?.name || "Select Queue"}
@@ -316,7 +339,7 @@ export default function LiveQueuePage() {
                                                         setIsAddModalOpen(true);
                                                         setIsQueueDropdownOpen(false);
                                                     }}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-black text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                                                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors"
                                                 >
                                                     <Plus className="h-3 w-3" />
                                                     CREATE NEW QUEUE
@@ -329,26 +352,54 @@ export default function LiveQueuePage() {
                         </div>
 
                         {business && (
-                            <button
-                                onClick={handleCopyLink}
-                                className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-black transition-all border-2",
-                                    isCopied
-                                        ? "bg-green-500 border-green-500 text-white"
-                                        : "bg-white border-slate-100 text-slate-600 hover:border-primary/20 hover:text-primary shadow-sm"
-                                )}
-                            >
-                                {isCopied ? (
-                                    <>
-                                        <Check className="h-4 w-4" />
-                                        Copied!
-                                    </>
-                                ) : (
-                                    <>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleCopyLink}
+                                    className={cn(
+                                        "flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all border-2",
+                                        isCopied
+                                            ? "bg-emerald-500 border-emerald-500 text-white"
+                                            : "bg-white border-slate-100 text-slate-600 hover:border-primary/20 hover:text-primary shadow-sm"
+                                    )}
+                                >
+                                    {isCopied ? (
+                                        <CheckCircle2 className="h-4 w-4" />
+                                    ) : (
                                         <Share2 className="h-4 w-4" />
-                                        Share Join Link
-                                    </>
-                                )}
+                                    )}
+                                    <span className="hidden sm:inline">{isCopied ? 'Link Copied!' : 'Join Link'}</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (business) {
+                                            const link = `${window.location.origin}/display/${business.slug}`;
+                                            window.open(link, '_blank');
+                                        }
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 border-2 border-slate-900 text-white rounded-2xl text-xs font-bold transition-all hover:bg-slate-800 shadow-sm"
+                                >
+                                    <Monitor className="h-4 w-4" />
+                                    <span className="hidden sm:inline">TV Mode</span>
+                                </button>
+                            </div>
+                        )}
+                        {selectedQueue && (
+                            <button
+                                onClick={handleNextCustomer}
+                                disabled={isSubmitting || entries.length === 0}
+                                className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-2xl text-xs font-bold transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/10"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                                Next Customer
+                            </button>
+                        )}
+                        {business && (
+                            <button
+                                onClick={() => setIsInviteModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-xs font-bold transition-all border-2 border-emerald-500 shadow-sm"
+                            >
+                                <Phone className="h-4 w-4" />
+                                <span className="hidden sm:inline">WhatsApp Invite</span>
                             </button>
                         )}
 
@@ -370,7 +421,7 @@ export default function LiveQueuePage() {
                                 </button>
                                 <button
                                     onClick={() => setIsResetModalOpen(true)}
-                                    className="px-3 py-2 text-primary hover:bg-primary/5 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest border border-primary/10"
+                                    className="px-3 py-2 text-primary hover:bg-primary/5 rounded-xl transition-all text-[10px] font-bold uppercase tracking-widest border border-primary/10"
                                     title="Clear Today's Entries"
                                 >
                                     Reset Today
@@ -380,68 +431,77 @@ export default function LiveQueuePage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search active customers..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-2xl text-sm font-bold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all w-72 shadow-sm placeholder:text-slate-400 placeholder:font-medium"
-                        />
-                    </div>
+                <div className="relative group">
+                    <Search className="absolute left-6 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                    <input
+                        type="text"
+                        placeholder="Search customers..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-3xl text-sm font-semibold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all w-full lg:w-72 shadow-sm placeholder:text-slate-400 placeholder:font-medium"
+                    />
                 </div>
             </div>
 
             {/* Queue Summary Bar */}
-            {selectedQueue && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                            <Users className="h-6 w-6" />
+            {
+                selectedQueue && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                            <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                                <Users className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Visitors</p>
+                                <p className="text-xl font-bold text-slate-900">{entries.length}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Visitors</p>
-                            <p className="text-xl font-black text-slate-900">{entries.length}</p>
+                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                            <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+                                <Clock className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Est. Wait Time</p>
+                                <p className="text-xl font-bold text-slate-900">
+                                    {entries
+                                        .filter(e => e.status === 'waiting')
+                                        .reduce((acc, e) => {
+                                            const serviceDuration = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.services?.duration_minutes || 0), 0) || (selectedQueue?.current_wait_time_minutes || 0);
+                                            return acc + serviceDuration;
+                                        }, 0)} min
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                            <div className="h-12 w-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
+                                <IndianRupee className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expected Revenue</p>
+                                <p className="text-xl font-bold text-slate-900">
+                                    ₹{entries
+                                        .reduce((acc, e) => {
+                                            const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.services?.price || 0), 0) || (selectedQueue?.services?.price || 0);
+                                            return acc + entryPrice;
+                                        }, 0).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                            <div className={cn(
+                                "h-12 w-12 rounded-2xl flex items-center justify-center",
+                                selectedQueue.status === 'open' ? "bg-indigo-50 text-indigo-600" : "bg-red-50 text-red-600"
+                            )}>
+                                <div className={cn("h-3 w-3 rounded-full", selectedQueue.status === 'open' ? "bg-indigo-600" : "bg-red-600")} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+                                <p className="text-xl font-bold text-slate-900 uppercase">{selectedQueue.status}</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
-                            <Clock className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Est. Wait Time</p>
-                            <p className="text-xl font-black text-slate-900">
-                                {(entries.filter(e => e.status === 'waiting').length * (selectedQueue.current_wait_time_minutes || 0))} min
-                            </p>
-                        </div>
-                    </div>
-                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className="h-12 w-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
-                            <IndianRupee className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expected Revenue</p>
-                            <p className="text-xl font-black text-slate-900">
-                                ₹{(entries.length * (selectedQueue.services?.price || 0)).toLocaleString()}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className={cn(
-                            "h-12 w-12 rounded-2xl flex items-center justify-center",
-                            selectedQueue.status === 'open' ? "bg-indigo-50 text-indigo-600" : "bg-red-50 text-red-600"
-                        )}>
-                            <div className={cn("h-3 w-3 rounded-full", selectedQueue.status === 'open' ? "bg-indigo-600" : "bg-red-600")} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
-                            <p className="text-xl font-black text-slate-900 uppercase">{selectedQueue.status}</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Table Container */}
             <div className="pro-card p-0 overflow-hidden bg-white border-2 border-slate-50">
@@ -455,11 +515,11 @@ export default function LiveQueuePage() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Visitor Info</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Details</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Life Cycle</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Waiting Time</th>
-                                    <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Action</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Visitor Info</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Service Details</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Life Cycle</th>
+                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Waiting Time</th>
+                                    <th className="px-8 py-5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -490,8 +550,14 @@ export default function LiveQueuePage() {
                                                         {item.position}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-black text-slate-900">{item.customer_name || 'Anonymous'}</p>
-                                                        <div className="text-[11px] font-bold text-slate-500 mt-1 flex items-center gap-1.5 uppercase tracking-tighter">
+                                                        {item.appointment_id && (
+                                                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[8px] font-black uppercase tracking-tighter border border-indigo-100 mb-1 w-fit">
+                                                                <Calendar className="h-2 w-2" />
+                                                                Booked
+                                                            </div>
+                                                        )}
+                                                        <p className="text-sm font-bold text-slate-900 leading-tight capitalize">{item.customer_name || 'Anonymous'}</p>
+                                                        <div className="text-[11px] font-bold text-slate-500 mt-0.5 flex items-center gap-1.5 uppercase tracking-tighter">
                                                             <div className="h-1 w-1 rounded-full bg-slate-300" />
                                                             {item.phone || 'No phone'}
                                                         </div>
@@ -499,13 +565,23 @@ export default function LiveQueuePage() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
-                                                <div className="inline-flex items-center px-3 py-1 bg-slate-100/50 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-tight">
-                                                    {item.service_name || 'Standard Service'}
+                                                <div className="flex flex-wrap gap-1">
+                                                    {item.queue_entry_services && item.queue_entry_services.length > 0 ? (
+                                                        item.queue_entry_services.map((s, idx) => (
+                                                            <div key={idx} className="inline-flex items-center px-3 py-1 bg-slate-100/50 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-tight">
+                                                                {s.services?.name}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="inline-flex items-center px-3 py-1 bg-slate-100/50 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-tight">
+                                                            {item.service_name || 'Standard Service'}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className={cn(
-                                                    "inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm",
+                                                    "inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-sm",
                                                     item.status === 'serving'
                                                         ? "bg-green-500 text-white"
                                                         : "bg-amber-400 text-white"
@@ -516,38 +592,59 @@ export default function LiveQueuePage() {
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-2 text-slate-900">
                                                     <Clock className="h-3.5 w-3.5 opacity-30" />
-                                                    <span className="text-xs font-black" title={`Joined at ${formatTime(item.joined_at)}`}>
+                                                    <span className="text-xs font-bold" title={`Joined at ${formatTime(item.joined_at)}`}>
                                                         {item.status === 'serving' ? `Started ${getWaitTimeDisplay(item.served_at || item.joined_at)}` : getWaitTimeDisplay(item.joined_at)}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    {item.phone && (
+                                                    <div className="flex items-center gap-2">
+                                                        {item.status === 'waiting' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    const msg = `Hello ${item.customer_name},\n\nThis is ${business?.name}. Your turn is next! Please be ready. We'll call you shortly.\n\nTicket Number: ${item.ticket_number}\n\nThank you.`;
+                                                                    let phone = item.phone?.replace(/\D/g, '');
+                                                                    if (phone && phone.length === 10) phone = `91${phone}`;
+                                                                    if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                                                                }}
+                                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 transition-colors"
+                                                            >
+                                                                <Bell className="h-3 w-3" />
+                                                                Alert
+                                                            </button>
+                                                        )}
                                                         <button
                                                             onClick={() => {
-                                                                const msg = `Hello ${item.customer_name}! This is ${business?.name}. It's almost your turn! Please come to the counter.`;
-                                                                window.open(`https://wa.me/${item.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+                                                                const msg = `Hello ${item.customer_name},\n\nIt is now your turn at ${business?.name}! Please proceed to the service area.\n\nTicket: ${item.ticket_number}\n\nThank you.`;
+                                                                let phone = item.phone?.replace(/\D/g, '');
+                                                                if (phone && phone.length === 10) phone = `91${phone}`;
+
+                                                                // Use business whatsapp_number if available
+                                                                const fromPhone = (business?.whatsapp_number || "").replace(/\D/g, '');
+
+                                                                if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
                                                             }}
-                                                            className="h-10 w-10 flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-100 rounded-xl transition-all border border-green-200 shadow-sm"
-                                                            title="Notify on WhatsApp"
+                                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors"
                                                         >
-                                                            <Phone className="h-4 w-4" />
+                                                            <Phone className="h-3 w-3" />
+                                                            Call
                                                         </button>
-                                                    )}
-                                                    {item.status === 'waiting' ? (
-                                                        <button
-                                                            onClick={() => handleUpdateStatus(item.id, 'serving')}
-                                                            className="h-10 px-6 bg-primary hover:bg-primary-hover text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/20 hover:-translate-y-0.5 active:scale-95"
-                                                        >
-                                                            SERVE
-                                                        </button>
-                                                    ) : (
+                                                        {item.status === 'waiting' && (
+                                                            <button
+                                                                onClick={() => handleUpdateStatus(item.id, 'serving')}
+                                                                className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-primary transition-colors"
+                                                            >
+                                                                <Play className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {item.status === 'serving' && (
                                                         <button
                                                             onClick={() => handleUpdateStatus(item.id, 'completed')}
-                                                            className="h-10 px-6 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-green-500/20 hover:-translate-y-0.5 active:scale-95"
+                                                            className="p-2 hover:bg-slate-100 rounded-xl text-emerald-500 transition-colors"
                                                         >
-                                                            FINISH
+                                                            <CheckCircle2 className="h-4 w-4" />
                                                         </button>
                                                     )}
                                                 </div>
@@ -560,6 +657,18 @@ export default function LiveQueuePage() {
                     )}
                 </div>
             </div>
+
+            {/* Dashboard Toast Notifications */}
+            {
+                isCopied && (
+                    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
+                            <CheckCircle2 className="h-5 w-5" />
+                            <p className="text-sm font-black uppercase tracking-widest">Link Copied to Clipboard!</p>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* Modals & Dialogs */}
             <ManagementModal
@@ -587,9 +696,90 @@ export default function LiveQueuePage() {
                 onConfirm={handleResetQueue}
                 isDeleting={isDeleting}
             />
-        </div>
+
+            <InviteModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+                business={business}
+            />
+
+            {/* QR Code Side Panel (Realtime) */}
+            {
+                business && (
+                    <div className="fixed bottom-8 right-8 z-30 group">
+                        <div className="bg-white p-4 rounded-3xl shadow-2xl border-2 border-slate-100 transition-all group-hover:scale-110">
+                            <QRCodeSVG
+                                value={`${window.location.origin}/${business.slug}`}
+                                size={100}
+                                level="H"
+                                includeMargin={false}
+                            />
+                            <p className="mt-2 text-[8px] font-black text-center text-slate-400 uppercase tracking-widest">Join Scan</p>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
+
+const InviteModal = ({ isOpen, onClose, business }: any) => {
+    const [inviteData, setInviteData] = useState({ name: '', phone: '' });
+    if (!isOpen) return null;
+
+    const handleSendInvite = (e: React.FormEvent) => {
+        e.preventDefault();
+        const link = `${window.location.origin}/${business.slug}`;
+        const message = `Hello ${inviteData.name},\n\nThis is ${business.name}. You can join the queue online using this link: ${link}\n\nAfter joining, you'll see your token number and live waiting time.\n\nThank you.`;
+        let phone = inviteData.phone.replace(/\D/g, '');
+        if (phone.length === 10) phone = `91${phone}`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-black text-slate-900 uppercase">WhatsApp Invite</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                        <X className="h-5 w-5 text-slate-400" />
+                    </button>
+                </div>
+                <form onSubmit={handleSendInvite} className="space-y-4">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Customer Name</label>
+                        <input
+                            required
+                            type="text"
+                            placeholder="e.g. Rahul Sharma"
+                            value={inviteData.name}
+                            onChange={(e) => setInviteData({ ...inviteData, name: e.target.value })}
+                            className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">WhatsApp Number</label>
+                        <input
+                            required
+                            type="tel"
+                            placeholder="Phone number"
+                            value={inviteData.phone}
+                            onChange={(e) => setInviteData({ ...inviteData, phone: e.target.value })}
+                            className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/10 transition-all active:scale-95"
+                    >
+                        GENERATING INVITE & OPEN WHATSAPP
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
 
 const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isSubmitting, error, mode }: any) => {
     if (!isOpen) return null;

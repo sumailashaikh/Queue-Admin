@@ -22,6 +22,7 @@ export default function DashboardPage() {
     const [isQRModalOpen, setIsQRModalOpen] = useState(false); // State for QR modal visibility
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showInstallBtn, setShowInstallBtn] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -88,11 +89,11 @@ export default function DashboardPage() {
                         <div className="h-20 w-20 bg-amber-50 rounded-[32px] flex items-center justify-center mx-auto mb-8">
                             <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
                         </div>
-                        <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Verification Pending</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-4">Verification Pending</h2>
                         <p className="text-slate-500 font-medium mb-8 leading-relaxed">
                             Aapka account review mein hai. Admin ki approval ke baad hi aap queues aur appointments manage kar payenge.
                         </p>
-                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                             Expect approval within 24 hours
                         </div>
                     </div>
@@ -118,7 +119,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="mt-5">
                                 <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{stat.name}</p>
-                                <h3 className="text-2xl font-extrabold tracking-tight text-slate-900 mt-1">
+                                <h3 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
                                     {loading ? "..." : stat.value}
                                 </h3>
                             </div>
@@ -143,20 +144,25 @@ export default function DashboardPage() {
                                     className="flex-1 p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl flex flex-col items-center justify-center gap-2 text-indigo-600 hover:bg-indigo-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <QrCode className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Business QR</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">Business QR</span>
                                 </button>
                                 <button
-                                    onClick={() => window.open('/dashboard/display', '_blank')}
+                                    onClick={() => {
+                                        if (business) {
+                                            const link = `${window.location.host}/display/${business.slug}`;
+                                            window.open(`http://${link}`, '_blank');
+                                        }
+                                    }}
                                     disabled={!business}
                                     className="flex-1 p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl flex flex-col items-center justify-center gap-2 text-amber-600 hover:bg-amber-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Monitor className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">TV Mode</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">TV Mode</span>
                                 </button>
                             </div>
 
                             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Public Link</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Public Link</p>
                                 <div className="flex items-center justify-between gap-3">
                                     <p className="text-xs font-bold text-slate-600 truncate">
                                         {business ? `${window.location.host}/${business.slug}` : 'Loading...'}
@@ -169,7 +175,8 @@ export default function DashboardPage() {
                                             }
                                             const url = `${window.location.origin}/${business.slug}`;
                                             navigator.clipboard.writeText(url);
-                                            alert("Link copied!");
+                                            setIsCopied(true);
+                                            setTimeout(() => setIsCopied(false), 3000);
                                         }}
                                         disabled={!business?.slug}
                                         className="p-2 bg-white text-blue-600 rounded-lg shadow-sm border border-slate-200 hover:bg-blue-50 transition-colors disabled:opacity-50"
@@ -189,7 +196,7 @@ export default function DashboardPage() {
                                             <Monitor className="h-5 w-5" />
                                         </div>
                                         <div className="text-left">
-                                            <p className="text-xs font-black uppercase tracking-wider">Install App</p>
+                                            <p className="text-xs font-bold uppercase tracking-wider">Install App</p>
                                             <p className="text-[10px] font-medium opacity-70">Save to your home screen</p>
                                         </div>
                                     </div>
@@ -219,7 +226,7 @@ export default function DashboardPage() {
                         <div className="bg-white w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                             <div className="p-10 flex flex-col items-center text-center space-y-8">
                                 <div className="flex items-center justify-between w-full mb-2">
-                                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Business QR Code</h3>
+                                    <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Business QR Code</h3>
                                     <button onClick={() => setIsQRModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                                         <X className="h-6 w-6 text-slate-400" />
                                     </button>
@@ -235,17 +242,26 @@ export default function DashboardPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <p className="text-lg font-black text-slate-900">{business.name}</p>
+                                    <p className="text-lg font-bold text-slate-900">{business.name}</p>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Scan to Join Queue</p>
                                 </div>
 
                                 <button
                                     onClick={() => window.print()}
-                                    className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95"
+                                    className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95"
                                 >
                                     <Printer className="h-4 w-4" /> Print QR Code
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+                {/* Dashboard Toast Notifications */}
+                {isCopied && (
+                    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
+                            <Users className="h-5 w-5 text-white/50" />
+                            <p className="text-sm font-bold uppercase tracking-widest">Link Copied to Clipboard!</p>
                         </div>
                     </div>
                 )}

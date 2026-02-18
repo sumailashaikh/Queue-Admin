@@ -7,7 +7,10 @@ export interface Appointment {
     customer_id: string;
     start_time: string;
     end_time: string;
-    status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    status: 'pending' | 'scheduled' | 'confirmed' | 'checked_in' | 'in_service' | 'completed' | 'cancelled';
+    guest_name?: string;
+    guest_phone?: string;
+    service_ids?: string[]; // For multi-service selection
     profiles?: {
         full_name: string;
         phone: string;
@@ -20,7 +23,7 @@ export interface Appointment {
 }
 
 export const appointmentService = {
-    async createAppointment(data: Partial<Appointment>): Promise<Appointment> {
+    async createAppointment(data: Partial<Appointment> & { service_ids?: string[] }): Promise<Appointment> {
         const result = await api.post<Appointment>('/appointments', data);
         return result.data;
     },

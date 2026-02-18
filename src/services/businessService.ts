@@ -6,8 +6,12 @@ export interface Business {
     slug: string;
     address: string;
     phone: string;
+    whatsapp_number?: string;
     description: string;
     owner_id: string;
+    open_time: string;
+    close_time: string;
+    is_closed: boolean;
 }
 
 export const businessService = {
@@ -45,6 +49,11 @@ export const businessService = {
 
     async getBusinessBySlug(slug: string): Promise<Business & { queues: any[] }> {
         const result = await api.get<Business & { queues: any[] }>(`/businesses/slug/${slug}`);
+        return result.data;
+    },
+
+    async getBusinessDisplayData(slug: string): Promise<{ business: any, entries: any[] }> {
+        const result = await api.get<{ business: any, entries: any[] }>(`/public/business/${slug}/display-data`);
         return result.data;
     }
 };

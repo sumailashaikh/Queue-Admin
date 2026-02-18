@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, hasBusiness, loading } = useAuth();
+    const { user, isAuthenticated, hasBusiness, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -14,13 +14,18 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         if (!loading) {
             if (!isAuthenticated) {
                 router.push("/login");
+            } else if (user?.role === 'admin') {
+                // Admins are always allowed in dashboard
+                if (pathname === "/setup") {
+                    router.push("/dashboard");
+                }
             } else if (!hasBusiness && pathname !== "/setup") {
                 router.push("/setup");
             } else if (hasBusiness && pathname === "/setup") {
                 router.push("/dashboard");
             }
         }
-    }, [isAuthenticated, hasBusiness, loading, router, pathname]);
+    }, [isAuthenticated, hasBusiness, loading, router, pathname, user?.role]);
 
     if (loading) {
         return (
@@ -31,7 +36,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
 
     if (!isAuthenticated) return null;
-    if (!hasBusiness && pathname !== "/setup") return null;
+    if (user?.role !== 'admin' && !hasBusiness && pathname !== "/setup") return null;
 
     return <>{children}</>;
 }

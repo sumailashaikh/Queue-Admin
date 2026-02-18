@@ -7,11 +7,15 @@ import {
     Clock,
     ChevronRight,
     CheckCircle2,
-    ArrowLeft,
+    Phone,
+    MessageCircle,
+    ChevronLeft,
+    ExternalLink,
     Loader2,
     AlertCircle,
-    Phone,
-    User
+    ArrowLeft,
+    User,
+    Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { businessService, Business } from "@/services/businessService";
@@ -29,8 +33,7 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
     // Form State
     const [activeView, setActiveView] = useState<'queue' | 'appointment'>('queue');
     const [step, setStep] = useState(1); // 1: Selection, 2: Details, 3: Success
-    const [selectedQueue, setSelectedQueue] = useState<any | null>(null);
-    const [selectedService, setSelectedService] = useState<any | null>(null);
+    const [selectedServices, setSelectedServices] = useState<any[]>([]); // Array for multi-select
     const [bookingDate, setBookingDate] = useState("");
     const [bookingTime, setBookingTime] = useState("");
     const [name, setName] = useState("");
@@ -38,6 +41,49 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ticket, setTicket] = useState<QueueEntry | null>(null);
     const [isAppointmentMode, setIsAppointmentMode] = useState(false);
+
+    const toggleService = (service: any) => {
+        const isSelected = selectedServices.find(s => s.id === service.id);
+        if (isSelected) {
+            setSelectedServices(selectedServices.filter(s => s.id !== service.id));
+        } else {
+            setSelectedServices([...selectedServices, service]);
+        }
+    };
+
+    const totalDuration = selectedServices.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
+    const totalPrice = selectedServices.reduce((acc, s) => acc + (s.price || 0), 0);
+
+    const formatTime12 = (timeStr: string) => {
+        if (!timeStr) return "";
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return `${h12}:${minutes} ${ampm}`;
+    };
+
+    const isStoreOpen = () => {
+        if (!business) return false;
+        if (business.is_closed) return false;
+
+        const now = new Date();
+        const istTimeStr = now.toLocaleTimeString('en-GB', {
+            timeZone: 'Asia/Kolkata',
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        const normalize = (t: string) => (t && t.length === 5) ? `${t}:00` : t;
+        const open = normalize(business.open_time || '09:00:00');
+        const close = normalize(business.close_time || '21:00:00');
+
+        return istTimeStr >= open && istTimeStr <= close;
+    };
+
+    const isOpen = isStoreOpen();
 
     useEffect(() => {
         const loadBusiness = async () => {
@@ -59,29 +105,34 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
         setError(null);
 
         try {
+            const service_ids = selectedServices.map(s => s.id);
+
             if (activeView === 'queue') {
-                if (!selectedQueue) return;
+                const openQueue = business!.queues?.find(q => q.status === 'open');
+                if (!openQueue) {
+                    setError("No open queue available right now.");
+                    return;
+                }
+
                 const entry = await queueService.joinQueue({
-                    queue_id: selectedQueue.id,
+                    queue_id: openQueue.id,
                     customer_name: name,
                     phone: phone,
-                    service_name: selectedQueue.services?.name
+                    service_ids: service_ids // Send array
                 });
                 setTicket(entry);
             } else {
-                if (!selectedService || !bookingDate || !bookingTime) return;
-                const duration = selectedService.duration_minutes || 30;
+                if (selectedServices.length === 0 || !bookingDate || !bookingTime) return;
                 const startTime = new Date(`${bookingDate}T${bookingTime}:00`);
-                const endTime = new Date(startTime.getTime() + duration * 60000);
+                // Duration is already summed up in totalDuration
 
                 await appointmentService.createAppointment({
                     business_id: business!.id,
-                    service_id: selectedService.id,
+                    service_ids: service_ids, // Send array
                     start_time: startTime.toISOString(),
-                    end_time: endTime.toISOString(),
                     status: 'pending'
                 });
-                // For simplified success message, we can use a mock ticket or different state
+                // For simplified success message
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
                 setIsAppointmentMode(true);
             }
@@ -132,8 +183,14 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
                         <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center font-black text-xl">
                             {business.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="px-3 py-1.5 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest">
-                            Live Queue
+                        <div className={cn(
+                            "px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border",
+                            isOpen
+                                ? "bg-emerald-500 text-white border-emerald-400"
+                                : "bg-red-500 text-white border-red-400"
+                        )}>
+                            <div className={cn("h-1.5 w-1.5 rounded-full bg-white", isOpen && "animate-pulse")} />
+                            {isOpen ? "Open Now" : "Currently Closed"}
                         </div>
                     </div>
                     <div>
@@ -163,64 +220,104 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
                 <div className="flex-1 p-8">
                     {/* View Switcher */}
                     {step < 3 && (
-                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl mb-8">
-                            <button
-                                onClick={() => { setActiveView('queue'); setStep(1); }}
-                                className={cn(
-                                    "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
-                                    activeView === 'queue' ? "bg-white text-primary shadow-sm" : "text-slate-500"
-                                )}
-                            >
-                                Join Queue
-                            </button>
-                            <button
-                                onClick={() => { setActiveView('appointment'); setStep(1); }}
-                                className={cn(
-                                    "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
-                                    activeView === 'appointment' ? "bg-white text-primary shadow-sm" : "text-slate-500"
-                                )}
-                            >
-                                Book Appointment
-                            </button>
-                        </div>
+                        <>
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl mb-8">
+                                <button
+                                    onClick={() => { setActiveView('queue'); setStep(1); }}
+                                    className={cn(
+                                        "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
+                                        activeView === 'queue' ? "bg-white text-primary shadow-sm" : "text-slate-500"
+                                    )}
+                                >
+                                    Join Queue
+                                </button>
+                                <button
+                                    onClick={() => { setActiveView('appointment'); setStep(1); }}
+                                    className={cn(
+                                        "flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all",
+                                        activeView === 'appointment' ? "bg-white text-primary shadow-sm" : "text-slate-500"
+                                    )}
+                                >
+                                    Book Appointment
+                                </button>
+                            </div>
+
+                            {!isOpen && (
+                                <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-black text-amber-900 uppercase tracking-widest">Business is Closed</p>
+                                        <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                                            We are currently not accepting new queue entries or appointments.
+                                            Our hours: <span className="text-amber-900">{formatTime12(business.open_time)} - {formatTime12(business.close_time)}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {step === 1 && activeView === 'queue' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="space-y-1">
                                 <h2 className="text-xl font-black text-slate-900 uppercase">What are you here for?</h2>
-                                <p className="text-sm font-bold text-slate-400">Select a service to see the wait time</p>
+                                <p className="text-sm font-bold text-slate-400">Select all services you need</p>
                             </div>
 
-                            <div className="space-y-3">
-                                {business.queues?.map((q) => (
-                                    <button
-                                        key={q.id}
-                                        onClick={() => {
-                                            setSelectedQueue(q);
-                                            setStep(2);
-                                        }}
-                                        disabled={q.status !== 'open'}
-                                        className={cn(
-                                            "w-full p-6 rounded-[24px] border-2 text-left transition-all group flex items-center gap-4",
-                                            q.status === 'open'
-                                                ? "bg-white border-slate-100 hover:border-primary/20 hover:bg-slate-50/50 active:scale-[0.98]"
-                                                : "bg-slate-50 border-transparent opacity-60 grayscale"
-                                        )}
-                                    >
-                                        <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                            <Users className="h-6 w-6" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-black text-slate-900 group-hover:text-primary transition-colors">{q.name}</h3>
-                                            <div className="flex items-center gap-3 mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {q.current_wait_time_minutes}m Wait / Person</span>
+                            <div className="space-y-3 pb-24 md:pb-0">
+                                {(business as any).services?.map((s: any) => {
+                                    const isSelected = selectedServices.some(item => item.id === s.id);
+                                    return (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => toggleService(s)}
+                                            disabled={!isOpen}
+                                            className={cn(
+                                                "w-full p-6 rounded-[24px] border-2 text-left transition-all group flex items-center gap-4",
+                                                isSelected
+                                                    ? "bg-primary/5 border-primary shadow-lg shadow-primary/5"
+                                                    : "bg-white border-slate-100 hover:border-slate-200"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "h-12 w-12 rounded-2xl flex items-center justify-center transition-all",
+                                                isSelected ? "bg-primary text-white scale-110" : "bg-slate-50 text-slate-400"
+                                            )}>
+                                                {isSelected ? <CheckCircle2 className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-slate-900">{s.name}</h3>
+                                                <div className="flex items-center gap-3 mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                    <span>₹{s.price}</span>
+                                                    <span>•</span>
+                                                    <span>{s.duration_minutes} min</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {selectedServices.length > 0 && (
+                                <div className="fixed bottom-0 left-0 right-0 md:relative p-6 bg-white border-t border-slate-100 md:border-none md:p-0 md:mt-8 animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0">
+                                    <div className="bg-slate-900 rounded-[28px] p-6 text-white shadow-2xl flex items-center justify-between gap-6">
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Selection</p>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xl font-black text-primary">₹{totalPrice}</span>
+                                                <span className="text-slate-600">/</span>
+                                                <span className="text-sm font-bold">{totalDuration} min</span>
                                             </div>
                                         </div>
-                                        <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-primary transition-all group-hover:translate-x-1" />
-                                    </button>
-                                ))}
-                            </div>
+                                        <button
+                                            onClick={() => setStep(2)}
+                                            className="px-8 py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 active:scale-95 transition-all"
+                                        >
+                                            Continue
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -228,27 +325,47 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="space-y-1">
                                 <h2 className="text-xl font-black text-slate-900 uppercase">When would you like to come?</h2>
-                                <p className="text-sm font-bold text-slate-400">Choose a service and schedule your visit</p>
+                                <p className="text-sm font-bold text-slate-400">Choose services and schedule your visit</p>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Select Service</label>
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Select Services</label>
                                     <div className="grid grid-cols-1 gap-2">
-                                        {(business as any).services?.map((s: any) => (
-                                            <button
-                                                key={s.id}
-                                                onClick={() => setSelectedService(s)}
-                                                className={cn(
-                                                    "p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between",
-                                                    selectedService?.id === s.id ? "border-primary bg-primary/5" : "border-slate-100 hover:border-slate-200"
-                                                )}
-                                            >
-                                                <span className="font-bold text-slate-900">{s.name}</span>
-                                                <span className="text-xs font-black text-primary">₹{s.price}</span>
-                                            </button>
-                                        ))}
+                                        {(business as any).services?.map((s: any) => {
+                                            const isSelected = selectedServices.some(item => item.id === s.id);
+                                            return (
+                                                <button
+                                                    key={s.id}
+                                                    onClick={() => toggleService(s)}
+                                                    className={cn(
+                                                        "p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between",
+                                                        isSelected ? "border-primary bg-primary/5" : "border-slate-100 hover:border-slate-200"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={cn(
+                                                            "h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all",
+                                                            isSelected ? "bg-primary border-primary text-white" : "border-slate-200"
+                                                        )}>
+                                                            {isSelected && <CheckCircle2 className="h-3 w-3" />}
+                                                        </div>
+                                                        <span className="font-bold text-slate-900">{s.name}</span>
+                                                    </div>
+                                                    <span className="text-xs font-black text-primary">₹{s.price}</span>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
+                                    {selectedServices.length > 0 && (
+                                        <div className="flex items-center gap-4 px-4 py-3 bg-slate-50 rounded-xl mt-2 border border-slate-100">
+                                            <div className="flex-1">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Summary</p>
+                                                <p className="text-sm font-bold text-slate-700">{totalDuration} min total duration</p>
+                                            </div>
+                                            <p className="text-lg font-black text-primary">₹{totalPrice}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -274,10 +391,10 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
 
                                 <button
                                     onClick={() => setStep(2)}
-                                    disabled={!selectedService || !bookingDate || !bookingTime}
+                                    disabled={!isOpen || selectedServices.length === 0 || !bookingDate || !bookingTime}
                                     className="w-full py-5 bg-primary text-white rounded-[20px] text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/10 disabled:opacity-50 transition-all active:scale-95"
                                 >
-                                    Continue to Details
+                                    {!isOpen ? "Store Currently Closed" : "Continue to Details"}
                                 </button>
                             </div>
                         </div>
@@ -367,17 +484,17 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
                                 {isAppointmentMode ? (
                                     <div className="space-y-6">
                                         <div className="space-y-1">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Service</p>
-                                            <p className="text-2xl font-black text-indigo-600 uppercase">{selectedService?.name}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Services</p>
+                                            <p className="text-xl font-black text-indigo-600 uppercase">{selectedServices.map(s => s.name).join(', ')}</p>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date</p>
-                                                <p className="text-lg font-black text-slate-900">{new Date(bookingDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Stay</p>
+                                                <p className="text-lg font-black text-slate-900">~{totalDuration} min</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Time</p>
-                                                <p className="text-lg font-black text-slate-900">{bookingTime}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Fee</p>
+                                                <p className="text-lg font-black text-slate-900">₹{totalPrice}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -395,7 +512,7 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Wait</p>
-                                                <p className="text-xl font-black text-amber-500">~{selectedQueue?.current_wait_time_minutes}m</p>
+                                                <p className="text-xl font-black text-amber-500">~{totalDuration || 10}m</p>
                                             </div>
                                         </div>
                                     </>
@@ -410,16 +527,51 @@ export default function CustomerJoinPage({ params }: { params: Promise<{ slug: s
                                     }
                                 </p>
 
+                                {!isAppointmentMode && (
+                                    <button
+                                        onClick={() => {
+                                            if (ticket?.token) {
+                                                window.open(`/status?token=${ticket.token}`, '_blank');
+                                            }
+                                        }}
+                                        className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
+                                    >
+                                        <ExternalLink className="h-4 w-4" /> View Live Status
+                                    </button>
+                                )}
+
                                 <button
                                     onClick={() => {
-                                        const text = isAppointmentMode
-                                            ? `Hello! I just requested an appointment for ${selectedService?.name} on ${bookingDate} at ${bookingTime}. My name is ${name}.`
-                                            : `Hello! I just joined the queue at ${business.name}. My ticket is ${ticket.ticket_number}.`;
-                                        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                                        const formatDate = (date: string | Date) => new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                                        const formatTime12 = (time: string) => {
+                                            const [hours, minutes] = time.split(':');
+                                            const d = new Date();
+                                            d.setHours(parseInt(hours), parseInt(minutes));
+                                            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                                        };
+
+                                        let text = "";
+                                        const servicesList = selectedServices.map(s => s.name).join(', ');
+                                        if (isAppointmentMode) {
+                                            text = `Hello,\n\nI would like to request an appointment at ${business.name}.\n\nServices: ${servicesList}\nDate: ${formatDate(bookingDate)}\nTime: ${formatTime12(bookingTime)}\nName: ${name}\n\nThank you.`;
+                                        } else {
+                                            const statusLink = `${window.location.origin}/status?token=${ticket.token}`;
+                                            text = `Hello,\n\nI have joined the live queue at ${business.name}.\n\nTicket Number: ${ticket.ticket_number}\nServices: ${servicesList}\nName: ${name}\n\nTrack my live status: ${statusLink}\n\nThank you.`;
+                                        }
+
+                                        // Use business whatsapp_number if available, fallback to phone
+                                        let phoneStr = (business.whatsapp_number || business.phone || "").replace(/\D/g, '');
+                                        if (phoneStr.length === 10) phoneStr = `91${phoneStr}`;
+
+                                        if (phoneStr) {
+                                            window.open(`https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`, '_blank');
+                                        } else {
+                                            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                                        }
                                     }}
                                     className="w-full py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
                                 >
-                                    <Phone className="h-4 w-4" /> Message Salon on WhatsApp
+                                    <Phone className="h-4 w-4" /> Message Business on WhatsApp
                                 </button>
                             </div>
                         </div>

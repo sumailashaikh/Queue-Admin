@@ -28,7 +28,11 @@ export default function SettingsPage() {
         description: business?.description || "",
         address: business?.address || "",
         phone: business?.phone || "",
-        slug: business?.slug || ""
+        whatsapp_number: business?.whatsapp_number || "",
+        slug: business?.slug || "",
+        open_time: business?.open_time || "09:00:00",
+        close_time: business?.close_time || "21:00:00",
+        is_closed: business?.is_closed || false
     });
 
     useEffect(() => {
@@ -38,7 +42,11 @@ export default function SettingsPage() {
                 description: business.description || "",
                 address: business.address || "",
                 phone: business.phone || "",
-                slug: business.slug
+                whatsapp_number: business.whatsapp_number || "",
+                slug: business.slug,
+                open_time: business.open_time || "09:00:00",
+                close_time: business.close_time || "21:00:00",
+                is_closed: business.is_closed || false
             });
         }
     }, [business]);
@@ -143,6 +151,22 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">WhatsApp Number (E.164)</label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                                        <input
+                                            type="tel"
+                                            placeholder="91XXXXXXXXXX"
+                                            value={formData.whatsapp_number}
+                                            onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1.5">
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Public URL (Slug)</label>
                                     <div className="relative">
                                         <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -156,18 +180,44 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Address</label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Operating Hours & Store Status</label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Open At</label>
                                     <input
-                                        required
-                                        type="text"
-                                        value={formData.address}
-                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                        type="time"
+                                        value={formData.open_time}
+                                        onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                                     />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Close At</label>
+                                    <input
+                                        type="time"
+                                        value={formData.close_time}
+                                        onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Current Status</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, is_closed: !formData.is_closed })}
+                                        className={cn(
+                                            "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border flex items-center justify-center gap-2 shadow-sm",
+                                            formData.is_closed
+                                                ? "bg-red-50 border-red-100 text-red-600 hover:bg-red-100"
+                                                : "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
+                                        )}
+                                    >
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", formData.is_closed ? "bg-red-600" : "bg-emerald-600")} />
+                                        {formData.is_closed ? "MANUALLY CLOSED" : "ACTIVE & OPEN"}
+                                    </button>
                                 </div>
                             </div>
                         </div>

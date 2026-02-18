@@ -19,12 +19,23 @@ export interface QueueEntry {
     customer_name: string;
     phone: string;
     service_name: string;
-    status: 'waiting' | 'serving' | 'completed' | 'cancelled';
+    status: 'waiting' | 'serving' | 'completed' | 'cancelled' | 'no_show';
     position: number;
     ticket_number: string;
     joined_at: string;
     served_at?: string;
+    completed_at?: string;
     queue_id: string;
+    appointment_id?: string;
+    token?: string; // status_token for public page
+    queue_entry_services?: {
+        services: {
+            id: string;
+            name: string;
+            duration_minutes: number;
+            price?: number;
+        }
+    }[];
 }
 
 export const queueService = {
@@ -61,8 +72,12 @@ export const queueService = {
         await api.delete(`/queues/${queueId}/entries/today`);
     },
 
-    async joinQueue(data: { queue_id: string, customer_name: string, phone?: string, service_name?: string }): Promise<QueueEntry> {
-        const result = await api.post<QueueEntry>('/queues/join', data);
+    async joinQueue(data: { queue_id: string, customer_name: string, phone?: string, service_name?: string, service_ids?: string[] }): Promise<QueueEntry> {
+        const result = await api.post<QueueEntry>('/public/queue/join', data);
         return result.data;
+    },
+
+    async nextEntry(queueId: string): Promise<void> {
+        await api.post('/queues/next', { queue_id: queueId });
     }
 };

@@ -105,7 +105,7 @@ export default function SetupPage() {
                                         <input
                                             required
                                             type="text"
-                                            placeholder="e.g. Rahul's Salon & Spa"
+                                            placeholder="e.g. Acme Business Centre"
                                             value={formData.name}
                                             onChange={handleNameChange}
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium"

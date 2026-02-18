@@ -72,6 +72,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
         localStorage.setItem('auth_token', token);
         localStorage.setItem('auth_user', JSON.stringify(userData));
+
+        // Admins go straight to dashboard
+        if (userData.role === 'admin') {
+            router.push('/dashboard');
+            return;
+        }
+
         const biz = await refreshBusiness();
         if (biz) {
             router.push('/dashboard');

@@ -24,8 +24,13 @@ export interface DashboardBusiness {
 }
 
 export const adminService = {
-    async getAllUsers(params: { search?: string, role?: string, page?: number } = {}) {
-        const result = await api.get<DashboardUser[]>('/admin/users', { params });
+    async getAllUsers(params: { search?: string, role?: string, status?: string, page?: number } = {}) {
+        const result = await api.get<DashboardUser[]>('/admin/users', {
+            params: {
+                ...params,
+                page: params.page?.toString()
+            } as any
+        });
         return result as any;
     },
 
@@ -46,6 +51,16 @@ export const adminService = {
 
     async inviteAdmin(phone: string) {
         const result = await api.post('/admin/invite', { phone });
+        return result.data;
+    },
+
+    async getBusinessDetails(businessId: string) {
+        const result = await api.get(`/admin/businesses/${businessId}/details`);
+        return result.data;
+    },
+
+    async createUser(userData: { full_name: string, phone: string, role: string }) {
+        const result = await api.post('/admin/users', userData);
         return result.data;
     }
 };
