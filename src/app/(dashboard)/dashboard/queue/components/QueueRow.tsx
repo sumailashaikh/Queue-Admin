@@ -7,8 +7,8 @@ import {
     Calendar,
     Bell,
     Phone,
-    Clock,
-    SkipForward,
+    Timer,
+    ArrowRightToLine,
     QrCode,
     RefreshCcw,
     RotateCcw,
@@ -17,7 +17,9 @@ import {
     CheckCheck,
     ChevronDown,
     Users,
-    UserX
+    UserMinus,
+    MessageCircle,
+    Megaphone
 } from "lucide-react";
 import { ServiceExecutionStrip } from "./ServiceExecutionStrip";
 
@@ -163,7 +165,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                         <ServiceStatusBadge status={item.status} />
                         {isDelayed && item.status === 'waiting' && (
                             <div className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[9px] font-black uppercase tracking-tight flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
+                                <Timer className="h-3 w-3" />
                                 late {delayMins}m
                             </div>
                         )}
@@ -200,42 +202,47 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => {
-                                if (!item.phone) { onShowToast("No phone", "error"); return; }
+                                if (!item.phone || !business) { onShowToast("No phone", "error"); return; }
                                 const cleanPhone = item.phone.replace(/\D/g, '');
-                                const message = encodeURIComponent(`Hi ${item.customer_name || 'Guest'}, your visit is expected at ${expectedTime}. Thank you for your patience.`);
+                                const name = item.customer_name || 'Guest';
+                                const message = encodeURIComponent(`Hi ${name}, we apologize for the delay at ${business.name}. Your service will begin shortly. Thank you for your patience.`);
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                 sessionStorage.setItem(delayKey, 'true');
                                 setHasNotifiedDelay(true);
                             }}
                             className={cn(
                                 "h-10 w-10 flex items-center justify-center rounded-full transition-all active:scale-90",
-                                isDelayed && !hasNotifiedDelay ? "bg-amber-100 text-amber-600 animate-pulse" : "bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                isDelayed && !hasNotifiedDelay ? "bg-amber-100 text-amber-600 animate-pulse" : "bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10"
                             )}
-                            title="Update Delay"
+                            title="WhatsApp: Delay Alert"
                         >
-                            <Clock className="h-5 w-5" />
+                            <Timer className="h-5 w-5" />
                         </button>
                         <button
                             onClick={() => {
-                                if (!item.phone) { onShowToast("No phone", "error"); return; }
+                                if (!item.phone || !business) { onShowToast("No phone", "error"); return; }
                                 const cleanPhone = item.phone.replace(/\D/g, '');
-                                const message = encodeURIComponent(`Hi ${item.customer_name || 'Guest'}, your turn is next. Please be ready.`);
+                                const name = item.customer_name || 'Guest';
+                                const message = encodeURIComponent(`Hi ${name}, you’re next in line at ${business.name}. Please stay nearby. We’ll notify you shortly.`);
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                             }}
-                            className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all active:scale-90"
-                            title="Next Up Alert"
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90"
+                            title="WhatsApp: You're Next"
                         >
-                            <Bell className="h-5 w-5" />
+                            <Megaphone className="h-5 w-5" />
                         </button>
                         <button
                             onClick={() => {
-                                if (!item.phone) return;
-                                window.location.href = `tel:${item.phone}`;
+                                if (!item.phone || !business) return;
+                                const cleanPhone = item.phone.replace(/\D/g, '');
+                                const name = item.customer_name || 'Guest';
+                                const message = encodeURIComponent(`Hi ${name}, your turn at ${business.name} is ready. Please proceed to the service counter. Thank you.`);
+                                window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                             }}
-                            className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all active:scale-90"
-                            title="Call Customer"
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20"
+                            title="WhatsApp: Turn Ready"
                         >
-                            <Phone className="h-5 w-5" />
+                            <MessageCircle className="h-5 w-5 fill-current opacity-20" />
                         </button>
                     </div>
                 )}
@@ -274,12 +281,12 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 <div className="flex flex-col gap-1">
                     {!isServingOrCompleted && (
                         <button onClick={() => onSkip?.(item.id)} className="p-2 text-slate-200 hover:text-amber-500 transition-colors">
-                            <SkipForward className="h-4 w-4" />
+                            <ArrowRightToLine className="h-4 w-4" />
                         </button>
                     )}
                     {!isServingOrCompleted && (
                         <button onClick={() => setShowNoShowModal(true)} className="p-2 text-slate-200 hover:text-rose-500 transition-colors">
-                            <UserX className="h-4 w-4" />
+                            <UserMinus className="h-4 w-4" />
                         </button>
                     )}
                     {(item.status === 'skipped' || item.status === 'no_show') && (
@@ -295,7 +302,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                     <div className="bg-white rounded-[32px] shadow-2xl p-8 max-w-sm w-full animate-in zoom-in-95 duration-200">
                         <div className="h-16 w-16 rounded-full bg-rose-50 flex items-center justify-center mb-6 mx-auto">
-                            <UserX className="h-8 w-8 text-rose-600" />
+                            <UserMinus className="h-8 w-8 text-rose-600" />
                         </div>
                         <h3 className="text-lg font-black text-slate-900 mb-2 text-center uppercase tracking-tight">Customer Missing?</h3>
                         <p className="text-xs text-slate-500 mb-8 text-center font-bold tracking-tight leading-relaxed px-4">

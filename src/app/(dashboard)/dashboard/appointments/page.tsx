@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
     Calendar,
-    Clock,
     User,
     CheckCircle2,
     XCircle,
@@ -11,10 +10,13 @@ import {
     CalendarDays,
     Phone,
     CheckCheck,
-    AlertCircle,
-    Play,
     Bell,
-    Info
+    Megaphone,
+    Info,
+    MessageCircle,
+    Timer,
+    AlertCircle,
+    Play
 } from "lucide-react";
 import { appointmentService, Appointment } from "@/services/appointmentService";
 import { cn } from "@/lib/utils";
@@ -146,9 +148,9 @@ export default function AppointmentsPage() {
 
         let message = "";
         if (type === 'alert') {
-            message = `Hello ${customerName},\n\nThis is ${business.name}. Your turn for your ${serviceNames} is next! Please be ready. We'll call you shortly.\n\nTime: ${time}\n\nThank you!`;
+            message = `Hi ${customerName}, you’re next in line at ${business.name}. Please stay nearby. We’ll notify you shortly.`;
         } else {
-            message = `Hello ${customerName},\n\nThis is ${business.name}. It is now your turn for your ${serviceNames}! Please proceed to the service area.\n\nThank you!`;
+            message = `Hi ${customerName}, your turn at ${business.name} is ready. Please proceed to the service counter. Thank you.`;
         }
 
         let phoneStr = phone.replace(/\D/g, '');
@@ -312,12 +314,21 @@ export default function AppointmentsPage() {
                                         <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-4">
                                             <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || 'Premium Guest'}</span>
 
-                                            {apt.queue_entry && !['completed', 'done', 'cancelled', 'no_show', 'skipped'].includes(apt.queue_entry.status) && (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20 animate-pulse">
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider">In Live Queue {apt.queue_entry.ticket_number}</span>
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                const isToday = new Date(apt.start_time).toDateString() === new Date().toDateString();
+                                                const isActive = ['scheduled', 'confirmed', 'checked_in', 'in_service'].includes(apt.status);
+                                                const hasQueueData = apt.queue_entry && !['completed', 'cancelled', 'no_show', 'skipped'].includes(apt.queue_entry.status);
+
+                                                if (isToday && isActive && hasQueueData) {
+                                                    return (
+                                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20 animate-pulse">
+                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider">In Live Queue {apt.queue_entry?.ticket_number}</span>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
 
                                             {apt.profiles?.phone && (
                                                 <button
@@ -331,19 +342,17 @@ export default function AppointmentsPage() {
                                                             return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
                                                         };
 
-                                                        const services = (apt as any).appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [];
-                                                        const serviceNames = services.join(', ') || 'General Service';
-                                                        const text = `Hello ${profile.full_name},\n\nYour appointment at ${business.name} has been confirmed.\n\nServices: ${serviceNames}\nDate: ${formatDate(apt.start_time)}\nTime: ${formatTime12(apt.start_time)}\n\nWe look forward to seeing you.\n\nThank you.`;
+                                                        const text = `Hello ${profile.full_name}, \n\nYour appointment at ${business.name} has been successfully confirmed.\n\nDate: ${formatDate(apt.start_time)}\nTime: ${formatTime12(apt.start_time)}\n\nWe look forward to serving you.`;
 
                                                         let phoneStr = profile.phone.replace(/\D/g, '');
                                                         if (phoneStr.length === 10) phoneStr = `91${phoneStr}`;
 
                                                         window.open(`https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`, '_blank');
                                                     }}
-                                                    className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
-                                                    title="Message via WhatsApp"
+                                                    className="p-2.5 bg-[#25D366]/10 text-[#25D366] rounded-2xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm border border-[#25D366]/20"
+                                                    title="WhatsApp customer"
                                                 >
-                                                    <Phone className="h-4.5 w-4.5" />
+                                                    <MessageCircle className="h-4.5 w-4.5" />
                                                 </button>
                                             )}
                                         </h3>
@@ -357,7 +366,7 @@ export default function AppointmentsPage() {
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-slate-400" />
+                                            <Timer className="h-4 w-4 text-slate-400" />
                                             <span className="text-xs font-bold text-slate-500">
                                                 {(apt as any).appointment_services?.reduce((acc: number, as: any) => acc + (as.services?.duration_minutes || 0), 0) || 30} mins
                                             </span>
@@ -415,7 +424,7 @@ export default function AppointmentsPage() {
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'confirmed')}
-                                                className="h-10 px-6 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                                                className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
                                             >
                                                 {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                 Confirm
@@ -444,23 +453,23 @@ export default function AppointmentsPage() {
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'alert')}
                                                 className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-blue-100 transition-colors border border-blue-100"
-                                                title="Send 'Next Turn' Alert"
+                                                title="WhatsApp: You're Next"
                                             >
-                                                <Bell className="h-4 w-4" />
+                                                <Megaphone className="h-4 w-4" />
                                                 Alert
                                             </button>
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'call')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-emerald-100 transition-colors border border-emerald-100"
-                                                title="Send 'Your Turn' Call"
+                                                className="flex items-center gap-2 px-3 py-2 bg-[#25D366]/10 text-[#25D366] rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#25D366] hover:text-white transition-colors border border-[#25D366]/20"
+                                                title="WhatsApp: Turn Ready"
                                             >
-                                                <Phone className="h-4 w-4" />
+                                                <MessageCircle className="h-4 w-4" />
                                                 Call
                                             </button>
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'checked_in')}
-                                                className="h-10 px-6 bg-indigo-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+                                                className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
                                                 Check In

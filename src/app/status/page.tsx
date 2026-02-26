@@ -136,7 +136,7 @@ function StatusContent() {
                     </div>
                     <div className="space-y-2">
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Access Denied</h1>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest leading-loose">
+                        <p className="text-slate-600 text-xs font-bold uppercase tracking-widest leading-loose">
                             {error || "Invalid status token"}
                         </p>
                     </div>
@@ -182,19 +182,19 @@ function StatusContent() {
                         <QrCode className="absolute top-8 right-8 h-8 w-8 text-slate-100" />
 
                         <div className="text-center space-y-1">
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Pass ID</p>
-                            <p className="text-8xl font-black text-slate-900 tracking-tighter">{status.display_token}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Pass ID</p>
+                            <p className="text-8xl font-black text-[#0B1B3F] tracking-tighter">{status.display_token}</p>
                         </div>
 
                         {/* Stats Row */}
                         <div className="grid grid-cols-2 gap-4 w-full">
                             <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-100/50">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Position</p>
-                                <p className="text-3xl font-black text-slate-900 tracking-tighter">#{status.position}</p>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Position</p>
+                                <p className="text-3xl font-black text-[#0B1B3F] tracking-tighter">#{status.position}</p>
                             </div>
                             <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-100/50">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wait Time</p>
-                                <p className="text-3xl font-black text-slate-900 tracking-tighter">{status.estimated_wait_time}M</p>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Wait Time</p>
+                                <p className="text-3xl font-black text-[#0B1B3F] tracking-tighter">{status.estimated_wait_time}M</p>
                             </div>
                         </div>
                     </div>
@@ -206,28 +206,50 @@ function StatusContent() {
                         </div>
                         <div className="relative z-10 flex flex-col items-center space-y-4">
                             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Currently Serving</p>
-                            <div className="h-20 w-40 bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center">
-                                <p className="text-4xl font-black tracking-tighter text-white/40">---</p>
+                            <div className="h-20 w-40 bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center text-center px-4">
+                                <p className="text-sm font-bold tracking-tight text-white/60 leading-tight">
+                                    {status.current_serving && status.current_serving !== '---' ? status.current_serving : "Now serving will appear here"}
+                                </p>
                             </div>
                             <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                     </div>
 
+                    {/* Customer Alert Card */}
+                    <div className={cn(
+                        "w-full p-6 rounded-[32px] border flex flex-col items-center text-center space-y-2 animate-in fade-in slide-in-from-top-4 duration-500",
+                        status.position <= 1
+                            ? "bg-blue-50 border-blue-100 shadow-sm"
+                            : "bg-slate-50 border-slate-100"
+                    )}>
+                        {status.position <= 1 ? (
+                            <>
+                                <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center mb-1 shadow-lg shadow-blue-200">
+                                    <Bell className="h-5 w-5 text-white animate-bounce" />
+                                </div>
+                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">You’re next in line — please be ready.</h4>
+                                <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-[240px]">
+                                    Please stay nearby. We’ll call you shortly.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Waiting for Turn</h4>
+                                <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-[240px]">
+                                    Please wait — we’ll notify you as your turn approaches.
+                                </p>
+                            </>
+                        )}
+                    </div>
+
                     {/* Action Buttons */}
-                    <div className="w-full grid grid-cols-2 gap-4">
+                    <div className="w-full">
                         <button
                             onClick={handleWhatsApp}
-                            className="h-16 bg-[#10b981] hover:bg-[#059669] text-white rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl shadow-emerald-500/10"
+                            className="w-full h-16 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-[24px] flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-xl shadow-slate-900/10"
                         >
                             <MessageCircle className="h-5 w-5 fill-white/20" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Message</span>
-                        </button>
-                        <button
-                            onClick={handleCall}
-                            className="h-16 bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 border border-slate-100"
-                        >
-                            <Phone className="h-4 w-4" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Call Studio</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Message Official</span>
                         </button>
                     </div>
 
