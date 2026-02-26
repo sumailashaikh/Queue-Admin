@@ -68,22 +68,22 @@ export default function TVDisplayPage() {
             {/* Header */}
             <div className="flex items-center justify-between bg-slate-900/40 p-8 rounded-[40px] border border-slate-800/50 backdrop-blur-sm">
                 <div className="flex items-center gap-8">
-                    <div className="h-24 w-24 bg-primary rounded-[32px] flex items-center justify-center text-4xl font-black shadow-2xl shadow-primary/20 transform -rotate-3">
+                    <div className="h-24 w-24 bg-primary rounded-[32px] flex items-center justify-center text-4xl font-bold shadow-2xl shadow-primary/20 transform -rotate-3">
                         {business?.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="space-y-1">
-                        <h1 className="text-5xl font-black tracking-tight text-white">{business?.name}</h1>
+                        <h1 className="text-5xl font-bold tracking-tight text-white">{business?.name}</h1>
                         <div className="flex items-center gap-3">
                             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-xs">Live Serving Dashboard</p>
+                            <p className="text-slate-400 font-bold uppercase tracking-[0.4em] text-xs">Live Serving Dashboard</p>
                         </div>
                     </div>
                 </div>
                 <div className="text-right bg-slate-950/50 px-10 py-6 rounded-[32px] border border-slate-800 shadow-inner">
-                    <p className="text-7xl font-black font-mono tracking-tighter text-primary leading-none">
+                    <p className="text-7xl font-bold font-mono tracking-tighter text-primary leading-none">
                         {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-[10px] mt-3">Current Time</p>
+                    <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-xs mt-3">Current Time</p>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@ export default function TVDisplayPage() {
                 <div className="col-span-12 lg:col-span-8 space-y-8">
                     <div className="flex items-center gap-4 text-emerald-400 ml-2">
                         <Users className="h-6 w-6" />
-                        <h2 className="text-2xl font-black uppercase tracking-[0.5em]">Now Serving</h2>
+                        <h2 className="text-2xl font-bold uppercase tracking-[0.5em]">Now Serving</h2>
                     </div>
 
                     <div className="h-full">
@@ -102,8 +102,8 @@ export default function TVDisplayPage() {
                                     <Clock className="h-10 w-10 text-slate-600" />
                                 </div>
                                 <div className="text-center space-y-2">
-                                    <p className="text-4xl font-black text-slate-700 uppercase tracking-widest leading-tight">Waiting for<br />Next Customer</p>
-                                    <p className="text-slate-800 font-black uppercase tracking-[0.3em] text-xs">All caught up!</p>
+                                    <p className="text-4xl font-bold text-slate-700 uppercase tracking-wider leading-tight">Waiting for<br />Next Customer</p>
+                                    <p className="text-slate-800 font-bold uppercase tracking-[0.3em] text-xs">All caught up!</p>
                                 </div>
                             </div>
                         ) : (
@@ -114,17 +114,17 @@ export default function TVDisplayPage() {
                                             <Users className="h-64 w-64" />
                                         </div>
                                         <div className="space-y-4 relative z-10">
-                                            <p className="text-white/70 text-2xl font-black uppercase tracking-[0.2em] mb-2">Currently Serving</p>
-                                            <p className="text-9xl font-black tracking-tighter text-white drop-shadow-2xl">{item.customer_name}</p>
+                                            <p className="text-white/70 text-2xl font-bold uppercase tracking-[0.2em] mb-2">Currently Serving</p>
+                                            <p className="text-9xl font-bold tracking-tighter text-white drop-shadow-2xl">{item.customer_name}</p>
                                             <div className="flex items-center gap-4">
-                                                <span className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-black uppercase tracking-widest text-white border border-white/20">
+                                                <span className="px-6 py-2 bg-white/20 backdrop-blur-md rounded-full text-sm font-bold uppercase tracking-wider text-white border border-white/20">
                                                     {item.service_name || 'Service In Progress'}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="bg-white rounded-[48px] px-16 py-12 text-center min-w-[300px] shadow-2xl relative z-10 transform -rotate-2 group-hover:rotate-0 transition-transform">
-                                            <p className="text-slate-400 text-xl font-black uppercase tracking-widest mb-2">Token #</p>
-                                            <p className="text-9xl font-black text-primary leading-none tracking-tighter">{item.ticket_number}</p>
+                                            <p className="text-slate-400 text-xl font-bold uppercase tracking-wider mb-2">Token #</p>
+                                            <p className="text-9xl font-bold text-primary leading-none tracking-tighter">{item.ticket_number}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -137,13 +137,13 @@ export default function TVDisplayPage() {
                 <div className="col-span-12 lg:col-span-4 flex flex-col gap-8 h-full">
                     <div className="flex items-center gap-4 text-primary ml-2">
                         <div className="h-3 w-3 rounded-full bg-primary animate-ping" />
-                        <h2 className="text-2xl font-black uppercase tracking-[0.5em]">Up Next</h2>
+                        <h2 className="text-2xl font-bold uppercase tracking-[0.5em]">Up Next</h2>
                     </div>
 
                     <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
                         {waiting.length === 0 ? (
                             <div className="bg-slate-900/50 border-2 border-slate-800 rounded-[40px] p-12 text-center">
-                                <p className="text-xl font-black text-slate-600 uppercase tracking-widest">Queue Empty</p>
+                                <p className="text-xl font-bold text-slate-600 uppercase tracking-wider">Queue Empty</p>
                             </div>
                         ) : (
                             waiting.map((item, idx) => (
@@ -155,18 +155,18 @@ export default function TVDisplayPage() {
                                 )}>
                                     <div className="flex items-center gap-6">
                                         <div className={cn(
-                                            "h-16 w-16 rounded-2xl flex items-center justify-center text-2xl font-black border",
+                                            "h-16 w-16 rounded-2xl flex items-center justify-center text-2xl font-bold border",
                                             idx === 0 ? "bg-white/20 border-white/20 text-white" : "bg-slate-800 border-slate-700 text-slate-500"
                                         )}>
                                             {item.ticket_number}
                                         </div>
                                         <p className={cn(
-                                            "text-3xl font-black tracking-tight",
+                                            "text-3xl font-bold tracking-tight",
                                             idx === 0 ? "text-white" : "text-slate-300"
                                         )}>{item.customer_name}</p>
                                     </div>
                                     {idx === 0 && (
-                                        <div className="px-5 py-2 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest animate-pulse">
+                                        <div className="px-5 py-2 bg-white/20 rounded-xl text-xs font-bold uppercase tracking-wider animate-pulse">
                                             Next
                                         </div>
                                     )}
@@ -188,8 +188,8 @@ export default function TVDisplayPage() {
                             )}
                         </div>
                         <div className="space-y-2 relative z-10">
-                            <p className="text-3xl font-black text-slate-900 tracking-tight">Scan to Join</p>
-                            <p className="text-sm font-black text-primary uppercase tracking-[0.3em]">{business?.slug}.salonapp.com</p>
+                            <p className="text-3xl font-bold text-slate-900 tracking-tight">Scan to Join</p>
+                            <p className="text-sm font-bold text-primary uppercase tracking-[0.3em]">{business?.slug}.salonapp.com</p>
                         </div>
                     </div>
                 </div>

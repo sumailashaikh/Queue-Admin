@@ -47,13 +47,13 @@ export const businessService = {
         await api.delete(`/businesses/${id}`);
     },
 
-    async getBusinessBySlug(slug: string): Promise<Business & { queues: any[] }> {
-        const result = await api.get<Business & { queues: any[] }>(`/businesses/slug/${slug}`);
+    async getBusinessBySlug(slug: string): Promise<Business & { queues: any[], services: any[] }> {
+        const result = await api.get<Business & { queues: any[], services: any[] }>(`/businesses/slug/${slug}`);
         return result.data;
     },
 
-    async getBusinessDisplayData(slug: string): Promise<{ business: any, entries: any[] }> {
-        const result = await api.get<{ business: any, entries: any[] }>(`/public/business/${slug}/display-data`);
+    async getBusinessDisplayData(slug: string): Promise<{ business: Business & { queues: any[] }, entries: any[] }> {
+        const result = await api.get<{ business: Business & { queues: any[] }, entries: any[] }>(`/public/business/${slug}/display-data`);
         return result.data;
     }
 };

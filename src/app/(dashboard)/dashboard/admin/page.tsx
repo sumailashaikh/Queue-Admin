@@ -173,12 +173,12 @@ export default function AdminDashboard() {
                         <div className="pt-2">
                             <button
                                 onClick={() => setIsReportsModalOpen(false)}
-                                className="w-full h-14 bg-slate-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+                                className="w-full h-14 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
                             >
                                 Got it, thanks!
                             </button>
                         </div>
-                        <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.2em]">Coming Late 2026</p>
+                        <p className="text-xs font-bold text-indigo-500 uppercase tracking-[0.2em]">Coming Late 2026</p>
                     </div>
                 </div>
             )}
@@ -195,14 +195,14 @@ export default function AdminDashboard() {
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     <button
                         onClick={() => setIsInviteModalOpen(true)}
-                        className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-xl shadow-indigo-200 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-xl shadow-indigo-200 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
                     >
                         <UserPlus className="h-4 w-4" />
                         Invite Admin
                     </button>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-200 text-slate-600 hover:border-indigo-600 hover:text-indigo-600 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-xl shadow-slate-200/50 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-200 text-slate-600 hover:border-indigo-600 hover:text-indigo-600 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-xl shadow-slate-200/50 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
                     >
                         <UserPlus className="h-4 w-4" />
                         Create User
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
                         <button
                             onClick={() => setActiveTab('users')}
                             className={cn(
-                                "px-8 py-3 text-[10px] font-bold uppercase tracking-widest rounded-[16px] transition-all duration-300 flex items-center gap-2",
+                                "px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-[16px] transition-all duration-300 flex items-center gap-2",
                                 activeTab === 'users' ? "bg-white text-indigo-600 shadow-xl shadow-indigo-500/10 scale-105" : "text-slate-500 hover:text-slate-900"
                             )}
                         >
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
                         <button
                             onClick={() => setActiveTab('businesses')}
                             className={cn(
-                                "px-8 py-3 text-[10px] font-bold uppercase tracking-widest rounded-[16px] transition-all duration-300 flex items-center gap-2",
+                                "px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-[16px] transition-all duration-300 flex items-center gap-2",
                                 activeTab === 'businesses' ? "bg-white text-indigo-600 shadow-xl shadow-indigo-500/10 scale-105" : "text-slate-500 hover:text-slate-900"
                             )}
                         >
@@ -245,7 +245,7 @@ export default function AdminDashboard() {
                             <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center", `bg-${stat.color}-50 text-${stat.color}-600`)}>
                                 <stat.icon className="h-6 w-6" />
                             </div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Global</span>
                         </div>
                         <div className="mt-6 space-y-1">
                             <p className="text-4xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                                 setPagination(p => ({ ...p, page: 1 }));
                             }}
                             className={cn(
-                                "h-14 px-6 border rounded-[20px] text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-all",
+                                "h-14 px-6 border rounded-[20px] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
                                 statusFilter === 'pending'
                                     ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200"
                                     : "border-slate-100 text-slate-600 hover:bg-slate-50"
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
                         <Loader2 className="h-10 w-10 animate-spin text-indigo-600/20" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Synching with Mainframe...</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">Synching with Mainframe...</p>
                     </div>
                 ) : (
                     <>
@@ -298,11 +298,11 @@ export default function AdminDashboard() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50/50">
-                                        <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identity</th>
-                                        <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Role</th>
-                                        <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Phone</th>
-                                        <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Joined</th>
-                                        <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Identity</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Role</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Joined</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
                                                         value={user.role}
                                                         onChange={(e) => handleRoleChange(user.id, e.target.value)}
                                                         className={cn(
-                                                            "px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest border-0 ring-1 ring-inset outline-none focus:ring-2",
+                                                            "px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border-0 ring-1 ring-inset outline-none focus:ring-2",
                                                             user.role === 'admin' ? "bg-indigo-50 text-indigo-700 ring-indigo-200" :
                                                                 user.role === 'owner' ? "bg-blue-50 text-blue-700 ring-blue-200" :
                                                                     "bg-slate-50 text-slate-500 ring-slate-200"
@@ -345,7 +345,7 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-8 py-6 text-xs font-bold text-slate-600">{user.phone}</td>
                                             <td className="px-8 py-6">
-                                                <div className="flex flex-col text-[10px]">
+                                                <div className="flex flex-col text-xs">
                                                     <p className="font-bold text-slate-900">{new Date(user.created_at).toLocaleDateString()}</p>
                                                     <p className="text-slate-400 font-bold uppercase">{new Date(user.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                 </div>
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
                                                     {user.status !== 'active' && (
                                                         <button
                                                             onClick={() => handleStatusChange(user.id, 'active', true)}
-                                                            className="h-8 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center gap-1"
+                                                            className="h-8 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all flex items-center gap-1"
                                                         >
                                                             <CheckCircle2 className="h-3 w-3" />
                                                             Verify
@@ -364,7 +364,7 @@ export default function AdminDashboard() {
                                                     {user.status !== 'blocked' && (
                                                         <button
                                                             onClick={() => handleStatusChange(user.id, 'blocked')}
-                                                            className="h-8 px-3 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-1"
+                                                            className="h-8 px-3 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-1"
                                                         >
                                                             <XCircle className="h-3 w-3" />
                                                             Block
@@ -378,26 +378,26 @@ export default function AdminDashboard() {
                                             <td className="px-8 py-6">
                                                 <div className="space-y-1">
                                                     <p className="font-bold text-slate-900 tracking-tight text-base">{business.name}</p>
-                                                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">/{business.slug}</p>
+                                                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">/{business.slug}</p>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-2">
                                                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Active</span>
+                                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Active</span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <div className="space-y-0.5">
                                                     <p className="text-xs font-bold text-slate-900">{business.owner?.full_name}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400">{business.owner?.phone}</p>
+                                                    <p className="text-xs font-bold text-slate-400">{business.owner?.phone}</p>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-xs font-bold text-slate-600">{new Date(business.created_at).toLocaleDateString()}</td>
                                             <td className="px-8 py-6 text-right">
                                                 <button
                                                     onClick={() => handleInspect(business)}
-                                                    className="h-10 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-600 transition-all"
+                                                    className="h-10 px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 transition-all"
                                                 >
                                                     Inspect
                                                 </button>
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
                         {/* Pagination */}
                         {activeTab === 'users' && pagination.total > 0 && (
                             <div className="p-8 border-t border-slate-50 flex items-center justify-between">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                                     Showing <span className="text-slate-900">{(pagination.page - 1) * 20 + 1}-{Math.min(pagination.page * 20, pagination.total)}</span> of {pagination.total} users
                                 </p>
                                 <div className="flex gap-2">
@@ -466,13 +466,13 @@ export default function AdminDashboard() {
                             </div>
 
                             {inviteError && (
-                                <div className="w-full p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-[10px] font-bold uppercase tracking-widest animate-in shake-1">
+                                <div className="w-full p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold uppercase tracking-wider animate-in shake-1">
                                     {inviteError}
                                 </div>
                             )}
 
                             {inviteSuccess && (
-                                <div className="w-full p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600 text-[10px] font-bold uppercase tracking-widest text-center">
+                                <div className="w-full p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600 text-xs font-bold uppercase tracking-wider text-center">
                                     {inviteSuccess}
                                 </div>
                             )}
@@ -492,7 +492,7 @@ export default function AdminDashboard() {
                                 <button
                                     disabled={inviteLoading}
                                     type="submit"
-                                    className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                                    className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                                 >
                                     {inviteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Promotion"}
                                 </button>
@@ -510,7 +510,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center justify-between w-full">
                                 <div className="space-y-1">
                                     <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">{inspectedBusiness.name}</h3>
-                                    <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em]">Business Oversight Mode</p>
+                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em]">Business Oversight Mode</p>
                                 </div>
                                 <button
                                     onClick={() => setInspectedBusiness(null)}
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                             {detailsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600/20" />
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fetching Live Performance...</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fetching Live Performance...</p>
                                 </div>
                             ) : businessDetails ? (
                                 <div className="space-y-8">
@@ -535,7 +535,7 @@ export default function AdminDashboard() {
                                             { label: 'Wait Time', value: `${businessDetails.avgWaitTimeMinutes}m`, icon: Clock, color: 'amber', desc: 'Average time spent in waiting state' },
                                         ].map((stat, i) => (
                                             <div key={i} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 group/stat relative transition-all hover:bg-white hover:shadow-lg">
-                                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                                                     {stat.label}
                                                     <span className="h-1.5 w-1.5 rounded-full bg-slate-300" title={stat.desc} />
                                                 </p>
@@ -549,26 +549,26 @@ export default function AdminDashboard() {
 
                                     {businessDetails.recentActivity && businessDetails.recentActivity.length > 0 && (
                                         <div className="space-y-4">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">Today's Activity Log</p>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Today's Activity Log</p>
                                             <div className="bg-slate-50 rounded-[32px] border border-slate-100 overflow-hidden">
                                                 <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
                                                     {businessDetails.recentActivity.map((act: any) => (
                                                         <div key={act.id} className="p-4 border-b border-slate-100 last:border-0 flex items-center justify-between hover:bg-white transition-colors">
                                                             <div className="flex items-center gap-4">
                                                                 <div className={cn(
-                                                                    "h-10 w-10 rounded-xl flex items-center justify-center text-[10px] font-bold",
+                                                                    "h-10 w-10 rounded-xl flex items-center justify-center text-xs font-bold",
                                                                     act.type === 'appointment' ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600"
                                                                 )}>
                                                                     {act.token}
                                                                 </div>
                                                                 <div className="space-y-0.5">
                                                                     <p className="text-sm font-bold text-slate-900">{act.name}</p>
-                                                                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{act.service}</p>
+                                                                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{act.service}</p>
                                                                 </div>
                                                             </div>
                                                             <div className="text-right space-y-0.5">
-                                                                <p className="text-[10px] font-bold text-slate-900 uppercase tracking-wider">{act.status}</p>
-                                                                <p className="text-[10px] font-medium text-slate-400">{new Date(act.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                                <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">{act.status}</p>
+                                                                <p className="text-xs font-medium text-slate-400">{new Date(act.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -578,19 +578,19 @@ export default function AdminDashboard() {
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-widest">No data available for today.</p>
+                                <p className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-wider">No data available for today.</p>
                             )}
 
                             <div className="flex gap-4">
                                 <button
                                     onClick={() => window.open(`/${inspectedBusiness.slug}`, '_blank')}
-                                    className="flex-1 py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
+                                    className="flex-1 py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
                                 >
                                     View Public Page
                                 </button>
                                 <button
                                     onClick={() => alert("Comprehensive historical reports and CSV exports are being prepared for the next release.")}
-                                    className="flex-1 py-5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
+                                    className="flex-1 py-5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
                                 >
                                     Export Reports
                                 </button>
@@ -617,7 +617,7 @@ export default function AdminDashboard() {
 
                             <form onSubmit={handleCreateUser} className="space-y-4">
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Full Name</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">Full Name</label>
                                     <input
                                         required
                                         type="text"
@@ -628,7 +628,7 @@ export default function AdminDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Phone Number</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">Phone Number</label>
                                     <input
                                         required
                                         type="tel"
@@ -639,7 +639,7 @@ export default function AdminDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Initital Role</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">Initital Role</label>
                                     <select
                                         value={createUserData.role}
                                         onChange={(e) => setCreateUserData(prev => ({ ...prev, role: e.target.value }))}
@@ -653,7 +653,7 @@ export default function AdminDashboard() {
                                 <button
                                     disabled={createLoading}
                                     type="submit"
-                                    className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4"
+                                    className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4"
                                 >
                                     {createLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
                                 </button>

@@ -12,10 +12,10 @@ import { businessService } from "@/services/businessService"; // Assuming busine
 export default function DashboardPage() {
     const { user } = useAuth();
     const [stats, setStats] = useState([
-        { name: 'Currently Serving', value: '0', icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
-        { name: 'Waiting in Queue', value: '0', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100' },
-        { name: 'Today\'s Revenue', value: '₹0', icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-100' },
-        { name: 'Avg. Wait Time', value: '0m', icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-100' },
+        { name: 'Currently Serving', value: '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { name: 'Waiting in Queue', value: '0', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { name: 'Today\'s Revenue', value: '₹0', icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { name: 'Avg. Wait Time', value: '0m', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
     ]);
     const [loading, setLoading] = useState(true);
     const [business, setBusiness] = useState<any>(null); // State to hold business data
@@ -23,6 +23,10 @@ export default function DashboardPage() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showInstallBtn, setShowInstallBtn] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+
+    // Live Analytics States
+    const [popularServices, setPopularServices] = useState<{ name: string, count: number, color: string }[]>([]);
+    const [queueHealth, setQueueHealth] = useState({ completed: 0, waiting: 0, serving: 0, skipped: 0 });
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -54,19 +58,54 @@ export default function DashboardPage() {
 
                 // Fetch active queues to get serving/waiting counts
                 const queues = await queueService.getMyQueues();
-                let currentlyServing = 0;
-                let waitingCount = 0;
+                // We calculate precise queue health
+                if (myBusiness) {
+                    try {
+                        const providerAnalytics = await analyticsService.getProviderAnalytics({
+                            business_id: myBusiness.id,
+                            range: 'daily'
+                        });
 
-                queues.forEach(q => {
-                    // This is a simplification, ideally we'd get precise counts from backend
-                    // But for now we use the summary or queue data
-                });
+                        const serviceMap: Record<string, number> = {};
+                        if (providerAnalytics && providerAnalytics.data) {
+                            providerAnalytics.data.forEach((p: any) => {
+                                p.service_breakdown?.forEach((s: any) => {
+                                    serviceMap[s.service_name] = (serviceMap[s.service_name] || 0) + s.count;
+                                });
+                            });
+                        }
+
+                        const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-purple-500'];
+                        const top = Object.entries(serviceMap)
+                            .map(([name, count]) => ({ name, count }))
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 4)
+                            .map((s, i) => ({ ...s, color: colors[i] }));
+
+                        setPopularServices(top);
+
+                        if (queues.length > 0) {
+                            const entries = await queueService.getQueueEntriesToday(queues[0].id);
+                            // Set completed directly from summary since getQueueEntriesToday filters out paid ones
+                            const health = { completed: summary.completedVisits || 0, waiting: 0, serving: 0, skipped: 0 };
+                            entries.forEach((e: any) => {
+                                if (e.status === 'completed' && health.completed === 0) health.completed++; // fallback
+                                else if (e.status === 'waiting') health.waiting++;
+                                else if (e.status === 'serving') health.serving++;
+                                else if (e.status === 'skipped' || e.status === 'no_show') health.skipped++;
+                            });
+                            setQueueHealth(health);
+                        }
+                    } catch (err) {
+                        console.error("Failed fetching live analytics data:", err);
+                    }
+                }
 
                 setStats([
-                    { name: 'Total Customers', value: summary.totalCustomers.toString(), icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
-                    { name: 'Completed Visits', value: summary.completedVisits.toString(), icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100' },
-                    { name: 'Today\'s Revenue', value: `₹${summary.totalRevenue}`, icon: IndianRupee, color: 'text-green-600', bg: 'bg-green-100' },
-                    { name: 'Avg. Wait Time', value: `${summary.avgWaitTimeMinutes}m`, icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-100' },
+                    { name: 'Total Customers', value: summary.totalCustomers.toString(), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { name: 'Completed Visits', value: summary.completedVisits.toString(), icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+                    { name: 'Today\'s Revenue', value: `₹${summary.totalRevenue}`, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { name: 'Avg. Wait Time', value: `${summary.avgWaitTimeMinutes}m`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
                 ]);
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
@@ -93,7 +132,7 @@ export default function DashboardPage() {
                         <p className="text-slate-500 font-medium mb-8 leading-relaxed">
                             Aapka account review mein hai. Admin ki approval ke baad hi aap queues aur appointments manage kar payenge.
                         </p>
-                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                        <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
                             Expect approval within 24 hours
                         </div>
                     </div>
@@ -106,19 +145,19 @@ export default function DashboardPage() {
             )}>
                 <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">Business Overview</h1>
-                    <p className="text-sm font-semibold text-slate-600">Real-time performance and queue insights.</p>
+                    <p className="text-sm font-semibold text-slate-500">Real-time performance and queue insights.</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     {stats.map((stat) => (
-                        <div key={stat.name} className="pro-card p-6 group cursor-default">
+                        <div key={stat.name} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow group cursor-default">
                             <div className="flex items-center justify-between">
-                                <div className={cn(stat.bg, stat.color, "p-2.5 rounded-lg transition-transform duration-300 group-hover:scale-110")}>
-                                    <stat.icon className="h-5 w-5" />
+                                <div className={cn(stat.bg, stat.color, "p-3 rounded-xl transition-transform duration-300 group-hover:scale-105")}>
+                                    <stat.icon className="h-6 w-6" />
                                 </div>
                             </div>
-                            <div className="mt-5">
-                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{stat.name}</p>
+                            <div className="mt-4">
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stat.name}</p>
                                 <h3 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
                                     {loading ? "..." : stat.value}
                                 </h3>
@@ -128,23 +167,124 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 pro-card p-8 flex flex-col items-center justify-center text-slate-600 bg-white">
-                        <TrendingUp className="h-10 w-10 mb-3 opacity-30 text-blue-600" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Live Analytics</p>
-                        <p className="text-xs mt-1 font-medium text-slate-400">Data automatically refreshes every 30 seconds.</p>
+                    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col min-h-[400px]">
+                        <div className="flex items-center justify-between gap-4 mb-6">
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Live Analytics</p>
+                                <p className="text-sm mt-1 font-medium text-slate-400">Activity on your floor today.</p>
+                            </div>
+                            <div className="animate-pulse h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+                            {/* Left: Queue Health */}
+                            <div className="flex flex-col gap-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Queue Health</p>
+                                {queueHealth.completed === 0 && queueHealth.waiting === 0 && queueHealth.serving === 0 && queueHealth.skipped === 0 ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+                                        <TrendingUp className="h-8 w-8 text-slate-400 mb-2" />
+                                        <p className="text-xs font-medium text-slate-500">No entries today yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {/* Completed */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 shrink-0 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                                                <CalendarCheck className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900 leading-none">Completed</p>
+                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
+                                                    <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (queueHealth.completed / 20) * 100)}%` }} />
+                                                </div>
+                                            </div>
+                                            <div className="text-lg font-bold text-slate-900">{queueHealth.completed}</div>
+                                        </div>
+                                        {/* Serving */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 shrink-0 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                                                <TrendingUp className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900 leading-none">In Service</p>
+                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
+                                                    <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${queueHealth.serving > 0 ? 100 : 0}%` }} />
+                                                </div>
+                                            </div>
+                                            <div className="text-lg font-bold text-slate-900">{queueHealth.serving}</div>
+                                        </div>
+                                        {/* Waiting */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 shrink-0 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                                                <Clock className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900 leading-none">Waiting</p>
+                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
+                                                    <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (queueHealth.waiting / 20) * 100)}%` }} />
+                                                </div>
+                                            </div>
+                                            <div className="text-lg font-bold text-slate-900">{queueHealth.waiting}</div>
+                                        </div>
+                                        {/* Skipped */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 shrink-0 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
+                                                <X className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900 leading-none">Dropped / No Show</p>
+                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
+                                                    <div className="bg-rose-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (queueHealth.skipped / 20) * 100)}%` }} />
+                                                </div>
+                                            </div>
+                                            <div className="text-lg font-bold text-slate-900">{queueHealth.skipped}</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Right: Service Popularity */}
+                            <div className="flex flex-col gap-6 p-4 rounded-xl">
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Top Services Ranked</p>
+                                <div className="space-y-4">
+                                    {popularServices.length === 0 ? (
+                                        <p className="text-xs font-semibold text-slate-500 italic">No services completed today to rank.</p>
+                                    ) : (
+                                        popularServices.map((s, idx) => {
+                                            const maxCount = popularServices[0].count;
+                                            const pct = Math.max(10, (s.count / maxCount) * 100);
+                                            return (
+                                                <div key={idx} className="flex flex-col gap-1">
+                                                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                                                        <span className="truncate pr-4">{s.name}</span>
+                                                        <span>{s.count}</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                        <div className={cn("h-full rounded-full transition-all duration-1000", s.color)} style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                </div>
+                                            )
+                                        })
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="pro-card p-6 flex flex-col">
-                        <h3 className="text-sm font-bold text-slate-900 mb-6 uppercase tracking-wider">Smart Tools</h3>
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col">
+                        <h3 className="text-sm font-semibold text-slate-900 mb-6 uppercase tracking-wider flex items-center gap-2">
+                            <Monitor className="h-4 w-4 text-slate-500" />
+                            Smart Tools
+                        </h3>
                         <div className="space-y-4">
-                            <div className="flex gap-3">
+                            <div className="flex gap-4">
                                 <button
                                     onClick={() => setIsQRModalOpen(true)}
                                     disabled={!business}
-                                    className="flex-1 p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl flex flex-col items-center justify-center gap-2 text-indigo-600 hover:bg-indigo-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex flex-col items-center justify-center gap-3 text-indigo-600 hover:bg-indigo-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <QrCode className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">Business QR</span>
+                                    <span className="text-xs font-semibold uppercase tracking-wider">Business QR</span>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -154,17 +294,17 @@ export default function DashboardPage() {
                                         }
                                     }}
                                     disabled={!business}
-                                    className="flex-1 p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl flex flex-col items-center justify-center gap-2 text-amber-600 hover:bg-amber-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 p-4 bg-amber-50 border border-amber-100 rounded-xl flex flex-col items-center justify-center gap-3 text-amber-600 hover:bg-amber-100 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Monitor className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">TV Mode</span>
+                                    <span className="text-xs font-semibold uppercase tracking-wider">TV Mode</span>
                                 </button>
                             </div>
 
-                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Public Link</p>
+                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Public Link</p>
                                 <div className="flex items-center justify-between gap-3">
-                                    <p className="text-xs font-bold text-slate-600 truncate">
+                                    <p className="text-sm font-medium text-slate-700 truncate">
                                         {business ? `${window.location.host}/${business.slug}` : 'Loading...'}
                                     </p>
                                     <button
@@ -173,13 +313,13 @@ export default function DashboardPage() {
                                                 alert("Business details still loading...");
                                                 return;
                                             }
-                                            const url = `${window.location.origin}/${business.slug}`;
+                                            const url = `${window.location.origin}/p/${business.slug}`;
                                             navigator.clipboard.writeText(url);
                                             setIsCopied(true);
                                             setTimeout(() => setIsCopied(false), 3000);
                                         }}
                                         disabled={!business?.slug}
-                                        className="p-2 bg-white text-blue-600 rounded-lg shadow-sm border border-slate-200 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                                        className="p-2 bg-white text-indigo-600 rounded-lg shadow-sm border border-slate-200 hover:bg-indigo-50 transition-colors disabled:opacity-50"
                                     >
                                         <Share2 className="h-4 w-4" />
                                     </button>
@@ -197,7 +337,7 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="text-left">
                                             <p className="text-xs font-bold uppercase tracking-wider">Install App</p>
-                                            <p className="text-[10px] font-medium opacity-70">Save to your home screen</p>
+                                            <p className="text-xs font-medium opacity-70">Save to your home screen</p>
                                         </div>
                                     </div>
                                     <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">
@@ -208,14 +348,14 @@ export default function DashboardPage() {
 
                             <button
                                 onClick={() => window.location.href = '/dashboard/queue'}
-                                className="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 leading-none"
+                                className="w-full flex items-center justify-center bg-slate-900 border border-slate-900 text-white rounded-xl px-4 py-3 text-sm font-semibold tracking-wide shadow-sm hover:bg-slate-800 transition-all active:scale-95"
                             >
-                                MANAGE LIVE QUEUE
+                                Manage Live Queue
                             </button>
                         </div>
 
-                        <div className="mt-auto pt-8 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Professional Admin</span>
+                        <div className="mt-8 pt-6 border-t border-slate-100 w-full flex flex-col items-center justify-center space-y-2">
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Queue System v1.0</span>
                         </div>
                     </div>
                 </div>
@@ -234,7 +374,7 @@ export default function DashboardPage() {
 
                                 <div className="p-8 bg-white border-4 border-slate-50 rounded-[48px] shadow-inner">
                                     <QRCodeSVG
-                                        value={`${window.location.origin}/${business.slug}`}
+                                        value={`${window.location.origin}/p/${business.slug}`}
                                         size={200}
                                         level="H"
                                         includeMargin={true}
@@ -261,7 +401,7 @@ export default function DashboardPage() {
                     <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
                             <Users className="h-5 w-5 text-white/50" />
-                            <p className="text-sm font-bold uppercase tracking-widest">Link Copied to Clipboard!</p>
+                            <p className="text-sm font-bold uppercase tracking-wider">Link Copied to Clipboard!</p>
                         </div>
                     </div>
                 )}

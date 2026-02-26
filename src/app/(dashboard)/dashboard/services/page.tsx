@@ -153,46 +153,41 @@ export default function ServicesPage() {
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <Sparkles className="h-4 w-4 text-primary/80 absolute -bottom-1 -right-1 animate-pulse" />
                 </div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Syncing Offerings...</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">Syncing Offerings...</p>
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-            {/* Header Section */}
-            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-10">
-                <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-sky-50 rounded-full border border-sky-100">
-                        <Sparkles className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-[10px] font-black text-sky-700 uppercase tracking-widest">Business Offerings Management</span>
-                    </div>
-                    <div className="space-y-1">
-                        <h1 className="text-4xl font-black tracking-tight text-slate-900 uppercase">
-                            Our <span className="text-primary italic">Services</span>
-                        </h1>
-                        <p className="text-sm font-bold text-slate-500 max-w-xl leading-relaxed">
-                            Define your unique value. Manage professional pricing and time-slots for your clients.
-                        </p>
-                    </div>
+        <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
+            {/* Header section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        Service Offerings
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-1 uppercase tracking-wider font-semibold">
+                        Define your unique value and pricing
+                    </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="relative group w-full sm:w-72">
-                        <Search className="absolute left-6 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                    <div className="relative w-full sm:w-64 md:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Find a service..."
+                            placeholder="Search services..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-3xl text-sm font-semibold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all shadow-sm placeholder:text-slate-400 placeholder:font-medium"
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium shadow-sm"
                         />
                     </div>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-primary hover:bg-primary-hover text-white rounded-2xl text-sm font-semibold transition-all shadow-xl shadow-primary/10 hover:-translate-y-0.5 active:scale-95"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:bg-slate-800 active:scale-95"
                     >
-                        <Plus className="h-5 w-5" />
+                        <Plus className="h-4 w-4" />
                         New Service
                     </button>
                 </div>
@@ -205,50 +200,50 @@ export default function ServicesPage() {
                         <LayoutGrid className="h-12 w-12 text-slate-300" />
                     </div>
                     <div className="space-y-3">
-                        <p className="text-2xl font-black text-slate-900 uppercase tracking-tight">Empty Workspace</p>
+                        <p className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Empty Workspace</p>
                         <p className="text-sm font-bold text-slate-500 max-w-sm mx-auto leading-relaxed">
                             No services match your search. Start fresh by creating a new offering.
                         </p>
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredServices.map((service) => (
                         <div
                             key={service.id}
-                            className="group relative pro-card p-6 overflow-hidden border-2 hover:border-primary/20"
+                            className="group relative bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between gap-4 overflow-hidden"
                         >
 
-                            <div className="relative space-y-6">
+                            <div className="relative space-y-4">
                                 <div className="flex justify-between items-start">
-                                    <div className="h-10 w-10 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                                    <div className="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
                                         <Sparkles className="h-5 w-5" />
                                     </div>
                                     <button
                                         onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name })}
-                                        className="p-2 text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                         title="Delete Service"
                                     >
-                                        <TrashIcon className="h-5 w-5" />
+                                        <TrashIcon className="h-4 w-4" />
                                     </button>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <h3 className="text-base font-bold text-slate-900 transition-colors tracking-tight leading-tight">
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">
                                         {service.name}
                                     </h3>
-                                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-2">
+                                    <p className="mt-1 text-sm text-slate-500 leading-relaxed line-clamp-2">
                                         {service.description || "Professional service tailored to your requirements."}
                                     </p>
                                 </div>
 
-                                <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200">
-                                        <Clock className="h-3.5 w-3.5 text-slate-400" />
-                                        <span className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">{service.duration_minutes} min</span>
+                                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-md border border-slate-200 text-slate-600">
+                                        <Clock className="h-3.5 w-3.5" />
+                                        <span className="text-xs font-semibold">{service.duration_minutes} min</span>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 opacity-60">Base Price</span>
+                                        <span className="text-xs font-semibold text-slate-400 mb-0.5">Price</span>
                                         <span className="text-xl font-bold text-slate-900 tracking-tight">₹{service.price}</span>
                                     </div>
                                 </div>
@@ -270,13 +265,13 @@ export default function ServicesPage() {
             {/* Add Service Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-500">
-                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-200">
-                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100">
+                        <div className="px-8 py-8 border-b border-slate-50 flex items-center justify-between">
                             <div className="space-y-1">
-                                <h2 className="text-xl font-bold text-slate-900">New Service</h2>
-                                <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">Configure Service Parameters</p>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">New Service</h2>
+                                <p className="text-sm font-semibold text-slate-500">Configure Service Parameters</p>
                             </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors shrink-0">
+                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors shrink-0">
                                 <X className="h-5 w-5 text-slate-400" />
                             </button>
                         </div>
@@ -289,32 +284,32 @@ export default function ServicesPage() {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Service Name</label>
+                                <label className="text-xs font-bold text-slate-700 ml-1">Service Name</label>
                                 <input
                                     required
                                     type="text"
                                     value={newService.name}
                                     onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400"
-                                    placeholder="e.g. Premium Haircut"
+                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
+                                    placeholder="e.g. Premium Consultation"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Brief Description</label>
+                                <label className="text-xs font-bold text-slate-700 ml-1">Brief Description</label>
                                 <textarea
                                     required
                                     rows={3}
                                     value={newService.description}
                                     onChange={(e) => setNewService({ ...newService, description: e.target.value })}
-                                    className="w-full px-4 py-3 bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm text-slate-900 outline-none transition-all resize-none placeholder:text-slate-400"
+                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all resize-none"
                                     placeholder="Describe your service..."
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Duration (Min)</label>
+                                    <label className="text-xs font-bold text-slate-700 ml-1">Duration (Min)</label>
                                     <div className="relative">
                                         <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <input
@@ -325,13 +320,13 @@ export default function ServicesPage() {
                                                 const val = e.target.value;
                                                 setNewService({ ...newService, duration_minutes: val === "" ? 0 : parseInt(val) });
                                             }}
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm text-slate-900 outline-none transition-all"
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
                                             placeholder="30"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-wider ml-1">Price (₹)</label>
+                                    <label className="text-xs font-bold text-slate-700 ml-1">Price (₹)</label>
                                     <div className="relative">
                                         <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <input
@@ -342,7 +337,7 @@ export default function ServicesPage() {
                                                 const val = e.target.value;
                                                 setNewService({ ...newService, price: val === "" ? 0 : parseInt(val) });
                                             }}
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 rounded-xl text-sm text-slate-900 outline-none transition-all"
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
                                             placeholder="0"
                                         />
                                     </div>
@@ -353,13 +348,13 @@ export default function ServicesPage() {
                                 <button
                                     disabled={isSubmitting}
                                     type="submit"
-                                    className="w-full py-4 bg-primary hover:bg-primary-hover disabled:bg-indigo-300 text-white rounded-xl text-sm font-bold transition-all shadow-xl shadow-primary/10 active:scale-95 flex items-center justify-center gap-2"
+                                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
                                 >
                                     {isSubmitting ? (
-                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
                                         <>
-                                            <Sparkles className="h-5 w-5" />
+                                            <Sparkles className="h-4 w-4" />
                                             Activate Service
                                         </>
                                     )}

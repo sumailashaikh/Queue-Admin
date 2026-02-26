@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +14,10 @@ export default function DashboardLayout({
 }) {
     const { business } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const pathname = usePathname();
+    const segment = pathname.split('/').pop() || 'dashboard';
+    const pageTitle = segment === 'dashboard' ? 'Overview' : segment.replace(/-/g, ' ');
 
     return (
         <ProtectedRoute>
@@ -26,10 +31,14 @@ export default function DashboardLayout({
                 )}
 
                 <div className={cn(
-                    "fixed inset-y-0 left-0 z-50 transform lg:relative lg:translate-x-0 transition duration-200 ease-in-out",
-                    isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    "fixed inset-y-0 left-0 z-50 transform lg:relative lg:translate-x-0 transition-all duration-300 ease-in-out",
+                    isSidebarOpen ? "translate-x-0" : "-translate-x-full",
+                    isSidebarCollapsed ? "lg:w-20" : "lg:w-64"
                 )}>
-                    <Sidebar onClose={() => setIsSidebarOpen(false)} />
+                    <Sidebar
+                        onClose={() => setIsSidebarOpen(false)}
+                        isCollapsed={isSidebarCollapsed}
+                    />
                 </div>
 
                 <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -43,15 +52,29 @@ export default function DashboardLayout({
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                 </svg>
                             </button>
-                            <h2 className="text-[10px] md:text-xs font-extrabold text-slate-700 uppercase tracking-widest truncate max-w-[150px] md:max-w-none">
-                                {business?.name || 'Dashboard'}
-                            </h2>
+                            <button
+                                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                className="hidden lg:flex p-2 -ml-2 text-slate-600 hover:text-primary transition-colors"
+                                title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                            >
+                                <svg className={cn("h-6 w-6 transition-transform", isSidebarCollapsed ? "rotate-180" : "rotate-0")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xs md:text-sm font-bold text-slate-800 uppercase tracking-wider truncate">
+                                    {business?.name || 'Dashboard'}
+                                </h2>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-6">
                             <div className="hidden sm:flex flex-col items-end">
                                 <p className="text-sm font-bold text-slate-900">Business Portal</p>
-                                <button className="text-[10px] font-extrabold text-primary uppercase tracking-widest hover:text-primary-hover transition-colors">
+                                <button
+                                    onClick={() => window.open(`/p/${business?.slug}`, '_blank')}
+                                    className="text-xs font-extrabold text-primary uppercase tracking-wider hover:text-blue-600 transition-colors"
+                                >
                                     View Public Page
                                 </button>
                             </div>

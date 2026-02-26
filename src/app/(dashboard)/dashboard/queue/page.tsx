@@ -32,7 +32,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { queueService, QueueEntry, Queue } from "@/services/queueService";
 import { businessService } from "@/services/businessService";
 import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { QRCodeSVG } from "qrcode.react";
+import { QueueRow } from "./components/QueueRow";
 
 // Local types have been replaced by imports from @/services/queueService
 
@@ -55,7 +57,20 @@ export default function LiveQueuePage() {
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, queueId: "", queueName: "" });
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [isQueueDropdownOpen, setIsQueueDropdownOpen] = useState(false);
+    const [isServiceFilterOpen, setIsServiceFilterOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [viewMode, setViewMode] = useState<'active' | 'noshow'>('active');
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
+    // Service Filtering State
+    const [services, setServices] = useState<any[]>([]);
+    const [selectedServiceId, setSelectedServiceId] = useState<string>("all");
+    const [providers, setProviders] = useState<any[]>([]);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -100,23 +115,132 @@ export default function LiveQueuePage() {
         }
     }, []);
 
+    const fetchProviders = useCallback(async () => {
+        if (!business?.id) return;
+        try {
+            const response = await api.get(`/service-providers?business_id=${business.id}`);
+            // The API returns { status: 'success', data: [...] }
+            setProviders((response as any).data || []);
+        } catch (error) {
+            console.error("Failed to fetch providers:", error);
+        }
+    }, [business?.id]);
+
+    const handleAssignTaskProvider = async (taskId: string, providerId: string) => {
+        const provider = providers.find(p => p.id === providerId);
+
+        // Optimistic update
+        setEntries((prev: QueueEntry[]) => prev.map(entry => ({
+            ...entry,
+            queue_entry_services: entry.queue_entry_services?.map(s =>
+                s.id === taskId ? {
+                    ...s,
+                    assigned_provider_id: providerId,
+                    service_providers: provider ? { name: provider.name } : undefined
+                } : s
+            )
+        })));
+
+        try {
+            await queueService.assignTaskProvider(taskId, providerId);
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            showToast("Expert assigned to service successfully");
+        } catch (error: any) {
+            console.error("Failed to assign expert:", error);
+            showToast(error.message || "Failed to assign expert", "error");
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+        }
+    };
+
+    const handleStartTask = async (taskId: string) => {
+        // Optimistic update
+        setEntries((prev: QueueEntry[]) => prev.map(entry => ({
+            ...entry,
+            queue_entry_services: entry.queue_entry_services?.map(s =>
+                s.id === taskId ? { ...s, task_status: 'in_progress' } : s
+            )
+        })));
+
+        try {
+            await queueService.startTask(taskId);
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            fetchProviders(); // Refresh provider availability
+            showToast("Service task started");
+        } catch (error: any) {
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Full Start Task Error:", error);
+            }
+            showToast(error.message || "Failed to start task", "error");
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+        }
+    };
+
+    const handleCompleteTask = async (taskId: string) => {
+        // Optimistic update
+        setEntries((prev: QueueEntry[]) => prev.map(entry => ({
+            ...entry,
+            queue_entry_services: entry.queue_entry_services?.map(s =>
+                s.id === taskId ? { ...s, task_status: 'done' } : s
+            )
+        })));
+
+        try {
+            await queueService.completeTask(taskId);
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            fetchProviders(); // Refresh provider availability
+            showToast("Service task completed");
+        } catch (error: any) {
+            console.error("Failed to complete task:", error);
+            showToast(error.message || "Failed to complete task", "error");
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+        }
+    };
+
+    const handleAssignProvider = async (entryId: string, providerId: string) => {
+        try {
+            await api.patch(`/service-providers/assignments/${entryId}`, { provider_id: providerId });
+            if (selectedQueue?.id) await fetchEntries(selectedQueue.id);
+            showToast("Expert assigned successfully");
+        } catch (error: any) {
+            showToast(error.message || "Failed to assign expert", "error");
+        }
+    };
+
     const handleNextCustomer = async () => {
         if (!selectedQueue) return;
         setIsSubmitting(true);
         try {
             await queueService.nextEntry(selectedQueue.id);
             await fetchEntries(selectedQueue.id);
+            showToast("Next customer called successfully");
         } catch (error: any) {
-            setError(error.message);
+            showToast(error.message || "Failed to call next customer", "error");
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const fetchServices = useCallback(async () => {
+        try {
+            const sData = await api.get<any[]>(`/businesses/${business?.id}/services`);
+            const sList = (sData as any).data || [];
+            setServices(sList);
+        } catch (error) {
+            try {
+                const myServices = await api.get<any[]>('/services/my');
+                setServices((myServices as any).data || []);
+            } catch (err) {
+                console.error("Failed to fetch services:", err);
+            }
+        }
+    }, [business?.id]);
+
     useEffect(() => {
         console.log("Mounting LiveQueuePage - fetching initial data");
         fetchQueues();
-    }, []); // Run only once on mount
+        fetchServices();
+        fetchProviders();
+    }, [fetchQueues, fetchServices, fetchProviders]);
 
     useEffect(() => {
         if (selectedQueue?.id) {
@@ -155,9 +279,64 @@ export default function LiveQueuePage() {
             // Optimistic update
             setEntries((prev: QueueEntry[]) => prev.map((item: QueueEntry) =>
                 item.id === id ? { ...item, status } : item
-            ).filter((item: QueueEntry) => item.status !== 'completed' && item.status !== 'cancelled'));
-        } catch (error) {
+            ));
+
+            if (status === 'serving') showToast("Serving started");
+            else if (status === 'completed') showToast("Service completed");
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+        } catch (error: any) {
             console.error("Failed to update status:", error);
+            showToast(error.message || "Failed to update status", "error");
+        }
+    };
+
+    const handleUpdatePayment = async (id: string, method: 'cash' | 'qr' | 'card' | 'unpaid') => {
+        try {
+            await queueService.updatePayment(id, method);
+            setEntries((prev: QueueEntry[]) => prev.map((item: QueueEntry) =>
+                item.id === id ? { ...item, payment_method: method } : item
+            ));
+            showToast(`Payment marked as ${method.toUpperCase()}`);
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+        } catch (error: any) {
+            console.error("Failed to update payment:", error);
+            showToast(error.message || "Failed to update payment", "error");
+        }
+    };
+
+    const handleNoShow = async (id: string) => {
+        try {
+            await queueService.noShowEntry(id);
+            // Update status to no_show instead of removing
+            setEntries((prev: QueueEntry[]) => prev.map((item: QueueEntry) =>
+                item.id === id ? { ...item, status: 'no_show' } : item
+            ));
+            showToast("Customer marked as no-show and expert released.");
+        } catch (error: any) {
+            console.error("Failed to mark no-show:", error);
+            showToast(error.message || "Failed to mark no-show", "error");
+        }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            await queueService.restoreEntry(id);
+            showToast("Customer restored to live queue");
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+        } catch (error: any) {
+            console.error("Failed to restore customer:", error);
+            showToast(error.message || "Failed to restore customer", "error");
+        }
+    };
+
+    const handleSkip = async (id: string) => {
+        try {
+            await queueService.skipEntry(id);
+            if (selectedQueue) fetchEntries(selectedQueue.id);
+            showToast("Customer moved down in queue");
+        } catch (error: any) {
+            console.error("Failed to skip:", error);
+            showToast(error.message || "Failed to skip", "error");
         }
     };
 
@@ -171,10 +350,9 @@ export default function LiveQueuePage() {
 
     const handleCopyLink = () => {
         if (!business) return;
-        const link = `${window.location.origin}/${business.slug}`;
+        const link = `${window.location.origin}/p/${business.slug}`;
         navigator.clipboard.writeText(link);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        showToast("Link Copied to Clipboard!");
     };
 
     const handleCreateQueue = async (e: React.FormEvent) => {
@@ -186,8 +364,9 @@ export default function LiveQueuePage() {
             await fetchQueues();
             setIsAddModalOpen(false);
             setFormData({ name: "", description: "", current_wait_time_minutes: 0, status: 'open' });
+            showToast("Queue created successfully");
         } catch (err: any) {
-            setError(err.message || "Failed to create queue");
+            showToast(err.message || "Failed to create queue", "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -202,8 +381,9 @@ export default function LiveQueuePage() {
             await queueService.updateQueue(selectedQueue.id, formData);
             await fetchQueues();
             setIsEditModalOpen(false);
+            showToast("Queue updated successfully");
         } catch (err: any) {
-            setError(err.message || "Failed to update queue");
+            showToast(err.message || "Failed to update queue", "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -216,9 +396,10 @@ export default function LiveQueuePage() {
             await queueService.deleteQueue(deleteModal.queueId);
             setDeleteModal({ isOpen: false, queueId: "", queueName: "" });
             await fetchQueues();
-        } catch (err) {
+            showToast("Queue deleted successfully");
+        } catch (err: any) {
             console.error("Delete failed:", err);
-            alert("Failed to delete queue. It might have active entries.");
+            showToast(err.message || "Failed to delete queue", "error");
         } finally {
             setIsDeleting(false);
         }
@@ -231,9 +412,10 @@ export default function LiveQueuePage() {
             await queueService.resetQueueEntries(selectedQueue.id);
             await fetchEntries(selectedQueue.id);
             setIsResetModalOpen(false);
-        } catch (err) {
+            showToast("Queue reset successfully");
+        } catch (err: any) {
             console.error("Reset failed:", err);
-            alert("Failed to reset queue.");
+            showToast(err.message || "Failed to reset queue", "error");
         } finally {
             setIsDeleting(false);
         }
@@ -250,10 +432,20 @@ export default function LiveQueuePage() {
         setIsEditModalOpen(true);
     };
 
-    const filteredEntries = entries.filter(item =>
-        item.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-        (item.phone && item.phone.includes(search))
-    );
+    const filteredEntries = entries.filter(item => {
+        const matchesSearch = item.customer_name.toLowerCase().includes(search.toLowerCase()) ||
+            (item.phone && item.phone.includes(search));
+
+        const matchesService = selectedServiceId === "all" ||
+            item.queue_entry_services?.some(s => s.services?.id === selectedServiceId) ||
+            (item.service_name && item.service_name.includes(services.find(s => s.id === selectedServiceId)?.name));
+
+        const matchesViewMode = viewMode === 'active'
+            ? item.status !== 'no_show'
+            : item.status === 'no_show';
+
+        return matchesSearch && matchesService && matchesViewMode;
+    });
 
     const getWaitTimeDisplay = (timeString: string) => {
         if (!timeString) return "--";
@@ -285,7 +477,7 @@ export default function LiveQueuePage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Initializing Queues...</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">Initializing Queues...</p>
             </div>
         );
     }
@@ -295,80 +487,26 @@ export default function LiveQueuePage() {
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-4">
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
                         Live Queue
                         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                     </h1>
                     <div className="flex flex-wrap items-center gap-3">
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsQueueDropdownOpen(!isQueueDropdownOpen)}
-                                className="group flex items-center gap-3 px-4 py-2 bg-white border-2 border-slate-100 rounded-2xl text-primary text-xs font-bold hover:border-primary/20 hover:bg-slate-50 transition-all shadow-sm"
-                            >
-                                <Layout className="h-4 w-4" />
-                                {selectedQueue?.name || "Select Queue"}
-                                <ChevronDown className={cn("h-4 w-4 opacity-40 transition-transform", isQueueDropdownOpen && "rotate-180")} />
-                            </button>
-
-                            {isQueueDropdownOpen && (
-                                <>
-                                    <div className="fixed inset-0 z-40" onClick={() => setIsQueueDropdownOpen(false)} />
-                                    <div className="absolute top-full left-0 mt-3 w-64 bg-white border border-slate-200 rounded-[24px] shadow-2xl overflow-hidden z-50 animate-in zoom-in-95 duration-200">
-                                        <div className="p-2 space-y-1">
-                                            {queues.map(q => (
-                                                <button
-                                                    key={q.id}
-                                                    onClick={() => {
-                                                        setSelectedQueue(q);
-                                                        setIsQueueDropdownOpen(false);
-                                                    }}
-                                                    className={cn(
-                                                        "w-full text-left px-4 py-3 text-sm font-bold rounded-xl transition-all",
-                                                        selectedQueue?.id === q.id
-                                                            ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                                                    )}
-                                                >
-                                                    {q.name}
-                                                </button>
-                                            ))}
-                                            <div className="pt-2 mt-2 border-t border-slate-100 px-2 pb-1">
-                                                <button
-                                                    onClick={() => {
-                                                        setFormData({ name: "", description: "", current_wait_time_minutes: 0, status: 'open' });
-                                                        setIsAddModalOpen(true);
-                                                        setIsQueueDropdownOpen(false);
-                                                    }}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                                                >
-                                                    <Plus className="h-3 w-3" />
-                                                    CREATE NEW QUEUE
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
                         {business && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
                                 <button
                                     onClick={handleCopyLink}
                                     className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all border-2",
+                                        "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold tracking-wide transition-all",
                                         isCopied
-                                            ? "bg-emerald-500 border-emerald-500 text-white"
-                                            : "bg-white border-slate-100 text-slate-600 hover:border-primary/20 hover:text-primary shadow-sm"
+                                            ? "bg-emerald-50 text-emerald-600"
+                                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                     )}
                                 >
-                                    {isCopied ? (
-                                        <CheckCircle2 className="h-4 w-4" />
-                                    ) : (
-                                        <Share2 className="h-4 w-4" />
-                                    )}
-                                    <span className="hidden sm:inline">{isCopied ? 'Link Copied!' : 'Join Link'}</span>
+                                    {isCopied ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                                    <span className="hidden sm:inline">{isCopied ? 'Link Copied' : 'Join Link'}</span>
                                 </button>
+                                <div className="w-px h-4 bg-slate-200 mx-1"></div>
                                 <button
                                     onClick={() => {
                                         if (business) {
@@ -376,295 +514,241 @@ export default function LiveQueuePage() {
                                             window.open(link, '_blank');
                                         }
                                     }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 border-2 border-slate-900 text-white rounded-2xl text-xs font-bold transition-all hover:bg-slate-800 shadow-sm"
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold tracking-wide transition-all hover:bg-slate-800 shadow-sm"
                                 >
                                     <Monitor className="h-4 w-4" />
                                     <span className="hidden sm:inline">TV Mode</span>
                                 </button>
                             </div>
                         )}
-                        {selectedQueue && (
-                            <button
-                                onClick={handleNextCustomer}
-                                disabled={isSubmitting || entries.length === 0}
-                                className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-2xl text-xs font-bold transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/10"
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                                Next Customer
-                            </button>
-                        )}
-                        {business && (
-                            <button
-                                onClick={() => setIsInviteModalOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-xs font-bold transition-all border-2 border-emerald-500 shadow-sm"
-                            >
-                                <Phone className="h-4 w-4" />
-                                <span className="hidden sm:inline">WhatsApp Invite</span>
-                            </button>
-                        )}
 
-                        {selectedQueue && (
-                            <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-3">
+                            {selectedQueue && (
                                 <button
-                                    onClick={openEditModal}
-                                    className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                                    title="Queue Settings"
+                                    onClick={handleNextCustomer}
+                                    disabled={isSubmitting || entries.length === 0}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-semibold tracking-wide transition-all hover:bg-primary/90 disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
                                 >
-                                    <Settings2 className="h-4 w-4" />
+                                    <ChevronRight className="h-4 w-4" />
+                                    Next Customer
                                 </button>
+                            )}
+                            {business && (
                                 <button
-                                    onClick={() => setDeleteModal({ isOpen: true, queueId: selectedQueue.id, queueName: selectedQueue.name })}
-                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                    title="Delete Queue"
+                                    onClick={() => setIsInviteModalOpen(true)}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:scale-105 active:scale-95"
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Phone className="h-4 w-4" />
+                                    <span className="hidden sm:inline">WhatsApp Invite</span>
                                 </button>
-                                <button
-                                    onClick={() => setIsResetModalOpen(true)}
-                                    className="px-3 py-2 text-primary hover:bg-primary/5 rounded-xl transition-all text-[10px] font-bold uppercase tracking-widest border border-primary/10"
-                                    title="Clear Today's Entries"
-                                >
-                                    Reset Today
-                                </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                <div className="relative group">
+                    {selectedQueue && (
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={openEditModal}
+                                className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                                title="Queue Settings"
+                            >
+                                <Settings2 className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setDeleteModal({ isOpen: true, queueId: selectedQueue.id, queueName: selectedQueue.name })}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                title="Delete Queue"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setIsResetModalOpen(true)}
+                                className="px-3 py-2 text-primary hover:bg-primary/5 rounded-xl transition-all text-xs font-semibold tracking-wide border border-primary/10"
+                                title="Clear Today's Entries"
+                            >
+                                Reset Today
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="relative group w-full md:w-72">
                     <Search className="absolute left-6 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input
                         type="text"
                         placeholder="Search customers..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-3xl text-sm font-semibold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all w-full lg:w-72 shadow-sm placeholder:text-slate-400 placeholder:font-medium"
+                        className="pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-3xl text-sm font-semibold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all w-full shadow-sm placeholder:text-slate-400 placeholder:font-medium"
                     />
+                </div>
+
+                <div className="flex p-1.5 bg-slate-100 rounded-2xl gap-1">
+                    <button
+                        onClick={() => setViewMode('active')}
+                        className={cn(
+                            "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                            viewMode === 'active'
+                                ? "bg-white text-slate-900 shadow-sm"
+                                : "text-slate-500 hover:text-slate-700"
+                        )}
+                    >
+                        Active Queue ({entries.filter(e => e.status !== 'no_show').length})
+                    </button>
+                    <button
+                        onClick={() => setViewMode('noshow')}
+                        className={cn(
+                            "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                            viewMode === 'noshow'
+                                ? "bg-white text-rose-600 shadow-sm"
+                                : "text-slate-500 hover:text-slate-700"
+                        )}
+                    >
+                        No-Shows ({entries.filter(e => e.status === 'no_show').length})
+                    </button>
+                </div>
+
+                {/* Mobile Scroll Hint */}
+                <div className="flex md:hidden items-center justify-center gap-2 mb-2 animate-pulse">
+                    <div className="px-3 py-1 bg-slate-100 rounded-full flex items-center gap-1.5">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">↔ Scroll to see actions</span>
+                    </div>
                 </div>
             </div>
 
             {/* Queue Summary Bar */}
-            {
-                selectedQueue && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                            <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                                <Users className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Visitors</p>
-                                <p className="text-xl font-bold text-slate-900">{entries.length}</p>
-                            </div>
+            {selectedQueue && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                        <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                            <Users className="h-6 w-6" />
                         </div>
-                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                            <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
-                                <Clock className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Est. Wait Time</p>
-                                <p className="text-xl font-bold text-slate-900">
-                                    {entries
-                                        .filter(e => e.status === 'waiting')
-                                        .reduce((acc, e) => {
-                                            const serviceDuration = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.services?.duration_minutes || 0), 0) || (selectedQueue?.current_wait_time_minutes || 0);
-                                            return acc + serviceDuration;
-                                        }, 0)} min
-                                </p>
-                            </div>
-                        </div>
-                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                            <div className="h-12 w-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
-                                <IndianRupee className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expected Revenue</p>
-                                <p className="text-xl font-bold text-slate-900">
-                                    ₹{entries
-                                        .reduce((acc, e) => {
-                                            const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.services?.price || 0), 0) || (selectedQueue?.services?.price || 0);
-                                            return acc + entryPrice;
-                                        }, 0).toLocaleString()}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                            <div className={cn(
-                                "h-12 w-12 rounded-2xl flex items-center justify-center",
-                                selectedQueue.status === 'open' ? "bg-indigo-50 text-indigo-600" : "bg-red-50 text-red-600"
-                            )}>
-                                <div className={cn("h-3 w-3 rounded-full", selectedQueue.status === 'open' ? "bg-indigo-600" : "bg-red-600")} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
-                                <p className="text-xl font-bold text-slate-900 uppercase">{selectedQueue.status}</p>
-                            </div>
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Visitors</p>
+                            <p className="text-2xl font-bold text-slate-900">{entries.length}</p>
                         </div>
                     </div>
-                )
-            }
-
-            {/* Table Container */}
-            <div className="pro-card p-0 overflow-hidden bg-white border-2 border-slate-50">
-                <div className="overflow-x-auto min-h-[400px]">
-                    {entriesLoading ? (
-                        <div className="flex flex-col items-center justify-center p-24 space-y-4">
-                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Syncing Live Data...</p>
+                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                        <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+                            <Clock className="h-6 w-6" />
                         </div>
-                    ) : (
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Visitor Info</th>
-                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Service Details</th>
-                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Life Cycle</th>
-                                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Waiting Time</th>
-                                    <th className="px-8 py-5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest border-0">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {filteredEntries.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-8 py-32 text-center">
-                                            <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
-                                                <div className="h-20 w-20 bg-slate-50 rounded-[32px] flex items-center justify-center text-slate-300">
-                                                    <Users className="h-10 w-10" />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-lg font-black text-slate-900">Quiet in here!</p>
-                                                    <p className="text-sm font-bold text-slate-400 leading-relaxed">
-                                                        {selectedQueue
-                                                            ? "Everything is clear. No active customers are currently waiting in this queue."
-                                                            : "Please select or create a queue to start managing your visitors live."}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredEntries.map((item) => (
-                                        <tr key={item.id} className="group hover:bg-slate-50/80 transition-all duration-300">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-2xl bg-white border-2 border-slate-100 shadow-sm flex items-center justify-center text-xs font-black text-primary group-hover:border-primary/20 transition-all">
-                                                        {item.position}
-                                                    </div>
-                                                    <div>
-                                                        {item.appointment_id && (
-                                                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[8px] font-black uppercase tracking-tighter border border-indigo-100 mb-1 w-fit">
-                                                                <Calendar className="h-2 w-2" />
-                                                                Booked
-                                                            </div>
-                                                        )}
-                                                        <p className="text-sm font-bold text-slate-900 leading-tight capitalize">{item.customer_name || 'Anonymous'}</p>
-                                                        <div className="text-[11px] font-bold text-slate-500 mt-0.5 flex items-center gap-1.5 uppercase tracking-tighter">
-                                                            <div className="h-1 w-1 rounded-full bg-slate-300" />
-                                                            {item.phone || 'No phone'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {item.queue_entry_services && item.queue_entry_services.length > 0 ? (
-                                                        item.queue_entry_services.map((s, idx) => (
-                                                            <div key={idx} className="inline-flex items-center px-3 py-1 bg-slate-100/50 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-tight">
-                                                                {s.services?.name}
-                                                            </div>
-                                                        ))
-                                                    ) : (
-                                                        <div className="inline-flex items-center px-3 py-1 bg-slate-100/50 rounded-lg text-[10px] font-bold text-slate-600 uppercase tracking-tight">
-                                                            {item.service_name || 'Standard Service'}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className={cn(
-                                                    "inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-sm",
-                                                    item.status === 'serving'
-                                                        ? "bg-green-500 text-white"
-                                                        : "bg-amber-400 text-white"
-                                                )}>
-                                                    {item.status === 'serving' ? 'IN SERVICE' : 'WAITING'}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-2 text-slate-900">
-                                                    <Clock className="h-3.5 w-3.5 opacity-30" />
-                                                    <span className="text-xs font-bold" title={`Joined at ${formatTime(item.joined_at)}`}>
-                                                        {item.status === 'serving' ? `Started ${getWaitTimeDisplay(item.served_at || item.joined_at)}` : getWaitTimeDisplay(item.joined_at)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        {item.status === 'waiting' && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    const msg = `Hello ${item.customer_name},\n\nThis is ${business?.name}. Your turn is next! Please be ready. We'll call you shortly.\n\nTicket Number: ${item.ticket_number}\n\nThank you.`;
-                                                                    let phone = item.phone?.replace(/\D/g, '');
-                                                                    if (phone && phone.length === 10) phone = `91${phone}`;
-                                                                    if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-                                                                }}
-                                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 transition-colors"
-                                                            >
-                                                                <Bell className="h-3 w-3" />
-                                                                Alert
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => {
-                                                                const msg = `Hello ${item.customer_name},\n\nIt is now your turn at ${business?.name}! Please proceed to the service area.\n\nTicket: ${item.ticket_number}\n\nThank you.`;
-                                                                let phone = item.phone?.replace(/\D/g, '');
-                                                                if (phone && phone.length === 10) phone = `91${phone}`;
-
-                                                                // Use business whatsapp_number if available
-                                                                const fromPhone = (business?.whatsapp_number || "").replace(/\D/g, '');
-
-                                                                if (phone) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-                                                            }}
-                                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors"
-                                                        >
-                                                            <Phone className="h-3 w-3" />
-                                                            Call
-                                                        </button>
-                                                        {item.status === 'waiting' && (
-                                                            <button
-                                                                onClick={() => handleUpdateStatus(item.id, 'serving')}
-                                                                className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-primary transition-colors"
-                                                            >
-                                                                <Play className="h-4 w-4" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    {item.status === 'serving' && (
-                                                        <button
-                                                            onClick={() => handleUpdateStatus(item.id, 'completed')}
-                                                            className="p-2 hover:bg-slate-100 rounded-xl text-emerald-500 transition-colors"
-                                                        >
-                                                            <CheckCircle2 className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    )}
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Est. Wait Time</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                                {entries
+                                    .filter(e => e.status === 'waiting')
+                                    .reduce((acc, e) => {
+                                        const serviceDuration = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.duration_minutes || 0), 0) || (selectedQueue?.current_wait_time_minutes || 0);
+                                        return acc + serviceDuration;
+                                    }, 0)} min
+                            </p>
+                        </div>
+                    </div>
+                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                        <div className="h-12 w-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
+                            <IndianRupee className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Expected Revenue</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                                ₹{entries
+                                    .reduce((acc, e) => {
+                                        const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.price || 0), 0) || (selectedQueue?.services?.price || 0);
+                                        return acc + entryPrice;
+                                    }, 0).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
+                        <div className={cn(
+                            "h-12 w-12 rounded-2xl flex items-center justify-center",
+                            selectedQueue.status === 'open' ? "bg-indigo-50 text-indigo-600" : "bg-red-50 text-red-600"
+                        )}>
+                            <div className={cn("h-3 w-3 rounded-full", selectedQueue.status === 'open' ? "bg-indigo-600" : "bg-red-600")} />
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</p>
+                            <p className="text-2xl font-bold text-slate-900 uppercase">{selectedQueue.status}</p>
+                        </div>
+                    </div>
                 </div>
+            )}
+
+            {/* Dashboard List Container */}
+            <div className="space-y-4">
+                {entriesLoading ? (
+                    <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-white rounded-[32px] border-2 border-slate-50">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Refreshing Live Queue...</p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                        {/* List Header (Hidden on Mobile) */}
+                        <div className="flex flex-row items-center gap-0 px-0 py-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 min-w-[850px]">
+                            <div className="w-[220px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer Profile</div>
+                            <div className="flex-1 min-w-[380px] px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Active Services & Experts</div>
+                            <div className="w-[250px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status & Billing</div>
+                        </div>
+
+                        {filteredEntries.length === 0 ? (
+                            <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
+                                <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
+                                    <div className="h-24 w-24 bg-slate-50 rounded-[40px] flex items-center justify-center text-slate-300">
+                                        <Users className="h-12 w-12" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-xl font-black text-slate-900">Queue is Clear</p>
+                                        <p className="text-sm font-bold text-slate-400 leading-relaxed">
+                                            {selectedQueue
+                                                ? "No customers are currently in line. Great time to catch up on maintenance!"
+                                                : "Select a queue from the sidebar to start managing your business live."}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-slate-50 bg-white rounded-[32px] border-2 border-slate-50 overflow-hidden shadow-sm shadow-slate-100/50">
+                                {filteredEntries.map((item) => (
+                                    <QueueRow
+                                        key={item.id}
+                                        item={item}
+                                        business={business}
+                                        providers={providers}
+                                        onAssignTaskProvider={handleAssignTaskProvider}
+                                        onStartTask={handleStartTask}
+                                        onCompleteTask={handleCompleteTask}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onUpdatePayment={handleUpdatePayment}
+                                        onNoShow={handleNoShow}
+                                        onRestore={handleRestore}
+                                        onSkip={handleSkip}
+                                        onShowToast={showToast}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Dashboard Toast Notifications */}
             {
-                isCopied && (
+                toast && (
                     <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
-                            <CheckCircle2 className="h-5 w-5" />
-                            <p className="text-sm font-black uppercase tracking-widest">Link Copied to Clipboard!</p>
+                        <div className={cn(
+                            "px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all",
+                            toast.type === 'success'
+                                ? "bg-emerald-500 text-white border-emerald-400/50"
+                                : "bg-red-500 text-white border-red-400/50"
+                        )}>
+                            {toast.type === 'success' ? (
+                                <CheckCircle2 className="h-5 w-5" />
+                            ) : (
+                                <AlertCircle className="h-5 w-5" />
+                            )}
+                            <p className="text-sm font-bold uppercase tracking-wider">{toast.message}</p>
                         </div>
                     </div>
                 )
@@ -703,22 +787,6 @@ export default function LiveQueuePage() {
                 business={business}
             />
 
-            {/* QR Code Side Panel (Realtime) */}
-            {
-                business && (
-                    <div className="fixed bottom-8 right-8 z-30 group">
-                        <div className="bg-white p-4 rounded-3xl shadow-2xl border-2 border-slate-100 transition-all group-hover:scale-110">
-                            <QRCodeSVG
-                                value={`${window.location.origin}/${business.slug}`}
-                                size={100}
-                                level="H"
-                                includeMargin={false}
-                            />
-                            <p className="mt-2 text-[8px] font-black text-center text-slate-400 uppercase tracking-widest">Join Scan</p>
-                        </div>
-                    </div>
-                )
-            }
         </div >
     );
 }
@@ -741,14 +809,14 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-black text-slate-900 uppercase">WhatsApp Invite</h2>
+                    <h2 className="text-xl font-bold text-slate-900 uppercase">WhatsApp Invite</h2>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                         <X className="h-5 w-5 text-slate-400" />
                     </button>
                 </div>
                 <form onSubmit={handleSendInvite} className="space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Customer Name</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Customer Name</label>
                         <input
                             required
                             type="text"
@@ -759,7 +827,7 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">WhatsApp Number</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">WhatsApp Number</label>
                         <input
                             required
                             type="tel"
@@ -771,7 +839,7 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
                     </div>
                     <button
                         type="submit"
-                        className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/10 transition-all active:scale-95"
+                        className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-bold uppercase tracking-wider shadow-xl shadow-emerald-500/10 transition-all active:scale-95"
                     >
                         GENERATING INVITE & OPEN WHATSAPP
                     </button>
@@ -790,10 +858,10 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                 <div className="p-8 space-y-8">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <h2 className="text-2xl font-black tracking-tight text-slate-900">
+                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                                 {mode === 'create' ? 'Create New Queue' : 'Queue Settings'}
                             </h2>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">
                                 {mode === 'create' ? 'Define a new visitor flow' : 'Update queue configuration'}
                             </p>
                         </div>
@@ -811,7 +879,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Queue Identity</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Queue Identity</label>
                             <input
                                 required
                                 type="text"
@@ -823,7 +891,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Description (Optional)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Description (Optional)</label>
                             <textarea
                                 rows={2}
                                 placeholder="What is this queue for?"
@@ -835,7 +903,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Avg. Time / Person</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Avg. Time / Person</label>
                                 <input
                                     type="number"
                                     value={formData.current_wait_time_minutes || ""}
@@ -847,7 +915,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Daily Status</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Daily Status</label>
                                 <select
                                     value={formData.status}
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -863,7 +931,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-5 bg-primary hover:bg-primary-hover text-white rounded-[20px] text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-primary/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                            className="w-full py-5 bg-primary hover:bg-primary-hover text-white rounded-[20px] text-sm font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-primary/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
                         >
                             {isSubmitting ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -889,7 +957,7 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
                         <Trash2 className="h-12 w-12" />
                     </div>
                     <div className="space-y-3">
-                        <h3 className="text-2xl font-black text-slate-900">Delete Queue?</h3>
+                        <h3 className="text-2xl font-bold text-slate-900">Delete Queue?</h3>
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-2">
                             Are you sure you want to remove <span className="text-slate-900">{queueName}</span>? All history for this queue will be archived.
                         </p>
@@ -898,13 +966,13 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
                         <button
                             disabled={isDeleting}
                             onClick={onConfirm}
-                            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-red-500/10 active:scale-95 flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-red-500/10 active:scale-95 flex items-center justify-center gap-2"
                         >
                             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "CONFIRM DELETE"}
                         </button>
                         <button
                             onClick={onClose}
-                            className="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
+                            className="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all"
                         >
                             CANCEL
                         </button>
@@ -925,7 +993,7 @@ const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
                         <AlertCircle className="h-10 w-10" />
                     </div>
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Clear Today's Queue?</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Clear Today's Queue?</h2>
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
                             This will remove ALL customers who joined today. This action cannot be undone.
                         </p>
@@ -933,14 +1001,14 @@ const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}
-                            className="flex-1 h-14 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-black uppercase tracking-widest rounded-2xl transition-all"
+                            className="flex-1 h-14 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-2xl transition-all"
                         >
                             KEEP ENTRIES
                         </button>
                         <button
                             onClick={onConfirm}
                             disabled={isDeleting}
-                            className="flex-1 h-14 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                            className="flex-1 h-14 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
                         >
                             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "YES, CLEAR"}
                         </button>

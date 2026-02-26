@@ -1,0 +1,126 @@
+"use client";
+
+import React from 'react';
+import {
+    X,
+    Layout,
+    IndianRupee,
+    Clock,
+    TrendingUp,
+    CheckCircle2
+} from "lucide-react";
+import { ProviderAnalytics, ProviderServiceStats } from "@/services/analyticsService";
+import { cn } from "@/lib/utils";
+
+interface ProviderServiceBreakdownModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    provider: ProviderAnalytics | null;
+    periodLabel: string;
+}
+
+export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownModalProps> = ({
+    isOpen,
+    onClose,
+    provider,
+    periodLabel
+}) => {
+    if (!isOpen || !provider) return null;
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                {/* Header */}
+                <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
+                                {provider.provider_name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                                {provider.provider_name}
+                            </h2>
+                        </div>
+                        <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mt-1.5 flex items-center gap-2">
+                            <TrendingUp className="h-3 w-3" />
+                            Service Breakdown • {periodLabel}
+                        </p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-200 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-8 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-4">
+                        {provider.service_breakdown.length === 0 ? (
+                            <div className="text-center py-12 text-slate-400 italic">
+                                No service data available
+                            </div>
+                        ) : (
+                            provider.service_breakdown.map((s, idx) => (
+                                <div
+                                    key={idx}
+                                    className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-white hover:border-primary/20 hover:shadow-sm transition-all group"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+                                            <CheckCircle2 className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 uppercase text-xs tracking-tight">{s.service_name}</h4>
+                                            <div className="flex items-center gap-3 mt-1">
+                                                <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                                    <Layout className="h-3 w-3" />
+                                                    {s.count} {s.count === 1 ? 'task' : 'tasks'}
+                                                </span>
+                                                <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    {s.avg_time}m avg
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right">
+                                        <div className="text-sm font-bold text-emerald-600">
+                                            ₹{s.revenue.toLocaleString()}
+                                        </div>
+                                        <div className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter mt-0.5">
+                                            Total Revenue
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer Stats */}
+                <div className="px-8 py-6 bg-slate-900 flex items-center justify-between">
+                    <div className="flex gap-8">
+                        <div>
+                            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">Combined Output</p>
+                            <p className="text-lg font-bold text-white tracking-tight">₹{provider.total_revenue.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">Efficiency</p>
+                            <p className="text-lg font-bold text-white tracking-tight">{provider.avg_service_time_minutes}m avg</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onClose}
+                        className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
+                    >
+                        Close Portal
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};

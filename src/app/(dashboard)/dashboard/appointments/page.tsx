@@ -13,11 +13,13 @@ import {
     CheckCheck,
     AlertCircle,
     Play,
-    Bell
+    Bell,
+    Info
 } from "lucide-react";
 import { appointmentService, Appointment } from "@/services/appointmentService";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
 
 type AppointmentStatus = Appointment['status'];
 
@@ -25,7 +27,9 @@ export default function AppointmentsPage() {
     const { business } = useAuth();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [providers, setProviders] = useState<any[]>([]); // Added for leave detection
     const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'past'>('today');
+    const [dismissedDelays, setDismissedDelays] = useState<string[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
@@ -40,9 +44,20 @@ export default function AppointmentsPage() {
         }
     }, []);
 
+    const fetchProviders = useCallback(async () => {
+        if (!business?.id) return;
+        try {
+            const { data } = await api.get(`/service-providers?business_id=${business.id}`) as any;
+            setProviders(data || []);
+        } catch (err) {
+            console.error("Failed to fetch providers:", err);
+        }
+    }, [business?.id]);
+
     useEffect(() => {
         fetchAppointments();
-    }, [fetchAppointments]);
+        fetchProviders();
+    }, [fetchAppointments, fetchProviders]);
 
     const handleUpdateStatus = async (id: string, status: AppointmentStatus) => {
         setActionLoading(id);
@@ -50,14 +65,74 @@ export default function AppointmentsPage() {
         try {
             await appointmentService.updateStatus(id, status);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-            setMessage({ text: `Appointment ${status} successfully!`, type: 'success' });
-            setTimeout(() => setMessage(null), 3000);
+            showSuccess(`Appointment updated to ${status}`);
+            await fetchAppointments();
         } catch (err: any) {
-            setMessage({ text: err.response?.data?.message || "Failed to update status. Please wait for server update.", type: 'error' });
-            setTimeout(() => setMessage(null), 5000);
+            if (process.env.NODE_ENV === 'development') {
+                console.error("Full Appointment Status Update Error:", err);
+            }
+            showError(err.message || "Failed to update status.");
         } finally {
             setActionLoading(null);
         }
+    };
+
+    const handleUpdatePayment = async (id: string, method: 'cash' | 'qr' | 'card' | 'unpaid') => {
+        setActionLoading(`payment-${id}`);
+        try {
+            await appointmentService.updatePayment(id, method);
+            setAppointments(prev => prev.map(a => a.id === id ? { ...a, payment_method: method } : a));
+            showSuccess(`Payment marked as ${method.toUpperCase()}`);
+            await fetchAppointments();
+        } catch (err: any) {
+            showError(err.message || "Failed to update payment method.");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleReschedule = async (id: string) => {
+        const newTime = prompt("Enter new start time (YYYY-MM-DD HH:MM):");
+        if (!newTime) return;
+
+        setActionLoading(id);
+        setMessage(null);
+        try {
+            const isoTime = new Date(newTime).toISOString();
+            await appointmentService.reschedule(id, isoTime);
+            await fetchAppointments();
+            showSuccess("Appointment rescheduled successfully!");
+        } catch (err: any) {
+            showError(err.message || "Failed to reschedule. Check business hours and buffer.");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleCancel = async (id: string) => {
+        if (!confirm("Are you sure you want to cancel this appointment?")) return;
+
+        setActionLoading(id);
+        setMessage(null);
+        try {
+            await appointmentService.cancel(id);
+            setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' } : a));
+            showSuccess("Appointment cancelled successfully!");
+        } catch (err: any) {
+            showError(err.message || "Failed to cancel.");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const showSuccess = (text: string) => {
+        setMessage({ text, type: 'success' });
+        setTimeout(() => setMessage(null), 3000);
+    };
+
+    const showError = (text: string) => {
+        setMessage({ text, type: 'error' });
+        setTimeout(() => setMessage(null), 5000);
     };
 
     const handleWhatsAppAction = (apt: Appointment, type: 'alert' | 'call') => {
@@ -119,7 +194,7 @@ export default function AppointmentsPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <Loader2 className="h-10 w-10 animate-spin text-blue-600/20" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Loading Concierge...</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading Concierge...</p>
             </div>
         );
     }
@@ -127,12 +202,21 @@ export default function AppointmentsPage() {
     return (
         <div className="space-y-10 max-w-5xl mx-auto pb-20 animate-in fade-in duration-1000">
             {/* Header */}
-            <div className="flex flex-col space-y-2">
-                <div className="flex items-center gap-3">
-                    <div className="h-8 w-1 bg-blue-600 rounded-full" />
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Reservations</h1>
+            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-10">
+                <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-100 rounded-full border border-slate-200">
+                        <Calendar className="h-4 w-4 text-slate-900" />
+                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Concierge Management</span>
+                    </div>
+                    <div className="space-y-2">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                            Client <span className="text-slate-400">Reservations</span>
+                        </h1>
+                        <p className="text-sm font-bold text-slate-500 max-w-xl leading-relaxed">
+                            Organize appointments and deliver a premium client experience.
+                        </p>
+                    </div>
                 </div>
-                <p className="text-slate-500 font-medium text-sm">Manage your premium bookings and customer experience.</p>
             </div>
 
             {/* Notification Bar (Replacement for alert) */}
@@ -142,7 +226,7 @@ export default function AppointmentsPage() {
                     message.type === 'success' ? "bg-slate-900 text-white" : "bg-red-600 text-white"
                 )}>
                     {message.type === 'success' ? <CheckCheck className="h-5 w-5 text-emerald-400" /> : <AlertCircle className="h-5 w-5" />}
-                    <p className="text-xs font-bold uppercase tracking-widest">{message.text}</p>
+                    <p className="text-sm font-semibold uppercase tracking-wider">{message.text}</p>
                 </div>
             )}
 
@@ -153,9 +237,9 @@ export default function AppointmentsPage() {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={cn(
-                            "px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] rounded-[18px] transition-all duration-300",
+                            "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300",
                             activeTab === tab
-                                ? "bg-white text-blue-600 shadow-xl shadow-blue-500/10 scale-105"
+                                ? "bg-slate-900 text-white shadow-xl shadow-slate-900/10 scale-105"
                                 : "text-slate-500 hover:text-slate-900"
                         )}
                     >
@@ -171,7 +255,7 @@ export default function AppointmentsPage() {
                         <Calendar className="h-8 w-8 text-slate-200" />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-lg font-bold text-slate-900 uppercase tracking-tight">Quiet Day</p>
+                        <p className="text-xl font-bold text-slate-900 tracking-tight">Quiet Day</p>
                         <p className="text-sm text-slate-400 font-medium">No {activeTab} bookings to display right now.</p>
                     </div>
                 </div>
@@ -185,31 +269,56 @@ export default function AppointmentsPage() {
                                 {/* Side Status Color */}
                                 <div className={cn(
                                     "absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-500",
-                                    apt.status === 'confirmed' ? "bg-emerald-500" :
+                                    (apt.status === 'confirmed' || apt.status === 'scheduled') ? "bg-emerald-500" :
                                         apt.status === 'cancelled' ? "bg-red-500" :
-                                            apt.status === 'completed' ? "bg-blue-500" : "bg-amber-500"
+                                            apt.status === 'completed' ? "bg-blue-500" :
+                                                apt.status === 'expired' ? "bg-slate-300" :
+                                                    apt.status === 'no_show' ? "bg-rose-600" : "bg-amber-500"
                                 )} />
 
                                 {/* Time/Date Column */}
-                                <div className="flex flex-col space-y-1 min-w-[120px]">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{date}</p>
-                                    <p className="text-xl font-bold text-slate-900 tracking-tight">{time}</p>
+                                <div className="flex flex-col space-y-1 min-w-[140px]">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider leading-none">{date}</p>
+
+                                    <p className={cn("text-xl font-bold tracking-tight", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
+                                        {time}
+                                    </p>
+
+                                    {apt.is_delayed && apt.expected_start_at && (
+                                        <div className="flex flex-col mt-1 space-y-0.5 animate-in fade-in zoom-in duration-300">
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase">Delayed {apt.delay_minutes} min</span>
+                                            <span className="text-lg font-extrabold text-amber-600">{formatDateTime(apt.expected_start_at).time}</span>
+                                        </div>
+                                    )}
+
                                     <div className={cn(
-                                        "mt-2 inline-flex items-center px-2 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest w-fit",
-                                        apt.status === 'confirmed' ? "bg-emerald-50 text-emerald-600" :
-                                            apt.status === 'cancelled' ? "bg-red-50 text-red-600" :
-                                                apt.status === 'completed' ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                                        "mt-3 inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider w-fit border shadow-sm",
+                                        (apt.appointment_state === 'LATE') ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                            (apt.appointment_state === 'IN_QUEUE') ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                                (apt.appointment_state === 'UPCOMING') ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                    (apt.status === 'completed') ? "bg-slate-900 text-white border-slate-900" :
+                                                        (apt.status === 'cancelled') ? "bg-slate-100 text-slate-400 border-slate-200" :
+                                                            (apt.status === 'expired') ? "bg-slate-100 text-slate-500 border-slate-200" :
+                                                                "bg-slate-50 text-slate-600 border-slate-100"
                                     )}>
-                                        {apt.status}
+                                        {apt.appointment_state || apt.status}
                                     </div>
                                 </div>
 
                                 {/* Customer Info */}
                                 <div className="flex-1 space-y-4">
                                     <div className="space-y-1">
-                                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest mb-1">Customer</p>
-                                        <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-                                            <span className="capitalize">{apt.profiles?.full_name || 'Premium Guest'}</span>
+                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Elite Guest</p>
+                                        <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-4">
+                                            <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || 'Premium Guest'}</span>
+
+                                            {apt.queue_entry && !['completed', 'done', 'cancelled', 'no_show', 'skipped'].includes(apt.queue_entry.status) && (
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20 animate-pulse">
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider">In Live Queue {apt.queue_entry.ticket_number}</span>
+                                                </div>
+                                            )}
+
                                             {apt.profiles?.phone && (
                                                 <button
                                                     onClick={() => {
@@ -231,10 +340,10 @@ export default function AppointmentsPage() {
 
                                                         window.open(`https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`, '_blank');
                                                     }}
-                                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors"
+                                                    className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
                                                     title="Message via WhatsApp"
                                                 >
-                                                    <Phone className="h-4 w-4" />
+                                                    <Phone className="h-4.5 w-4.5" />
                                                 </button>
                                             )}
                                         </h3>
@@ -253,27 +362,79 @@ export default function AppointmentsPage() {
                                                 {(apt as any).appointment_services?.reduce((acc: number, as: any) => acc + (as.services?.duration_minutes || 0), 0) || 30} mins
                                             </span>
                                         </div>
+
+                                        {/* Payment UI */}
+                                        {apt.payment_status === 'paid' ? (
+                                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl text-xs font-bold shadow-sm">
+                                                <CheckCheck className="h-3.5 w-3.5" />
+                                                <span className="capitalize">{apt.payment_method}</span> Paid
+                                            </div>
+                                        ) : (
+                                            /* Hide payment buttons if checked in or in service */
+                                            (apt.status !== 'checked_in' && apt.status !== 'in_service') ? (
+                                                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                                                    <span className="px-2 text-[10px] font-bold text-slate-400 uppercase">Pay:</span>
+                                                    <button onClick={() => handleUpdatePayment(apt.id, 'cash')} className="px-3 py-1.5 bg-white text-emerald-600 hover:bg-emerald-50 rounded-lg text-xs font-bold border shadow-sm transition-all flex items-center gap-1.5">
+                                                        Cash
+                                                    </button>
+                                                    <button onClick={() => handleUpdatePayment(apt.id, 'qr')} className="px-3 py-1.5 bg-white text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-bold border shadow-sm transition-all flex items-center gap-1.5">
+                                                        QR
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-xl text-[10px] font-bold shadow-sm uppercase">
+                                                    Payment in Queue
+                                                </div>
+                                            )
+                                        )}
                                     </div>
+
+                                    {/* Delay Warning Banner */}
+                                    {apt.is_delayed && !dismissedDelays.includes(apt.id) && (
+                                        <div className="mt-4 p-3.5 bg-amber-50 border border-amber-100 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-300">
+                                            <div className="flex items-center gap-2 text-amber-700">
+                                                <AlertCircle className="w-5 h-5 shrink-0" />
+                                                <span className="text-xs font-bold uppercase leading-tight">Running <span className="text-amber-900">{apt.delay_minutes} min</span> late</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                                <button onClick={() => setDismissedDelays(p => [...p, apt.id])} className="flex-1 sm:flex-none px-3 py-1.5 bg-amber-100/50 text-amber-700 hover:bg-amber-100 text-xs font-bold rounded-lg transition-colors border border-amber-200/50">
+                                                    Keep as is
+                                                </button>
+                                                <button onClick={() => handleReschedule(apt.id)} className="flex-1 sm:flex-none px-3 py-1.5 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                                    Reschedule
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex items-center gap-3 md:border-l md:border-slate-100 md:pl-8">
-                                    {(apt.status === 'pending' || apt.status === 'scheduled') && (
+                                <div className="flex items-center gap-2 md:border-l md:border-slate-100 md:pl-6">
+                                    {(apt.status === 'pending' || apt.status === 'scheduled' || apt.status === 'requested' || apt.status === 'rescheduled') && (
                                         <>
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'confirmed')}
-                                                className="h-14 px-8 bg-slate-900 text-white rounded-[20px] text-[10px] font-bold uppercase tracking-widest hover:bg-blue-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                                                className="h-10 px-6 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
                                             >
-                                                {actionLoading === apt.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                                                {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                 Confirm
                                             </button>
                                             <button
                                                 disabled={actionLoading === apt.id}
-                                                onClick={() => handleUpdateStatus(apt.id, 'cancelled')}
-                                                className="h-14 w-14 border-2 border-slate-100 text-red-500 rounded-[20px] hover:bg-red-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
+                                                onClick={() => handleReschedule(apt.id)}
+                                                className="h-10 w-10 border-2 border-slate-100 text-indigo-500 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
+                                                title="Reschedule Appointment"
                                             >
-                                                <XCircle className="h-6 w-6" />
+                                                <CalendarDays className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                disabled={actionLoading === apt.id}
+                                                onClick={() => handleCancel(apt.id)}
+                                                className="h-10 w-10 border-2 border-slate-100 text-red-500 rounded-xl hover:bg-red-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
+                                                title="Cancel Appointment"
+                                            >
+                                                <XCircle className="h-5 w-5" />
                                             </button>
                                         </>
                                     )}
@@ -282,7 +443,7 @@ export default function AppointmentsPage() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'alert')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 transition-colors"
+                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-blue-100 transition-colors border border-blue-100"
                                                 title="Send 'Next Turn' Alert"
                                             >
                                                 <Bell className="h-4 w-4" />
@@ -290,7 +451,7 @@ export default function AppointmentsPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'call')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 transition-colors"
+                                                className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-emerald-100 transition-colors border border-emerald-100"
                                                 title="Send 'Your Turn' Call"
                                             >
                                                 <Phone className="h-4 w-4" />
@@ -299,56 +460,24 @@ export default function AppointmentsPage() {
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'checked_in')}
-                                                className="h-14 px-8 bg-indigo-600 text-white rounded-[20px] text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-3"
+                                                className="h-10 px-6 bg-indigo-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2 shadow-sm"
                                             >
-                                                <CheckCheck className="h-5 w-5" />
+                                                <CheckCheck className="h-4 w-4" />
                                                 Check In
                                             </button>
                                         </div>
                                     )}
 
-                                    {apt.status === 'checked_in' && (
+                                    {(apt.status === 'checked_in' || apt.status === 'in_service') && (
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleWhatsAppAction(apt, 'alert')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 transition-colors"
-                                                title="Send 'Next Turn' Alert"
-                                            >
-                                                <Bell className="h-4 w-4" />
-                                                Alert
-                                            </button>
-                                            <button
-                                                onClick={() => handleWhatsAppAction(apt, 'call')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 transition-colors"
-                                                title="Send 'Your Turn' Call"
-                                            >
-                                                <Phone className="h-4 w-4" />
-                                                Call
-                                            </button>
-                                            <button
-                                                disabled={actionLoading === apt.id}
-                                                onClick={() => handleUpdateStatus(apt.id, 'in_service')}
-                                                className="h-14 px-8 bg-emerald-500 text-white rounded-[20px] text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 flex items-center gap-3"
-                                            >
-                                                <Play className="h-5 w-5" />
-                                                Start Service
-                                            </button>
+                                            <div className="px-6 py-2 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
+                                                Active in Live Queue
+                                            </div>
                                         </div>
                                     )}
 
-                                    {apt.status === 'in_service' && (
-                                        <button
-                                            disabled={actionLoading === apt.id}
-                                            onClick={() => handleUpdateStatus(apt.id, 'completed')}
-                                            className="h-14 px-8 border-2 border-emerald-500 text-emerald-600 rounded-[20px] text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-50 transition-all active:scale-95 flex items-center gap-3"
-                                        >
-                                            <CheckCheck className="h-5 w-5" />
-                                            Complete
-                                        </button>
-                                    )}
-
                                     {(apt.status === 'completed' || apt.status === 'cancelled') && (
-                                        <div className="px-6 py-3 bg-slate-50 rounded-2xl text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <div className="px-5 py-2.5 bg-slate-50 rounded-xl text-xs font-bold text-slate-400 uppercase tracking-wider border border-slate-100">
                                             {apt.status === 'completed' ? 'Finished' : 'Archived'}
                                         </div>
                                     )}
@@ -357,7 +486,8 @@ export default function AppointmentsPage() {
                         );
                     })}
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

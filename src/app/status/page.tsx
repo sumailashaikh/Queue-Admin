@@ -3,17 +3,54 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Users, Clock, CheckCircle2, AlertCircle, Share2, Info, ArrowRight, ShieldCheck, Wifi, MapPin, ExternalLink } from "lucide-react";
+import {
+    Loader2,
+    Users,
+    Clock,
+    CheckCircle2,
+    AlertCircle,
+    Share2,
+    Info,
+    ChevronRight,
+    ShieldCheck,
+    Wifi,
+    MapPin,
+    ExternalLink,
+    Play,
+    Bell,
+    Phone,
+    QrCode,
+    MessageCircle,
+    X
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface QueueContextItem {
+    ticket: string;
+    name: string;
+    status: string;
+    specialist: string;
+    service: string;
+    is_user: boolean;
+}
 
 interface QueueStatus {
     business_name: string;
     business_slug?: string;
+    business_phone?: string;
     display_token: string;
     current_serving: string;
+    current_specialist?: string;
     position: number;
     estimated_wait_time: number;
     status: 'waiting' | 'serving' | 'completed' | 'cancelled' | 'no_show';
+    guest_name?: string;
+    service_names?: string[];
+    specialist?: {
+        name: string;
+        role: string;
+    };
+    queue_context?: QueueContextItem[];
 }
 
 function StatusContent() {
@@ -22,12 +59,7 @@ function StatusContent() {
     const [status, setStatus] = useState<QueueStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentTime, setCurrentTime] = useState(new Date());
-
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
+    const [lastUpdated, setLastUpdated] = useState(new Date());
 
     const fetchStatus = async () => {
         if (!token) return;
@@ -36,6 +68,7 @@ function StatusContent() {
             const result = await res.json();
             if (result.status === 'success') {
                 setStatus(result.data);
+                setLastUpdated(new Date());
             } else {
                 setError(result.message);
             }
@@ -48,6 +81,9 @@ function StatusContent() {
 
     useEffect(() => {
         fetchStatus();
+
+        // Auto refresh every 30 seconds
+        const refreshInterval = setInterval(fetchStatus, 30000);
 
         const channel = supabase
             .channel('public:queue_entries')
@@ -65,41 +101,50 @@ function StatusContent() {
             .subscribe();
 
         return () => {
+            clearInterval(refreshInterval);
             supabase.removeChannel(channel);
         };
     }, [token]);
 
-    const isNearTurn = status?.position !== undefined && status.position <= 2 && status.status === 'waiting';
+    const handleWhatsApp = () => {
+        if (!status?.business_phone) return;
+        let phone = status.business_phone.replace(/\D/g, '');
+        if (phone.length === 10) phone = `91${phone}`;
+        const message = `Hello, I'm checking my status for ticket ${status.display_token} at ${status.business_name}.`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+    };
+
+    const handleCall = () => {
+        if (!status?.business_phone) return;
+        window.open(`tel:${status.business_phone}`, '_self');
+    };
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                <div className="relative flex flex-col items-center">
-                    <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-6" />
-                    <p className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Syncing secure connection...</p>
-                </div>
+            <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6">
+                <Loader2 className="h-10 w-10 animate-spin text-white opacity-20" />
             </div>
         );
     }
 
     if (error || !status) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white p-8">
-                <div className="max-w-md w-full text-center space-y-10">
-                    <div className="h-24 w-24 bg-red-50 rounded-[40px] flex items-center justify-center mx-auto border border-red-100 mb-2">
-                        <AlertCircle className="h-10 w-10 text-red-500" />
+            <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-8">
+                <div className="max-w-md w-full text-center space-y-8 bg-white p-12 rounded-[40px] shadow-2xl">
+                    <div className="h-20 w-20 bg-rose-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-rose-500" />
                     </div>
-                    <div className="space-y-4">
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">Access Denied</h1>
-                        <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-[280px] mx-auto">
-                            {error || "Your secure status token has expired or is invalid for this session."}
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Access Denied</h1>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest leading-loose">
+                            {error || "Invalid status token"}
                         </p>
                     </div>
                     <button
                         onClick={() => window.location.reload()}
-                        className="w-full py-6 bg-slate-900 text-white rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+                        className="w-full py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
                     >
-                        Retry Connection
+                        Try Again
                     </button>
                 </div>
             </div>
@@ -107,193 +152,112 @@ function StatusContent() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center p-6 pb-12 font-sans overflow-x-hidden">
-            {/* Elegant Header */}
-            <header className="w-full max-w-lg mb-10 flex items-center justify-between px-2 pt-4">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Updates</span>
+        <div className="min-h-screen bg-slate-100 flex flex-col items-center p-0 md:p-6 lg:p-12 font-sans">
+            <main className="w-full max-w-lg bg-white min-h-screen md:min-h-0 md:rounded-[40px] shadow-2xl flex flex-col relative overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700">
+
+                {/* Dark Navy Header */}
+                <div className="bg-[#0f172a] p-10 text-white flex flex-col items-center relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+
+                    <div className="flex items-center justify-between w-full mb-8 relative z-10">
+                        <div className="h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center text-xl font-black border-2 border-white/10 shadow-lg">
+                            {status.business_name.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div className="px-4 py-1.5 bg-[#1e293b] rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-2 border border-slate-700">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            LIVE STATUS PASS
+                        </div>
                     </div>
-                    <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">{status.business_name}</h1>
+
+                    <div className="text-center space-y-1 relative z-10">
+                        <h2 className="text-3xl font-black tracking-tight uppercase">{status.business_name}</h2>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] opacity-80">Digital Entry Protocol</p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm active:scale-95 transition-all text-slate-600 hover:text-indigo-600">
-                        <Share2 className="h-5 w-5" />
-                    </button>
-                </div>
-            </header>
 
-            <main className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                {/* Main Pass Card */}
-                <div className="bg-white rounded-[50px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-100 p-10 overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-8">
-                        <div className={cn(
-                            "px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 border shadow-sm",
-                            status.status === 'serving' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                status.status === 'completed' ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-                                    "bg-slate-50 text-slate-500 border-slate-100"
-                        )}>
-                            {status.status}
+                <div className="p-8 pb-12 flex flex-col items-center space-y-8">
+                    {/* Main Pass ID Card */}
+                    <div className="w-full bg-white border border-slate-100 rounded-[48px] p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] flex flex-col items-center space-y-10 relative">
+                        <QrCode className="absolute top-8 right-8 h-8 w-8 text-slate-100" />
+
+                        <div className="text-center space-y-1">
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">Pass ID</p>
+                            <p className="text-8xl font-black text-slate-900 tracking-tighter">{status.display_token}</p>
                         </div>
-                    </div>
 
-                    <div className="text-center space-y-2 mt-4 mb-12">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Digital Entry Pass</p>
-                        <div className="text-[10rem] font-black tracking-tighter text-slate-900 leading-none drop-shadow-sm select-none">
-                            {status.display_token}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6 mb-12">
-                        <div className="bg-slate-50 rounded-[35px] p-8 text-center border border-slate-100 space-y-2 group transition-all">
-                            <Users className="h-6 w-6 text-indigo-500 mx-auto mb-1 opacity-50" />
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Live Rank</p>
-                            <p className="text-5xl font-black text-slate-900">#{status.position}</p>
-                        </div>
-                        <div className="bg-slate-50 rounded-[35px] p-8 text-center border border-slate-100 space-y-2 group transition-all">
-                            <Clock className="h-6 w-6 text-indigo-500 mx-auto mb-1 opacity-50" />
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Est. Wait</p>
-                            <p className="text-5xl font-black text-slate-900">{status.estimated_wait_time}<span className="text-xl ml-1 text-slate-300">m</span></p>
-                        </div>
-                    </div>
-
-                    <div className="pt-10 border-t border-slate-50 text-center space-y-8 relative">
-                        <div className="space-y-2">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4">Now Calling to Station</p>
-                            <div className="relative inline-block w-full">
-                                <div className="relative flex flex-col items-center">
-                                    <div className={cn(
-                                        "w-full px-12 py-10 rounded-[35px] border transition-all duration-700 relative overflow-hidden flex flex-col items-center justify-center",
-                                        status.current_serving === 'None'
-                                            ? "bg-indigo-50/30 border-indigo-100 shadow-sm"
-                                            : "bg-slate-900 border-slate-800 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.3)]"
-                                    )}>
-                                        {/* Board Scanning Effect (Only on active) */}
-                                        {status.current_serving !== 'None' && (
-                                            <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] animate-[shimmer_3s_infinite]" />
-                                        )}
-
-                                        {status.current_serving === 'None' ? (
-                                            <div className="space-y-4 text-center py-4 animate-in fade-in zoom-in duration-1000">
-                                                <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm border border-indigo-50 mb-2">
-                                                    <CheckCircle2 className="h-8 w-8 text-indigo-200" />
-                                                </div>
-                                                <h3 className="text-xl font-black text-indigo-900/40 uppercase tracking-[0.2em] leading-tight">
-                                                    Ready to Welcome<br />Our Next Guest
-                                                </h3>
-                                            </div>
-                                        ) : (
-                                            <span className="text-8xl font-black text-white tracking-tighter tabular-nums drop-shadow-sm">
-                                                {status.current_serving}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Sub-label for station status */}
-                                    <div className="mt-6 flex flex-col items-center gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className={cn("h-2 w-2 rounded-full", status.current_serving === 'None' ? "bg-slate-300" : "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]")} />
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
-                                                {status.current_serving === 'None' ? 'Registry Synchronized' : 'Active Session'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                        {/* Stats Row */}
+                        <div className="grid grid-cols-2 gap-4 w-full">
+                            <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-100/50">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Position</p>
+                                <p className="text-3xl font-black text-slate-900 tracking-tighter">#{status.position}</p>
+                            </div>
+                            <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-100/50">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wait Time</p>
+                                <p className="text-3xl font-black text-slate-900 tracking-tighter">{status.estimated_wait_time}M</p>
                             </div>
                         </div>
-                        <p className="text-[9px] font-bold text-slate-400 max-w-[220px] mx-auto uppercase tracking-widest leading-relaxed">Please keep your mobile active for the final arrival ping.</p>
                     </div>
-                </div>
 
-                {/* Priority Advisory - Tiered Urgency */}
-                <div className={cn(
-                    "rounded-[40px] p-8 flex items-center gap-6 border transition-all duration-500 relative overflow-hidden",
-                    status.position === 1 ? "bg-red-50 border-red-200 text-red-900 animate-pulse" :
-                        status.position === 2 ? "bg-amber-50 border-amber-200 text-amber-900" :
-                            "bg-white border-slate-100 text-slate-600"
-                )}>
-                    {status.position === 1 && (
-                        <div className="absolute top-0 left-0 h-full w-1.5 bg-red-500" />
-                    )}
-                    <div className={cn(
-                        "h-16 w-16 rounded-[24px] flex items-center justify-center shrink-0 border",
-                        status.position === 1 ? "bg-red-100 border-red-200 shadow-sm" :
-                            status.position === 2 ? "bg-amber-100 border-amber-200 shadow-sm" :
-                                "bg-slate-50 border-slate-100"
-                    )}>
-                        {status.position === 1 ? <AlertCircle className="h-8 w-8 text-red-600 animate-bounce" /> :
-                            status.position === 2 ? <AlertCircle className="h-8 w-8 text-amber-600 animate-pulse" /> :
-                                <ShieldCheck className="h-8 w-8 text-indigo-400" />}
-                    </div>
-                    <div className="space-y-1">
-                        <p className={cn("text-[9px] font-black uppercase tracking-widest",
-                            status.position === 1 ? "text-red-600" :
-                                status.position === 2 ? "text-amber-600" :
-                                    "text-indigo-500"
-                        )}>
-                            {status.position === 1 ? "Immediate Presence Required" :
-                                status.position === 2 ? "Priority Alert: Arrive Now" :
-                                    "Service Protocol"}
-                        </p>
-                        <p className="text-sm font-bold leading-snug">
-                            {status.position === 1 ? "You are next inline! Please occupy the reception area immediately." :
-                                status.position === 2 ? "Your turn is approaching fast. Please arrive at the station now." :
-                                    "You will receive a mobile push or WhatsApp when your turn is approaching."
-                            }
-                        </p>
-                    </div>
-                </div>
-
-                {/* Secondary Actions */}
-                <div className="grid grid-cols-2 gap-4">
-                    <button onClick={() => window.location.href = `/${status.business_name.toLowerCase().replace(/\s+/g, '-')}`} className="bg-white border border-slate-200 rounded-[30px] p-6 flex flex-col items-center gap-3 shadow-sm hover:shadow-md transition-all active:scale-95 group">
-                        <div className="h-10 w-10 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                            <MapPin className="h-5 w-5" />
+                    {/* Serving Section */}
+                    <div className="w-full bg-[#0f172a] rounded-[32px] p-8 text-white relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-5">
+                            <Users className="h-16 w-16" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Business Page</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (status?.business_slug) {
-                                window.location.href = `/${status.business_slug}`;
-                            } else {
-                                alert("Business information unavailable.");
-                            }
-                        }}
-                        className="bg-white border border-slate-200 rounded-[30px] p-6 flex flex-col items-center gap-3 shadow-sm hover:shadow-md transition-all active:scale-95 group"
-                    >
-                        <div className="h-10 w-10 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                            <ExternalLink className="h-5 w-5" />
+                        <div className="relative z-10 flex flex-col items-center space-y-4">
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Currently Serving</p>
+                            <div className="h-20 w-40 bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center">
+                                <p className="text-4xl font-black tracking-tighter text-white/40">---</p>
+                            </div>
+                            <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Our Services</span>
-                    </button>
-                </div>
+                    </div>
 
-                {/* Secure Footer */}
-                <footer className="pt-12 text-center space-y-6">
-                    <div className="flex items-center justify-center gap-4 opacity-30">
-                        <div className="h-px w-8 bg-slate-300" />
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-900">Professional Queue Registry</p>
-                        <div className="h-px w-8 bg-slate-300" />
+                    {/* Action Buttons */}
+                    <div className="w-full grid grid-cols-2 gap-4">
+                        <button
+                            onClick={handleWhatsApp}
+                            className="h-16 bg-[#10b981] hover:bg-[#059669] text-white rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl shadow-emerald-500/10"
+                        >
+                            <MessageCircle className="h-5 w-5 fill-white/20" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Message</span>
+                        </button>
+                        <button
+                            onClick={handleCall}
+                            className="h-16 bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 border border-slate-100"
+                        >
+                            <Phone className="h-4 w-4" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Call Studio</span>
+                        </button>
                     </div>
-                    <div className="space-y-2">
-                        <p className="text-[12px] font-black text-indigo-600 uppercase tracking-[0.3em]">Powered by QueueUp</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic flex items-center justify-center gap-2">
-                            <Wifi className="h-3 w-3" /> Secure Node Sync Active
-                        </p>
+
+                    {/* Footer Protocol Info */}
+                    <div className="pt-4 flex flex-col items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="h-px w-8 bg-slate-200" />
+                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">QueueUp Concierge Protocol</p>
+                            <div className="h-px w-8 bg-slate-200" />
+                        </div>
+                        <button
+                            onClick={fetchStatus}
+                            className="text-[9px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-[0.2em] transition-colors"
+                        >
+                            Tap to force refresh
+                        </button>
                     </div>
-                </footer>
+                </div>
             </main>
         </div>
     );
 }
 
+// Add these icons to imports: Play, Bell
+
 export default function StatusPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-400 opacity-20" />
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <Loader2 className="h-12 w-12 animate-spin text-indigo-200 opacity-20" />
             </div>
         }>
             <StatusContent />
