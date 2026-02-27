@@ -5,14 +5,18 @@ import { Users, Clock, Loader2, Monitor, Play, Wifi, Calendar } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { businessService } from "@/services/businessService";
 import { QRCodeSVG } from "qrcode.react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
+    const { language, setLanguage, t } = useLanguage();
     const [entries, setEntries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [business, setBusiness] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
+
+    const isRTL = language === 'ar';
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -25,6 +29,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 const res = await businessService.getBusinessDisplayData(slug);
                 setBusiness(res.business);
                 setEntries(res.entries);
+
+                // Auto-set language to business language if defined
+                if (res.business?.language && res.business.language !== language) {
+                    setLanguage(res.business.language);
+                }
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -39,6 +48,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 try {
                     const res = await businessService.getBusinessDisplayData(slug);
                     setEntries(res.entries);
+                    if (res.business?.language && res.business.language !== language) {
+                        setLanguage(res.business.language);
+                    }
                 } catch (err) {
                     console.error("Poll failed", err);
                 }
@@ -46,23 +58,37 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [slug]);
+    }, [slug, setLanguage, language]);
+
+    const getTranslatedServiceName = (item: any) => {
+        if (!item.translations || item.translations.length === 0) return item.service_name;
+
+        // Since item.translations is an array of translation objects from multiple services
+        // we map them.
+        const translatedNames = item.translations.map((trans: any) => {
+            if (trans && trans[language]) return trans[language];
+            return null;
+        }).filter(Boolean);
+
+        if (translatedNames.length > 0) return translatedNames.join(', ');
+        return item.service_name;
+    };
 
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
                 <Loader2 className="h-16 w-16 animate-spin text-indigo-600" />
-                <p className="text-slate-500 font-black uppercase tracking-[0.4em] text-xs">Initialising High-End Display</p>
+                <p className="text-slate-500 font-black uppercase tracking-[0.4em] text-xs">{t('common.loading')}</p>
             </div>
         );
     }
 
     if (error || !business) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-12 text-center">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-12 text-center text-slate-900">
                 <div className="space-y-6 bg-white p-12 rounded-[48px] shadow-2xl border border-slate-100">
                     <Monitor className="h-20 w-20 text-red-500 mx-auto" />
-                    <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-900">System Offline</h1>
+                    <h1 className="text-4xl font-black uppercase tracking-tighter">System Offline</h1>
                     <p className="text-slate-500 font-medium">Please verify the business link or contact support.</p>
                 </div>
             </div>
@@ -73,25 +99,28 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
     const waitingEntries = entries.filter(e => e.status === 'waiting' || e.status === 'checked_in');
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 p-12 flex flex-col gap-12 overflow-hidden">
+        <div className={cn(
+            "min-h-screen bg-slate-50 text-slate-900 p-12 flex flex-col gap-12 overflow-hidden",
+            isRTL ? "font-arabic" : ""
+        )} dir={isRTL ? "rtl" : "ltr"}>
             {/* Premium Elite Header Area */}
             <div className="flex items-center justify-between bg-slate-900 px-12 py-10 rounded-[32px] shadow-2xl border border-slate-800">
                 <div className="space-y-1">
                     <h1 className="text-6xl font-black tracking-tight text-white uppercase italic leading-none">{business.name}</h1>
                     <div className="flex items-center gap-4 text-slate-400 font-black text-xl">
                         <Monitor className="h-6 w-6" />
-                        <span className="uppercase tracking-[0.4em]">Live Digital Concierge</span>
+                        <span className="uppercase tracking-[0.4em]">{t('display.title')}</span>
                     </div>
                 </div>
-                <div className="text-right flex flex-col items-end">
+                <div className={cn("flex flex-col", isRTL ? "items-start text-left" : "items-end text-right")}>
                     <p className="text-8xl font-black tracking-tighter tabular-nums text-white leading-tight">
-                        {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(/\s*(AM|PM)/i, '')}
+                        {currentTime.toLocaleTimeString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(/\s*(AM|PM|ص|م)/i, '')}
                         <span className="text-4xl ml-2 opacity-40 uppercase">
-                            {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).slice(-2)}
+                            {currentTime.toLocaleTimeString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).slice(-2)}
                         </span>
                     </p>
                     <p className="text-xl font-black text-slate-500 uppercase tracking-widest mt-2">
-                        {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {currentTime.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
                 </div>
             </div>
@@ -101,9 +130,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 <div className="col-span-12 lg:col-span-7 flex flex-col gap-8">
                     <div className="flex items-center gap-4 px-6">
                         <div className="h-14 w-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-200">
-                            <Play className="h-8 w-8 fill-current" />
+                            <Play className={cn("h-8 w-8 fill-current", isRTL && "rotate-180")} />
                         </div>
-                        <h2 className="text-4xl font-black uppercase tracking-widest text-slate-900">Now Serving</h2>
+                        <h2 className="text-4xl font-black uppercase tracking-widest text-slate-900">{t('display.now_serving')}</h2>
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 flex-1">
@@ -118,11 +147,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3">
                                             <span className="px-5 py-2 bg-slate-100 rounded-full text-base font-black text-slate-500 uppercase tracking-widest">
-                                                {item.service_name || "Standard Service"}
+                                                {getTranslatedServiceName(item) || t('services.default_desc')}
                                             </span>
                                             {idx === 0 && (
                                                 <span className="px-5 py-2 bg-emerald-500 rounded-full text-base font-black text-white uppercase tracking-widest animate-pulse">
-                                                    Active
+                                                    {t('admin.active')}
                                                 </span>
                                             )}
                                         </div>
@@ -132,7 +161,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                         "h-52 w-72 rounded-[40px] flex flex-col items-center justify-center font-black shadow-2xl px-4 text-center border-4",
                                         idx === 0 ? "bg-slate-900 text-white border-slate-800" : "bg-white text-slate-900 border-slate-100"
                                     )}>
-                                        <span className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">Visitor ID</span>
+                                        <span className="text-[10px] uppercase tracking-[0.4em] opacity-40 mb-2">{t('display.token')}</span>
                                         <span className={cn(
                                             "leading-none",
                                             item.display_token?.length > 3 ? "text-6xl" : "text-[120px]"
@@ -145,7 +174,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                         ) : (
                             <div className="flex-1 rounded-[48px] bg-white border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-12 shadow-inner">
                                 <Clock className="h-32 w-32 text-slate-100 mb-8" />
-                                <p className="text-4xl font-black text-slate-200 uppercase tracking-widest">Awaiting Next Guest</p>
+                                <p className="text-4xl font-black text-slate-200 uppercase tracking-widest">{t('display.waiting_for_next')}</p>
                             </div>
                         )}
                     </div>
@@ -156,10 +185,10 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     <div className="flex items-center justify-between border-b border-slate-50 pb-8">
                         <div className="flex items-center gap-4">
                             <Users className="h-10 w-10 text-slate-900" />
-                            <h2 className="text-3xl font-black uppercase tracking-widest text-slate-900">Waitlist</h2>
+                            <h2 className="text-3xl font-black uppercase tracking-widest text-slate-900">{t('sidebar.live_queue')}</h2>
                         </div>
                         <div className="px-8 py-3 bg-slate-900 text-white rounded-full text-2xl font-black shadow-lg">
-                            {waitingEntries.length} IN LINE
+                            {waitingEntries.length} {t('queue.active_guests').toUpperCase()}
                         </div>
                     </div>
 
@@ -168,7 +197,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             <div key={item.id} className="flex items-center justify-between px-10 py-8 bg-slate-50/50 rounded-[32px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group">
                                 <div className="space-y-1">
                                     <p className="text-4xl font-black text-slate-900 group-hover:text-black transition-colors capitalize">{item.customer_name}</p>
-                                    <p className="text-lg font-black text-slate-400 uppercase tracking-[0.1em]">{item.service_name}</p>
+                                    <p className="text-lg font-black text-slate-400 uppercase tracking-[0.1em]">{getTranslatedServiceName(item)}</p>
                                 </div>
                                 <div className="h-20 w-32 bg-white rounded-[24px] border border-slate-100 flex items-center justify-center text-4xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
                                     {item.display_token}
@@ -190,8 +219,8 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             )}
                         </div>
                         <div className="space-y-3 relative z-10">
-                            <h3 className="text-5xl font-black tracking-tighter leading-none italic uppercase">JOIN LINE</h3>
-                            <p className="text-lg font-bold text-slate-400 leading-tight uppercase tracking-widest">Scan to secure your turn instantly</p>
+                            <h3 className="text-5xl font-black tracking-tighter leading-none italic uppercase">{t('display.scan_to_join')}</h3>
+                            <p className="text-lg font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
                             <div className="flex items-center gap-2 mt-6 px-5 py-2.5 bg-white/10 rounded-full w-fit border border-white/10">
                                 <Wifi className="h-4 w-4 text-emerald-400" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Automated Intake Active</span>
@@ -210,20 +239,20 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 <div className="h-10 w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">
                     <div className="inline-block animate-marquee text-xl font-black text-slate-400 uppercase tracking-[0.3em]">
-                        Welcome to {business.name} • Professional concierge experience • Scan the QR code to join the virtual line • Current estimated wait time is under {(waitingEntries.length * 10)} minutes • Please wait for your ID to appear in the center panel •
+                        {t('display.welcome')} {business.name} • {t('display.please_wait')} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {(waitingEntries.length * 10)} {t('display.min')} •
                     </div>
                 </div>
             </div>
 
             <style jsx>{`
                 @keyframes marquee {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-100%); }
+                    0% { transform: translateX(${isRTL ? '-100%' : '0'}); }
+                    100% { transform: translateX(${isRTL ? '0' : '-100%'}); }
                 }
                 .animate-marquee {
                     animation: marquee 40s linear infinite;
                     display: inline-block;
-                    padding-right: 100%;
+                    padding-${isRTL ? 'left' : 'right'}: 100%;
                 }
                 .scrollbar-hide::-webkit-scrollbar {
                     display: none;

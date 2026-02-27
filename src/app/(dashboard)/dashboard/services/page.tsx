@@ -18,15 +18,18 @@ import {
 import { serviceService, Service } from "@/services/serviceService";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Custom Delete Dialog
-function DeleteDialog({ isOpen, onClose, onConfirm, serviceName, isDeleting }: {
+function DeleteDialog({ isOpen, onClose, onConfirm, serviceName, isDeleting, error }: {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
     serviceName: string;
     isDeleting: boolean;
+    error: string | null;
 }) {
+    const { t } = useLanguage();
     if (!isOpen) return null;
 
     return (
@@ -37,25 +40,32 @@ function DeleteDialog({ isOpen, onClose, onConfirm, serviceName, isDeleting }: {
                         <TrashIcon className="h-10 w-10" />
                     </div>
                     <div className="space-y-3">
-                        <h3 className="text-xl font-bold text-slate-900">Delete Service?</h3>
+                        <h3 className="text-xl font-bold text-slate-900">{t('services.delete_title')}</h3>
                         <p className="text-sm text-slate-500 leading-relaxed">
-                            Are you sure you want to remove <span className="text-slate-900 font-semibold">{serviceName}</span>? This action is permanent.
+                            {t('services.delete_desc', { name: serviceName })}
                         </p>
                     </div>
+
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-xs font-semibold animate-in slide-in-from-top-4">
+                            <AlertCircle className="h-5 w-5 shrink-0" />
+                            {error}
+                        </div>
+                    )}
                     <div className="flex flex-col gap-3 pt-2">
                         <button
                             disabled={isDeleting}
                             onClick={onConfirm}
                             className="w-full py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-red-500/10 active:scale-95 flex items-center justify-center gap-2"
                         >
-                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Delete"}
+                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('services.confirm_delete')}
                         </button>
                         <button
                             disabled={isDeleting}
                             onClick={onClose}
                             className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-all active:scale-95"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                     </div>
                 </div>
@@ -66,6 +76,7 @@ function DeleteDialog({ isOpen, onClose, onConfirm, serviceName, isDeleting }: {
 
 export default function ServicesPage() {
     const { business } = useAuth();
+    const { t, language } = useLanguage();
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -74,10 +85,11 @@ export default function ServicesPage() {
     const [searchQuery, setSearchQuery] = useState("");
 
     // Delete Modal State
-    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; serviceId: string; serviceName: string }>({
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; serviceId: string; serviceName: string; error: string | null }>({
         isOpen: false,
         serviceId: "",
-        serviceName: ""
+        serviceName: "",
+        error: null
     });
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -86,7 +98,12 @@ export default function ServicesPage() {
         name: "",
         description: "",
         duration_minutes: 30,
-        price: 0
+        price: 0,
+        translations: {
+            hi: "",
+            es: "",
+            ar: ""
+        }
     });
 
     const fetchServices = useCallback(async () => {
@@ -117,7 +134,13 @@ export default function ServicesPage() {
             });
             await fetchServices();
             setIsAddModalOpen(false);
-            setNewService({ name: "", description: "", duration_minutes: 30, price: 0 });
+            setNewService({
+                name: "",
+                description: "",
+                duration_minutes: 30,
+                price: 0,
+                translations: { hi: "", es: "", ar: "" }
+            });
         } catch (err: any) {
             setError(err.message || "Failed to add service");
         } finally {
@@ -129,21 +152,31 @@ export default function ServicesPage() {
         if (!deleteModal.serviceId) return;
 
         setIsDeleting(true);
+        setDeleteModal(prev => ({ ...prev, error: null }));
         try {
             await serviceService.deleteService(deleteModal.serviceId);
             setServices(prev => prev.filter(s => s.id !== deleteModal.serviceId));
-            setDeleteModal({ isOpen: false, serviceId: "", serviceName: "" });
-        } catch (err) {
+            setDeleteModal({ isOpen: false, serviceId: "", serviceName: "", error: null });
+        } catch (err: any) {
             console.error("Delete failed:", err);
-            alert("Failed to delete service. Please try again.");
+            const msg = err.response?.status === 404 ? t('services.delete_error') : t('services.delete_fail');
+            setDeleteModal(prev => ({ ...prev, error: msg }));
         } finally {
             setIsDeleting(false);
         }
     };
 
+    const getDisplayName = (service: Service) => {
+        if (service.translations && service.translations[language]) {
+            return service.translations[language];
+        }
+        return service.name;
+    };
+
     const filteredServices = services.filter(s =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        s.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (s.translations && Object.values(s.translations).some(v => v.toLowerCase().includes(searchQuery.toLowerCase())))
     );
 
     if (loading) {
@@ -153,7 +186,7 @@ export default function ServicesPage() {
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <Sparkles className="h-4 w-4 text-primary/80 absolute -bottom-1 -right-1 animate-pulse" />
                 </div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">Syncing Offerings...</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">{t('services.syncing')}</p>
             </div>
         );
     }
@@ -165,10 +198,10 @@ export default function ServicesPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <Sparkles className="h-6 w-6 text-primary" />
-                        Service Offerings
+                        {t('services.title')}
                     </h1>
                     <p className="text-slate-500 text-sm mt-1 uppercase tracking-wider font-semibold">
-                        Define your unique value and pricing
+                        {t('services.subtitle')}
                     </p>
                 </div>
 
@@ -177,7 +210,7 @@ export default function ServicesPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search services..."
+                            placeholder={t('services.search_placeholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium shadow-sm"
@@ -188,7 +221,7 @@ export default function ServicesPage() {
                         className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:bg-slate-800 active:scale-95"
                     >
                         <Plus className="h-4 w-4" />
-                        New Service
+                        {t('services.new_service')}
                     </button>
                 </div>
             </div>
@@ -200,9 +233,9 @@ export default function ServicesPage() {
                         <LayoutGrid className="h-12 w-12 text-slate-300" />
                     </div>
                     <div className="space-y-3">
-                        <p className="text-2xl font-bold text-slate-900 uppercase tracking-tight">Empty Workspace</p>
+                        <p className="text-2xl font-bold text-slate-900 uppercase tracking-tight">{t('services.empty_workspace')}</p>
                         <p className="text-sm font-bold text-slate-500 max-w-sm mx-auto leading-relaxed">
-                            No services match your search. Start fresh by creating a new offering.
+                            {t('services.no_match')}
                         </p>
                     </div>
                 </div>
@@ -220,7 +253,7 @@ export default function ServicesPage() {
                                         <Sparkles className="h-5 w-5" />
                                     </div>
                                     <button
-                                        onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name })}
+                                        onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name, error: null })}
                                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                         title="Delete Service"
                                     >
@@ -230,10 +263,15 @@ export default function ServicesPage() {
 
                                 <div>
                                     <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">
-                                        {service.name}
+                                        {getDisplayName(service)}
                                     </h3>
+                                    {service.translations && service.translations[language] && (
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                            Original: {service.name}
+                                        </p>
+                                    )}
                                     <p className="mt-1 text-sm text-slate-500 leading-relaxed line-clamp-2">
-                                        {service.description || "Professional service tailored to your requirements."}
+                                        {service.description || t('services.default_desc')}
                                     </p>
                                 </div>
 
@@ -243,7 +281,7 @@ export default function ServicesPage() {
                                         <span className="text-xs font-semibold">{service.duration_minutes} min</span>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-xs font-semibold text-slate-400 mb-0.5">Price</span>
+                                        <span className="text-xs font-semibold text-slate-400 mb-0.5">{t('services.price_label')}</span>
                                         <span className="text-xl font-bold text-slate-900 tracking-tight">₹{service.price}</span>
                                     </div>
                                 </div>
@@ -260,16 +298,17 @@ export default function ServicesPage() {
                 onConfirm={confirmDelete}
                 serviceName={deleteModal.serviceName}
                 isDeleting={isDeleting}
+                error={deleteModal.error}
             />
 
             {/* Add Service Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-500">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100">
-                        <div className="px-8 py-8 border-b border-slate-50 flex items-center justify-between">
+                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100 overflow-y-auto max-h-[90vh]">
+                        <div className="px-8 py-8 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white z-10">
                             <div className="space-y-1">
-                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">New Service</h2>
-                                <p className="text-sm font-semibold text-slate-500">Configure Service Parameters</p>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">{t('services.new_service')}</h2>
+                                <p className="text-sm font-semibold text-slate-500">{t('services.add_subtitle')}</p>
                             </div>
                             <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors shrink-0">
                                 <X className="h-5 w-5 text-slate-400" />
@@ -284,32 +323,87 @@ export default function ServicesPage() {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-700 ml-1">Service Name</label>
+                                <label className="text-xs font-bold text-slate-700 ml-1">{t('services.name_label')} (English)</label>
                                 <input
                                     required
                                     type="text"
                                     value={newService.name}
                                     onChange={(e) => setNewService({ ...newService, name: e.target.value })}
                                     className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                    placeholder="e.g. Premium Consultation"
+                                    placeholder={t('services.name_placeholder')}
                                 />
                             </div>
 
+                            {/* Multi-language inputs */}
+                            <div className="p-6 bg-slate-50 rounded-[24px] space-y-4 border border-slate-100">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <ShieldCheck className="h-4 w-4 text-primary" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Global Translations</span>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">{t('services.service_language', { lang: 'Hindi' })}</label>
+                                    <input
+                                        type="text"
+                                        value={newService.translations.hi}
+                                        onChange={(e) => setNewService({
+                                            ...newService,
+                                            translations: { ...newService.translations, hi: e.target.value }
+                                        })}
+                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
+                                        placeholder="हिन्दी में नाम..."
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">{t('services.service_language', { lang: 'Spanish' })}</label>
+                                    <input
+                                        type="text"
+                                        value={newService.translations.es}
+                                        onChange={(e) => setNewService({
+                                            ...newService,
+                                            translations: { ...newService.translations, es: e.target.value }
+                                        })}
+                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
+                                        placeholder="Nombre en español..."
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">{t('services.service_language', { lang: 'Arabic' })}</label>
+                                    <input
+                                        type="text"
+                                        dir="rtl"
+                                        value={newService.translations.ar}
+                                        onChange={(e) => setNewService({
+                                            ...newService,
+                                            translations: { ...newService.translations, ar: e.target.value }
+                                        })}
+                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
+                                        placeholder="الاسم بالعربية..."
+                                    />
+                                </div>
+
+                                <p className="text-[10px] text-slate-400 font-medium px-1">
+                                    {t('services.translations_hint')}
+                                </p>
+                            </div>
+
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-700 ml-1">Brief Description</label>
+                                <label className="text-xs font-bold text-slate-700 ml-1">{t('services.desc_label')}</label>
                                 <textarea
                                     required
-                                    rows={3}
+                                    rows={2}
                                     value={newService.description}
                                     onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                                     className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all resize-none"
-                                    placeholder="Describe your service..."
+                                    placeholder={t('services.desc_placeholder')}
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-700 ml-1">Duration (Min)</label>
+                                    <label className="text-xs font-bold text-slate-700 ml-1">{t('services.duration_label')}</label>
                                     <div className="relative">
                                         <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <input
@@ -326,7 +420,7 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-700 ml-1">Price (₹)</label>
+                                    <label className="text-xs font-bold text-slate-700 ml-1">{t('services.price_label')} (₹)</label>
                                     <div className="relative">
                                         <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <input
@@ -344,7 +438,7 @@ export default function ServicesPage() {
                                 </div>
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-4 pb-2">
                                 <button
                                     disabled={isSubmitting}
                                     type="submit"
@@ -355,7 +449,7 @@ export default function ServicesPage() {
                                     ) : (
                                         <>
                                             <Sparkles className="h-4 w-4" />
-                                            Activate Service
+                                            {t('services.activate')}
                                         </>
                                     )}
                                 </button>

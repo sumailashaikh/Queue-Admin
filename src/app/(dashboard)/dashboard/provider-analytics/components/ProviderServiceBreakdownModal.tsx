@@ -12,6 +12,7 @@ import {
 import { ProviderAnalytics, ProviderServiceStats } from "@/services/analyticsService";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProviderServiceBreakdownModalProps {
     isOpen: boolean;
@@ -27,6 +28,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
     periodLabel
 }) => {
     const { t } = useLanguage();
+    const { business } = useAuth();
 
     if (!isOpen || !provider) return null;
 
@@ -91,7 +93,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
 
                                     <div className="text-right">
                                         <div className="text-sm font-bold text-emerald-600">
-                                            ₹{s.revenue.toLocaleString()}
+                                            {business?.currency || '₹'}{s.revenue.toLocaleString()}
                                         </div>
                                         <div className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter mt-0.5">
                                             {t('provider_analytics.total_revenue_stats')}
@@ -108,7 +110,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                     <div className="flex gap-8">
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.combined_output')}</p>
-                            <p className="text-lg font-bold text-white tracking-tight">₹{provider.total_revenue.toLocaleString()}</p>
+                            <p className="text-lg font-bold text-white tracking-tight">{business?.currency || '₹'}{provider.total_revenue.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.efficiency')}</p>

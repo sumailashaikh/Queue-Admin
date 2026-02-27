@@ -122,16 +122,16 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
                     <div className="pt-2">
                         {!isCollapsed && (
                             <div className="px-4 mb-2">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
                                     <Shield className="h-3 w-3" />
-                                    Oversight
+                                    {t('sidebar.oversight')}
                                 </span>
                             </div>
                         )}
                         <Link
                             href="/dashboard/admin"
                             onClick={onClose}
-                            title={isCollapsed ? "Control Center" : undefined}
+                            title={isCollapsed ? t('sidebar.control_center') : undefined}
                             className={cn(
                                 "group flex items-center rounded-xl transition-all duration-200",
                                 isCollapsed ? "px-3 py-3 justify-center" : "px-4 py-3 text-sm font-black uppercase tracking-tighter",
@@ -141,7 +141,7 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
                             )}
                         >
                             <Shield className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                            {!isCollapsed && "Control Center"}
+                            {!isCollapsed && t('sidebar.control_center')}
                         </Link>
                     </div>
                 )}

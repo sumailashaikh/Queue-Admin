@@ -7,6 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardLayout({
     children,
@@ -14,6 +15,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const { business } = useAuth();
+    const { t } = useLanguage();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const pathname = usePathname();
@@ -72,12 +74,12 @@ export default function DashboardLayout({
                         <div className="flex items-center gap-6">
                             <LanguageSwitcher />
                             <div className="hidden sm:flex flex-col items-end">
-                                <p className="text-sm font-bold text-slate-900">Business Portal</p>
+                                <p className="text-sm font-bold text-slate-900">{t('dashboard.business_portal')}</p>
                                 <button
                                     onClick={() => window.open(`/p/${business?.slug}`, '_blank')}
                                     className="text-xs font-extrabold text-primary uppercase tracking-wider hover:text-blue-600 transition-colors"
                                 >
-                                    View Public Page
+                                    {t('dashboard.view_public_page')}
                                 </button>
                             </div>
                             <div className="h-9 w-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm">

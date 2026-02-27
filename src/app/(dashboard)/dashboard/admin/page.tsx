@@ -23,8 +23,12 @@ import {
 } from "lucide-react";
 import { adminService, DashboardUser, DashboardBusiness } from "@/services/adminService";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminDashboard() {
+    const { t } = useLanguage();
+    const { business } = useAuth();
     const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('users');
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [businesses, setBusinesses] = useState<DashboardBusiness[]>([]);
@@ -85,7 +89,7 @@ export default function AdminDashboard() {
             await adminService.updateUserRole(userId, newRole);
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
         } catch (err) {
-            alert("Failed to update user role");
+            alert(t('admin.create_modal.err_fail'));
         } finally {
             setUpdatingRole(null);
         }
@@ -101,7 +105,7 @@ export default function AdminDashboard() {
                 is_verified: isVerified ?? u.is_verified
             } : u));
         } catch (err) {
-            alert("Failed to update user status");
+            alert(t('admin.create_modal.err_fail'));
         } finally {
             setLoading(false);
         }
@@ -114,11 +118,11 @@ export default function AdminDashboard() {
         setInviteSuccess(null);
         try {
             await adminService.inviteAdmin(invitePhone);
-            setInviteSuccess(`Success! ${invitePhone} has been promoted to Admin.`);
+            setInviteSuccess(t('admin.invite_modal.success', { phone: invitePhone }));
             setInvitePhone("");
             fetchData();
         } catch (err: any) {
-            setInviteError(err.response?.data?.message || "Invitation failed. User may not be registered.");
+            setInviteError(err.response?.data?.message || t('admin.invite_modal.err_fail'));
         } finally {
             setInviteLoading(false);
         }
@@ -145,9 +149,9 @@ export default function AdminDashboard() {
             setIsCreateModalOpen(false);
             setCreateUserData({ full_name: "", phone: "", role: "owner" });
             fetchData();
-            alert("User created successfully!");
+            alert(t('admin.create_modal.success'));
         } catch (err: any) {
-            alert(err.response?.data?.message || "Failed to create user");
+            alert(err.response?.data?.message || t('admin.create_modal.err_fail'));
         } finally {
             setCreateLoading(false);
         }
@@ -165,9 +169,9 @@ export default function AdminDashboard() {
                             <TrendingUp className="h-10 w-10" />
                         </div>
                         <div className="space-y-2">
-                            <h3 className="text-2xl font-bold text-slate-900">Advanced Analytics</h3>
+                            <h3 className="text-2xl font-bold text-slate-900">{t('admin.analytics_modal.title')}</h3>
                             <p className="text-slate-500 font-medium leading-relaxed">
-                                We're currently building out a comprehensive reporting engine to help you track revenue, peak hours, and staff performance.
+                                {t('admin.analytics_modal.desc')}
                             </p>
                         </div>
                         <div className="pt-2">
@@ -175,10 +179,10 @@ export default function AdminDashboard() {
                                 onClick={() => setIsReportsModalOpen(false)}
                                 className="w-full h-14 bg-slate-900 text-white rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
                             >
-                                Got it, thanks!
+                                {t('admin.analytics_modal.cta')}
                             </button>
                         </div>
-                        <p className="text-xs font-bold text-indigo-500 uppercase tracking-[0.2em]">Coming Late 2026</p>
+                        <p className="text-xs font-bold text-indigo-500 uppercase tracking-[0.2em]">{t('admin.analytics_modal.coming_soon')}</p>
                     </div>
                 </div>
             )}
@@ -187,9 +191,9 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                     <div className="flex items-center gap-3">
                         <div className="h-8 w-1 bg-indigo-600 rounded-full" />
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 uppercase">Control Center</h1>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 uppercase">{t('admin.title')}</h1>
                     </div>
-                    <p className="text-slate-500 font-medium text-sm">System oversight, user management, and platform health.</p>
+                    <p className="text-slate-500 font-medium text-sm">{t('admin.desc')}</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -198,14 +202,14 @@ export default function AdminDashboard() {
                         className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-xl shadow-indigo-200 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
                     >
                         <UserPlus className="h-4 w-4" />
-                        Invite Admin
+                        {t('admin.invite_admin')}
                     </button>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
                         className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-200 text-slate-600 hover:border-indigo-600 hover:text-indigo-600 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-xl shadow-slate-200/50 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
                     >
                         <UserPlus className="h-4 w-4" />
-                        Create User
+                        {t('admin.create_user')}
                     </button>
 
                     <div className="flex items-center p-1 bg-slate-100 rounded-[20px] border border-slate-200/50">
@@ -217,7 +221,7 @@ export default function AdminDashboard() {
                             )}
                         >
                             <Users className="h-4 w-4" />
-                            Users
+                            {t('admin.users_tab')}
                         </button>
                         <button
                             onClick={() => setActiveTab('businesses')}
@@ -227,7 +231,7 @@ export default function AdminDashboard() {
                             )}
                         >
                             <Store className="h-4 w-4" />
-                            Businesses
+                            {t('admin.businesses_tab')}
                         </button>
                     </div>
                 </div>
@@ -236,16 +240,16 @@ export default function AdminDashboard() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: 'Total Users', value: '1,284', icon: Users, color: 'blue' },
-                    { label: 'Active Businesses', value: '86', icon: Store, color: 'indigo' },
-                    { label: 'Platform Health', value: '99.9%', icon: Shield, color: 'emerald' },
+                    { label: t('admin.total_users'), value: '1,284', icon: Users, color: 'blue' },
+                    { label: t('admin.active_businesses'), value: '86', icon: Store, color: 'indigo' },
+                    { label: t('admin.platform_health'), value: '99.9%', icon: Shield, color: 'emerald' },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-100 rounded-[32px] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
                         <div className="flex items-center justify-between">
                             <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center", `bg-${stat.color}-50 text-${stat.color}-600`)}>
                                 <stat.icon className="h-6 w-6" />
                             </div>
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Global</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.global_scope')}</span>
                         </div>
                         <div className="mt-6 space-y-1">
                             <p className="text-4xl font-bold text-slate-900 tracking-tighter">{stat.value}</p>
@@ -262,7 +266,7 @@ export default function AdminDashboard() {
                         <Search className="absolute left-4.5 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                         <input
                             type="text"
-                            placeholder="Find user by name or phone..."
+                            placeholder={t('admin.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-13 pr-6 py-4 bg-slate-50/50 border border-slate-100 rounded-[20px] text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-200 transition-all placeholder:text-slate-400 placeholder:font-medium"
@@ -282,7 +286,7 @@ export default function AdminDashboard() {
                             )}
                         >
                             <Filter className="h-4 w-4" />
-                            {statusFilter === 'pending' ? 'Showing Pending' : 'Filter Pending'}
+                            {statusFilter === 'pending' ? t('admin.showing_pending') : t('admin.filter_pending')}
                         </button>
                     </div>
                 </div>
@@ -290,7 +294,7 @@ export default function AdminDashboard() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
                         <Loader2 className="h-10 w-10 animate-spin text-indigo-600/20" />
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">Synching with Mainframe...</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">{t('admin.syncing')}</p>
                     </div>
                 ) : (
                     <>
@@ -298,11 +302,11 @@ export default function AdminDashboard() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50/50">
-                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Identity</th>
-                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Role</th>
-                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
-                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Joined</th>
-                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.identity')}</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.role')}</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.phone')}</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.joined')}</th>
+                                        <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">{t('admin.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -313,7 +317,7 @@ export default function AdminDashboard() {
                                                     <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-xs">
                                                         {user.full_name?.charAt(0) || 'U'}
                                                     </div>
-                                                    <p className="font-bold text-slate-900 tracking-tight">{user.full_name || 'Incognito User'}</p>
+                                                    <p className="font-bold text-slate-900 tracking-tight">{user.full_name || t('admin.incognito')}</p>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
@@ -329,8 +333,8 @@ export default function AdminDashboard() {
                                                                     "bg-slate-50 text-slate-500 ring-slate-200"
                                                         )}
                                                     >
-                                                        <option value="customer">Customer</option>
-                                                        <option value="owner">Owner</option>
+                                                        <option value="customer">{t('admin.customer')}</option>
+                                                        <option value="owner">{t('admin.owner')}</option>
                                                         <option value="admin">Admin</option>
                                                     </select>
                                                     <div className={cn(
@@ -358,7 +362,7 @@ export default function AdminDashboard() {
                                                             className="h-8 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all flex items-center gap-1"
                                                         >
                                                             <CheckCircle2 className="h-3 w-3" />
-                                                            Verify
+                                                            {t('admin.verify')}
                                                         </button>
                                                     )}
                                                     {user.status !== 'blocked' && (
@@ -367,7 +371,7 @@ export default function AdminDashboard() {
                                                             className="h-8 px-3 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-red-50 hover:text-red-600 transition-all flex items-center gap-1"
                                                         >
                                                             <XCircle className="h-3 w-3" />
-                                                            Block
+                                                            {t('admin.block')}
                                                         </button>
                                                     )}
                                                 </div>
@@ -384,7 +388,7 @@ export default function AdminDashboard() {
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-2">
                                                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Active</span>
+                                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t('admin.active')}</span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
@@ -399,7 +403,7 @@ export default function AdminDashboard() {
                                                     onClick={() => handleInspect(business)}
                                                     className="h-10 px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 transition-all"
                                                 >
-                                                    Inspect
+                                                    {t('admin.inspect')}
                                                 </button>
                                             </td>
                                         </tr>
@@ -412,7 +416,7 @@ export default function AdminDashboard() {
                         {activeTab === 'users' && pagination.total > 0 && (
                             <div className="p-8 border-t border-slate-50 flex items-center justify-between">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    Showing <span className="text-slate-900">{(pagination.page - 1) * 20 + 1}-{Math.min(pagination.page * 20, pagination.total)}</span> of {pagination.total} users
+                                    {t('admin.showing_users', { start: (pagination.page - 1) * 20 + 1, end: Math.min(pagination.page * 20, pagination.total), total: pagination.total })}
                                 </p>
                                 <div className="flex gap-2">
                                     <button
@@ -442,7 +446,7 @@ export default function AdminDashboard() {
                     <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-10 flex flex-col items-center text-center space-y-8">
                             <div className="flex items-center justify-between w-full mb-2">
-                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Invite System Admin</h3>
+                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('admin.invite_modal.title')}</h3>
                                 <button
                                     onClick={() => {
                                         setIsInviteModalOpen(false);
@@ -461,7 +465,7 @@ export default function AdminDashboard() {
 
                             <div className="space-y-2 text-center">
                                 <p className="text-sm font-bold text-slate-500 leading-relaxed max-w-[250px] mx-auto">
-                                    Enter the phone number of the user you want to promote to system administrator.
+                                    {t('admin.invite_modal.desc')}
                                 </p>
                             </div>
 
@@ -494,7 +498,7 @@ export default function AdminDashboard() {
                                     type="submit"
                                     className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                                 >
-                                    {inviteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Promotion"}
+                                    {inviteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.invite_modal.confirm')}
                                 </button>
                             </form>
                         </div>
@@ -510,7 +514,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center justify-between w-full">
                                 <div className="space-y-1">
                                     <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">{inspectedBusiness.name}</h3>
-                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em]">Business Oversight Mode</p>
+                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em]">{t('admin.inspect_modal.title')}</p>
                                 </div>
                                 <button
                                     onClick={() => setInspectedBusiness(null)}
@@ -523,16 +527,16 @@ export default function AdminDashboard() {
                             {detailsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                     <Loader2 className="h-8 w-8 animate-spin text-indigo-600/20" />
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fetching Live Performance...</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.inspect_modal.fetching')}</p>
                                 </div>
                             ) : businessDetails ? (
                                 <div className="space-y-8">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {[
-                                            { label: 'Today Revenue', value: `₹${businessDetails.totalRevenue}`, icon: IndianRupee, color: 'emerald', desc: 'Total expected earnings from services today' },
-                                            { label: 'Total Visits', value: businessDetails.totalCustomers, icon: Users, color: 'blue', desc: 'Total walk-ins and bookings today' },
-                                            { label: 'Completed', value: businessDetails.completedVisits, icon: CheckCircle2, color: 'indigo', desc: 'Successfully served customers' },
-                                            { label: 'Wait Time', value: `${businessDetails.avgWaitTimeMinutes}m`, icon: Clock, color: 'amber', desc: 'Average time spent in waiting state' },
+                                            { label: t('admin.inspect_modal.rev'), value: `${business?.currency || '₹'}${businessDetails.totalRevenue}`, icon: IndianRupee, color: 'emerald', desc: 'Total expected earnings from services today' },
+                                            { label: t('admin.inspect_modal.visits'), value: businessDetails.totalCustomers, icon: Users, color: 'blue', desc: 'Total walk-ins and bookings today' },
+                                            { label: t('admin.inspect_modal.completed'), value: businessDetails.completedVisits, icon: CheckCircle2, color: 'indigo', desc: 'Successfully served customers' },
+                                            { label: t('admin.inspect_modal.wait'), value: `${businessDetails.avgWaitTimeMinutes}m`, icon: Clock, color: 'amber', desc: 'Average time spent in waiting state' },
                                         ].map((stat, i) => (
                                             <div key={i} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 group/stat relative transition-all hover:bg-white hover:shadow-lg">
                                                 <p className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -549,7 +553,7 @@ export default function AdminDashboard() {
 
                                     {businessDetails.recentActivity && businessDetails.recentActivity.length > 0 && (
                                         <div className="space-y-4">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Today's Activity Log</p>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">{t('admin.inspect_modal.activity_log')}</p>
                                             <div className="bg-slate-50 rounded-[32px] border border-slate-100 overflow-hidden">
                                                 <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
                                                     {businessDetails.recentActivity.map((act: any) => (
@@ -578,7 +582,7 @@ export default function AdminDashboard() {
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-wider">No data available for today.</p>
+                                <p className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-wider">{t('admin.inspect_modal.no_data')}</p>
                             )}
 
                             <div className="flex gap-4">
@@ -586,13 +590,13 @@ export default function AdminDashboard() {
                                     onClick={() => window.open(`/${inspectedBusiness.slug}`, '_blank')}
                                     className="flex-1 py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
                                 >
-                                    View Public Page
+                                    {t('admin.inspect_modal.view_public')}
                                 </button>
                                 <button
                                     onClick={() => alert("Comprehensive historical reports and CSV exports are being prepared for the next release.")}
                                     className="flex-1 py-5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
                                 >
-                                    Export Reports
+                                    {t('admin.inspect_modal.export')}
                                 </button>
                             </div>
                         </div>
@@ -606,7 +610,7 @@ export default function AdminDashboard() {
                     <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-10 space-y-8">
                             <div className="flex items-center justify-between w-full">
-                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Onboard New User</h3>
+                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('admin.create_modal.title')}</h3>
                                 <button
                                     onClick={() => setIsCreateModalOpen(false)}
                                     className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
@@ -617,7 +621,7 @@ export default function AdminDashboard() {
 
                             <form onSubmit={handleCreateUser} className="space-y-4">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">Full Name</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">{t('admin.create_modal.full_name')}</label>
                                     <input
                                         required
                                         type="text"
@@ -628,7 +632,7 @@ export default function AdminDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">Phone Number</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">{t('admin.create_modal.phone')}</label>
                                     <input
                                         required
                                         type="tel"
@@ -639,15 +643,15 @@ export default function AdminDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">Initital Role</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">{t('admin.create_modal.role')}</label>
                                     <select
                                         value={createUserData.role}
                                         onChange={(e) => setCreateUserData(prev => ({ ...prev, role: e.target.value }))}
                                         className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
                                     >
-                                        <option value="owner">Business Owner</option>
-                                        <option value="customer">Regular Customer</option>
-                                        <option value="admin">Platform Admin</option>
+                                        <option value="owner">{t('admin.owner')}</option>
+                                        <option value="customer">{t('admin.customer')}</option>
+                                        <option value="admin">{t('admin.role')}</option>
                                     </select>
                                 </div>
                                 <button
@@ -655,7 +659,7 @@ export default function AdminDashboard() {
                                     type="submit"
                                     className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4"
                                 >
-                                    {createLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+                                    {createLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.create_modal.cta')}
                                 </button>
                             </form>
                         </div>

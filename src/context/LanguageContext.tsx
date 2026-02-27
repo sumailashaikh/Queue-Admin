@@ -13,7 +13,7 @@ const translations: Record<string, any> = { en, hi, es, ar };
 interface LanguageContextType {
     language: string;
     setLanguage: (lang: string) => Promise<void>;
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, any>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -44,14 +44,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                     localStorage.setItem('auth_user', JSON.stringify({ ...parsed, ui_language: newLang }));
                 }
 
-                await api.put('/user/language', { ui_language: newLang });
+                await api.put('/users/language', { ui_language: newLang });
             } catch (error) {
                 console.error('Failed to update language on server', error);
             }
         }
     };
 
-    const t = (key: string): string => {
+    const t = (key: string, params?: Record<string, any>): string => {
         const keys = key.split('.');
         let value = translations[language];
 
@@ -70,12 +70,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                 if (value && typeof value === 'object' && k in value) {
                     value = value[k];
                 } else {
-                    return key;
+                    value = key;
+                    break;
                 }
             }
         }
 
-        return value !== undefined ? String(value) : key;
+        let result = value !== undefined ? String(value) : key;
+
+        if (params) {
+            Object.entries(params).forEach(([k, v]) => {
+                result = result.replace(`{{${k}}}`, String(v));
+            });
+        }
+
+        return result;
     };
 
     return (

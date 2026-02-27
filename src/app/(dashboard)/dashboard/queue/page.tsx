@@ -147,10 +147,10 @@ export default function LiveQueuePage() {
         try {
             await queueService.assignTaskProvider(taskId, providerId);
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
-            showToast("Expert assigned to service successfully");
+            showToast(t('queue.success_assign'));
         } catch (error: any) {
             console.error("Failed to assign expert:", error);
-            showToast(error.message || "Failed to assign expert", "error");
+            showToast(error.message || t('queue.err_assign'), "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
@@ -168,12 +168,12 @@ export default function LiveQueuePage() {
             await queueService.startTask(taskId);
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
             fetchProviders(); // Refresh provider availability
-            showToast("Service task started");
+            showToast(t('queue.success_start'));
         } catch (error: any) {
             if (process.env.NODE_ENV === 'development') {
                 console.error("Full Start Task Error:", error);
             }
-            showToast(error.message || "Failed to start task", "error");
+            showToast(error.message || t('queue.err_start'), "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
@@ -191,10 +191,10 @@ export default function LiveQueuePage() {
             await queueService.completeTask(taskId);
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
             fetchProviders(); // Refresh provider availability
-            showToast("Service task completed");
+            showToast(t('queue.success_complete'));
         } catch (error: any) {
             console.error("Failed to complete task:", error);
-            showToast(error.message || "Failed to complete task", "error");
+            showToast(error.message || t('queue.err_complete'), "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
@@ -203,9 +203,9 @@ export default function LiveQueuePage() {
         try {
             await api.patch(`/service-providers/assignments/${entryId}`, { provider_id: providerId });
             if (selectedQueue?.id) await fetchEntries(selectedQueue.id);
-            showToast("Expert assigned successfully");
+            showToast(t('queue.success_assign'));
         } catch (error: any) {
-            showToast(error.message || "Failed to assign expert", "error");
+            showToast(error.message || t('queue.err_assign'), "error");
         }
     };
 
@@ -215,9 +215,9 @@ export default function LiveQueuePage() {
         try {
             await queueService.nextEntry(selectedQueue.id);
             await fetchEntries(selectedQueue.id);
-            showToast("Next customer called successfully");
+            showToast(t('queue.success_next'));
         } catch (error: any) {
-            showToast(error.message || "Failed to call next customer", "error");
+            showToast(error.message || t('queue.err_next'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -284,12 +284,12 @@ export default function LiveQueuePage() {
                 item.id === id ? { ...item, status } : item
             ));
 
-            if (status === 'serving') showToast("Serving started");
-            else if (status === 'completed') showToast("Service completed");
+            if (status === 'serving') showToast(t('queue.success_start'));
+            else if (status === 'completed') showToast(t('queue.success_complete'));
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         } catch (error: any) {
             console.error("Failed to update status:", error);
-            showToast(error.message || "Failed to update status", "error");
+            showToast(error.message || t('queue.err_status'), "error");
         }
     };
 
@@ -299,11 +299,11 @@ export default function LiveQueuePage() {
             setEntries((prev: QueueEntry[]) => prev.map((item: QueueEntry) =>
                 item.id === id ? { ...item, payment_method: method } : item
             ));
-            showToast(`Payment marked as ${method.toUpperCase()}`);
+            showToast(t('queue.success_payment', { method: method.toUpperCase() }));
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         } catch (error: any) {
             console.error("Failed to update payment:", error);
-            showToast(error.message || "Failed to update payment", "error");
+            showToast(error.message || t('queue.err_payment'), "error");
         }
     };
 
@@ -314,21 +314,21 @@ export default function LiveQueuePage() {
             setEntries((prev: QueueEntry[]) => prev.map((item: QueueEntry) =>
                 item.id === id ? { ...item, status: 'no_show' } : item
             ));
-            showToast("Customer marked as no-show and expert released.");
+            showToast(t('queue.success_noshow'));
         } catch (error: any) {
             console.error("Failed to mark no-show:", error);
-            showToast(error.message || "Failed to mark no-show", "error");
+            showToast(error.message || t('queue.err_noshow'), "error");
         }
     };
 
     const handleRestore = async (id: string) => {
         try {
             await queueService.restoreEntry(id);
-            showToast("Customer restored to live queue");
+            showToast(t('queue.success_restore'));
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         } catch (error: any) {
             console.error("Failed to restore customer:", error);
-            showToast(error.message || "Failed to restore customer", "error");
+            showToast(error.message || t('queue.err_restore'), "error");
         }
     };
 
@@ -336,10 +336,10 @@ export default function LiveQueuePage() {
         try {
             await queueService.skipEntry(id);
             if (selectedQueue) fetchEntries(selectedQueue.id);
-            showToast("Customer moved down in queue");
+            showToast(t('queue.success_skip'));
         } catch (error: any) {
             console.error("Failed to skip:", error);
-            showToast(error.message || "Failed to skip", "error");
+            showToast(error.message || t('queue.err_skip'), "error");
         }
     };
 
@@ -355,7 +355,7 @@ export default function LiveQueuePage() {
         if (!business) return;
         const link = `${window.location.origin}/p/${business.slug}`;
         navigator.clipboard.writeText(link);
-        showToast("Link Copied to Clipboard!");
+        showToast(t('queue.link_copied'));
     };
 
     const handleCreateQueue = async (e: React.FormEvent) => {
@@ -367,9 +367,9 @@ export default function LiveQueuePage() {
             await fetchQueues();
             setIsAddModalOpen(false);
             setFormData({ name: "", description: "", current_wait_time_minutes: 0, status: 'open' });
-            showToast("Queue created successfully");
+            showToast(t('queue.success_create'));
         } catch (err: any) {
-            showToast(err.message || "Failed to create queue", "error");
+            showToast(err.message || t('queue.err_create'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -384,9 +384,9 @@ export default function LiveQueuePage() {
             await queueService.updateQueue(selectedQueue.id, formData);
             await fetchQueues();
             setIsEditModalOpen(false);
-            showToast("Queue updated successfully");
+            showToast(t('queue.success_update'));
         } catch (err: any) {
-            showToast(err.message || "Failed to update queue", "error");
+            showToast(err.message || t('queue.err_update'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -399,10 +399,10 @@ export default function LiveQueuePage() {
             await queueService.deleteQueue(deleteModal.queueId);
             setDeleteModal({ isOpen: false, queueId: "", queueName: "" });
             await fetchQueues();
-            showToast("Queue deleted successfully");
+            showToast(t('queue.success_delete'));
         } catch (err: any) {
             console.error("Delete failed:", err);
-            showToast(err.message || "Failed to delete queue", "error");
+            showToast(err.message || t('queue.err_delete'), "error");
         } finally {
             setIsDeleting(false);
         }
@@ -415,10 +415,10 @@ export default function LiveQueuePage() {
             await queueService.resetQueueEntries(selectedQueue.id);
             await fetchEntries(selectedQueue.id);
             setIsResetModalOpen(false);
-            showToast("Queue reset successfully");
+            showToast(t('queue.success_reset'));
         } catch (err: any) {
             console.error("Reset failed:", err);
-            showToast(err.message || "Failed to reset queue", "error");
+            showToast(err.message || t('queue.err_reset'), "error");
         } finally {
             setIsDeleting(false);
         }
@@ -457,11 +457,11 @@ export default function LiveQueuePage() {
             const now = new Date().getTime();
             const diffInMinutes = Math.floor((now - joined) / (1000 * 60));
 
-            if (diffInMinutes < 1) return "Just now";
-            if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+            if (diffInMinutes < 1) return t('queue.just_now');
+            if (diffInMinutes < 60) return t('queue.m_ago', { m: diffInMinutes });
             const hours = Math.floor(diffInMinutes / 60);
             const mins = diffInMinutes % 60;
-            return `${hours}h ${mins}m ago`;
+            return t('queue.h_m_ago', { h: hours, m: mins });
         } catch (e) {
             return "--";
         }

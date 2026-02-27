@@ -1,5 +1,5 @@
-import React from 'react';
 import { cn } from "@/lib/utils";
+import { useLanguage } from '@/context/LanguageContext';
 
 // Global UI Tokens
 export const UI_TOKENS = {
@@ -27,18 +27,19 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+    const { t } = useLanguage();
     const s = status.toLowerCase();
 
     const config: Record<string, { bg: string, text: string, label: string }> = {
-        waiting: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'WAITING' },
-        serving: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'IN SERVICE' },
-        completed: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'COMPLETED' },
-        no_show: { bg: 'bg-rose-50', text: 'text-rose-700', label: 'NO SHOW' },
-        skipped: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'SKIPPED' },
-        confirmed: { bg: 'bg-indigo-50', text: 'text-indigo-700', label: 'CONFIRMED' },
-        upcoming: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'UPCOMING' },
-        unpaid: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'UNPAID' },
-        paid: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'PAID' },
+        waiting: { bg: 'bg-slate-100', text: 'text-slate-500', label: t('status.waiting') },
+        serving: { bg: 'bg-blue-50', text: 'text-blue-700', label: t('status.serving') },
+        completed: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: t('status.completed') },
+        no_show: { bg: 'bg-rose-50', text: 'text-rose-700', label: t('status.no_show') },
+        skipped: { bg: 'bg-amber-50', text: 'text-amber-700', label: t('status.skipped') },
+        confirmed: { bg: 'bg-indigo-50', text: 'text-indigo-700', label: t('status.confirmed') },
+        upcoming: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: t('status.upcoming') },
+        unpaid: { bg: 'bg-amber-50', text: 'text-amber-700', label: t('status.unpaid') },
+        paid: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: t('status.paid') },
     };
 
     const style = config[s] || { bg: 'bg-slate-100', text: 'text-slate-500', label: s.toUpperCase() };

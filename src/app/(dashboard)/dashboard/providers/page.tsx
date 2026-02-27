@@ -104,16 +104,16 @@ export default function ProvidersPage() {
                     formData.department !== (selectedProvider.department || "");
 
                 if (!hasChanges) {
-                    showToast("No changes done", "success");
+                    showToast(t('providers.no_changes'), "success");
                     setIsModalOpen(false);
                     return;
                 }
 
                 await providerService.updateProvider(selectedProvider.id, formData);
-                showToast("Provider updated successfully");
+                showToast(t('providers.success_update'));
             } else {
                 await providerService.createProvider({ ...formData, business_id: business?.id });
-                showToast("Provider added successfully");
+                showToast(t('providers.success_add'));
             }
             await fetchProviders();
             setIsModalOpen(false);
@@ -146,11 +146,11 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await providerService.deleteProvider(deleteModal.provider.id);
-            showToast("Provider deactivated");
+            showToast(t('providers.success_deactivate'));
             await fetchProviders();
             setDeleteModal({ isOpen: false, provider: null });
         } catch (error: any) {
-            showToast(error.message || "Failed to deactivate", "error");
+            showToast(error.message || t('providers.err_deactivate'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -167,7 +167,7 @@ export default function ProvidersPage() {
             setAssignedServiceIds([]);
             setIsAssignModalOpen(true);
         } catch (error) {
-            showToast("Failed to load assignments", "error");
+            showToast(t('providers.err_load_assignments'), "error");
         }
     };
 
@@ -189,7 +189,7 @@ export default function ProvidersPage() {
             }
             setIsAvailabilityModalOpen(true);
         } catch (error) {
-            showToast("Failed to load availability", "error");
+            showToast(t('providers.err_load_availability'), "error");
         }
     };
 
@@ -198,10 +198,10 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await providerService.assignServices(selectedProvider.id, assignedServiceIds);
-            showToast("Services assigned successfully");
+            showToast(t('providers.success_assign'));
             setIsAssignModalOpen(false);
         } catch (error: any) {
-            showToast(error.message || "Failed to assign services", "error");
+            showToast(error.message || t('providers.err_assign'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -212,10 +212,10 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await providerService.updateAvailability(selectedProvider.id, availabilityData);
-            showToast("Availability updated successfully");
+            showToast(t('providers.success_availability'));
             setIsAvailabilityModalOpen(false);
         } catch (error: any) {
-            showToast(error.message || "Failed to update availability", "error");
+            showToast(error.message || t('providers.err_availability'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -229,7 +229,7 @@ export default function ProvidersPage() {
             setIsLeaveModalOpen(true);
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
         } catch (error) {
-            showToast("Unable to load leaves. Please try again.", "error");
+            showToast(t('providers.err_load_leaves'), "error");
         }
     };
 
@@ -239,13 +239,13 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await providerService.addLeave(selectedProvider.id, leaveFormData);
-            showToast("Leave added successfully");
+            showToast(t('providers.success_leave_add'));
             const data = await providerService.getLeaves(selectedProvider.id);
             setLeavesData(data);
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             await fetchProviders(); // Refresh main list to update badges
         } catch (error: any) {
-            showToast(error.message || "Failed to add leave", "error");
+            showToast(error.message || t('providers.err_add_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -256,12 +256,12 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await providerService.deleteLeave(leaveId);
-            showToast("Leave deleted successfully");
+            showToast(t('providers.success_leave_delete'));
             const data = await providerService.getLeaves(selectedProvider.id);
             setLeavesData(data);
             await fetchProviders();
         } catch (error: any) {
-            showToast(error.message || "Failed to delete leave", "error");
+            showToast(error.message || t('providers.err_delete_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -628,7 +628,7 @@ export default function ProvidersPage() {
                                                         }}
                                                         className="h-4 w-4 rounded-lg border-2 border-slate-200 text-slate-900 focus:ring-0 transition-all cursor-pointer"
                                                     />
-                                                    <span className="text-sm font-bold uppercase tracking-wider text-slate-700">{day}</span>
+                                                    <span className="text-sm font-bold uppercase tracking-wider text-slate-700">{t(`providers.days.${idx}`)}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-3">

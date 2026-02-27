@@ -41,6 +41,7 @@ export interface Appointment {
         services: {
             id: string;
             name: string;
+            translations?: Record<string, string>;
         }
     }[];
 }

@@ -20,14 +20,16 @@ import {
 } from "lucide-react";
 import { appointmentService, Appointment } from "@/services/appointmentService";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/dashboard/DashboardUI";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
-import { StatusBadge } from "@/components/dashboard/DashboardUI";
+import { useLanguage } from "@/context/LanguageContext";
 
 type AppointmentStatus = Appointment['status'];
 
 export default function AppointmentsPage() {
     const { business } = useAuth();
+    const { t, language } = useLanguage();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [providers, setProviders] = useState<any[]>([]); // Added for leave detection
@@ -35,6 +37,19 @@ export default function AppointmentsPage() {
     const [dismissedDelays, setDismissedDelays] = useState<string[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+    const isRTL = language === 'ar';
+
+    const getTranslatedServiceNames = (apt: Appointment) => {
+        if (!apt.appointment_services) return 'Service';
+
+        return apt.appointment_services.map(as => {
+            if (as.services?.translations && as.services.translations[language]) {
+                return as.services.translations[language];
+            }
+            return as.services?.name;
+        }).filter(Boolean).join(', ') || 'Service';
+    };
 
     const fetchAppointments = useCallback(async () => {
         try {
@@ -68,13 +83,13 @@ export default function AppointmentsPage() {
         try {
             await appointmentService.updateStatus(id, status);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-            showSuccess(`Appointment updated to ${status}`);
+            showSuccess(t('appointments.status_updated', { status: status.toUpperCase() }));
             await fetchAppointments();
         } catch (err: any) {
             if (process.env.NODE_ENV === 'development') {
                 console.error("Full Appointment Status Update Error:", err);
             }
-            showError(err.message || "Failed to update status.");
+            showError(err.message || t('common.error_updating'));
         } finally {
             setActionLoading(null);
         }
@@ -85,17 +100,17 @@ export default function AppointmentsPage() {
         try {
             await appointmentService.updatePayment(id, method);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, payment_method: method } : a));
-            showSuccess(`Payment marked as ${method.toUpperCase()}`);
+            showSuccess(t('appointments.payment_marked', { method: method.toUpperCase() }));
             await fetchAppointments();
         } catch (err: any) {
-            showError(err.message || "Failed to update payment method.");
+            showError(err.message || t('common.error_updating'));
         } finally {
             setActionLoading(null);
         }
     };
 
     const handleReschedule = async (id: string) => {
-        const newTime = prompt("Enter new start time (YYYY-MM-DD HH:MM):");
+        const newTime = prompt(t('appointments.prompt_reschedule'));
         if (!newTime) return;
 
         setActionLoading(id);
@@ -104,25 +119,25 @@ export default function AppointmentsPage() {
             const isoTime = new Date(newTime).toISOString();
             await appointmentService.reschedule(id, isoTime);
             await fetchAppointments();
-            showSuccess("Appointment rescheduled successfully!");
+            showSuccess(t('appointments.success_reschedule'));
         } catch (err: any) {
-            showError(err.message || "Failed to reschedule. Check business hours and buffer.");
+            showError(err.message || t('appointments.error_reschedule'));
         } finally {
             setActionLoading(null);
         }
     };
 
     const handleCancel = async (id: string) => {
-        if (!confirm("Are you sure you want to cancel this appointment?")) return;
+        if (!confirm(t('appointments.confirm_cancel'))) return;
 
         setActionLoading(id);
         setMessage(null);
         try {
             await appointmentService.cancel(id);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' } : a));
-            showSuccess("Appointment cancelled successfully!");
+            showSuccess(t('appointments.success_cancel'));
         } catch (err: any) {
-            showError(err.message || "Failed to cancel.");
+            showError(err.message || t('appointments.error_cancel'));
         } finally {
             setActionLoading(null);
         }
@@ -143,15 +158,14 @@ export default function AppointmentsPage() {
         if (!phone || !business) return;
 
         const customerName = apt.profiles?.full_name || apt.guest_name || 'Guest';
-        const services = (apt as any).appointment_services?.map((as: any) => as.services?.name).filter(Boolean) || [];
-        const serviceNames = services.join(', ') || 'General Service';
-        const time = new Date(apt.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const serviceNames = getTranslatedServiceNames(apt);
+        const time = new Date(apt.start_time).toLocaleTimeString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
         let message = "";
         if (type === 'alert') {
-            message = `Hi ${customerName}, you’re next in line at ${business.name}. Please stay nearby. We’ll notify you shortly.`;
+            message = t('queue.wa_next_msg', { name: customerName, business: business.name });
         } else {
-            message = `Hi ${customerName}, your turn at ${business.name} is ready. Please proceed to the service counter. Thank you.`;
+            message = t('queue.wa_ready_msg', { name: customerName, business: business.name });
         }
 
         let phoneStr = phone.replace(/\D/g, '');
@@ -187,36 +201,37 @@ export default function AppointmentsPage() {
 
     const formatDateTime = (dateString: string) => {
         const d = new Date(dateString);
+        const locale = language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN';
         return {
-            date: d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
-            time: d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+            date: d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }),
+            time: d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: true })
         };
     };
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 font-inter">
                 <Loader2 className="h-10 w-10 animate-spin text-blue-600/20" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Loading Concierge...</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('appointments.loading')}</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-10 max-w-5xl mx-auto pb-20 animate-in fade-in duration-1000">
+        <div className={cn("space-y-10 max-w-5xl mx-auto pb-20 animate-in fade-in duration-1000 font-inter", isRTL && "font-arabic")} dir={isRTL ? "rtl" : "ltr"}>
             {/* Header */}
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-10">
                 <div className="space-y-4">
                     <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-100 rounded-full border border-slate-200">
                         <Calendar className="h-4 w-4 text-slate-900" />
-                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Concierge Management</span>
+                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">{t('appointments.title')}</span>
                     </div>
-                    <div className="space-y-2">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                            Client <span className="text-slate-400">Reservations</span>
+                    <div className="space-y-2 text-slate-900 text-left">
+                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                            {t('appointments.subtitle')}
                         </h1>
                         <p className="text-sm font-bold text-slate-500 max-w-xl leading-relaxed">
-                            Organize appointments and deliver a premium client experience.
+                            {t('appointments.desc')}
                         </p>
                     </div>
                 </div>
@@ -246,7 +261,7 @@ export default function AppointmentsPage() {
                                 : "text-slate-500 hover:text-slate-900"
                         )}
                     >
-                        {tab}
+                        {t(`appointments.${tab}`)}
                     </button>
                 ))}
             </div>
@@ -258,8 +273,8 @@ export default function AppointmentsPage() {
                         <Calendar className="h-8 w-8 text-slate-200" />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-xl font-bold text-slate-900 tracking-tight">Quiet Day</p>
-                        <p className="text-sm text-slate-400 font-medium">No {activeTab} bookings to display right now.</p>
+                        <p className="text-xl font-bold text-slate-900 tracking-tight">{t('appointments.quiet_day')}</p>
+                        <p className="text-sm text-slate-400 font-medium">{t('appointments.no_bookings', { tab: t(`appointments.${activeTab}`) })}</p>
                     </div>
                 </div>
             ) : (
@@ -280,7 +295,7 @@ export default function AppointmentsPage() {
                                 )} />
 
                                 {/* Time/Date Column */}
-                                <div className="flex flex-col space-y-2 min-w-[140px] shrink-0 border-r border-slate-50 pr-8">
+                                <div className={cn("flex flex-col space-y-2 min-w-[140px] shrink-0 border-slate-50 pr-8", isRTL ? "md:border-l md:pl-8 border-l" : "md:border-r md:pr-8 border-r")}>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-1">{date}</p>
 
                                     <p className={cn("text-2xl font-black tracking-tighter tabular-nums leading-none", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
@@ -294,15 +309,17 @@ export default function AppointmentsPage() {
                                         </div>
                                     )}
 
-                                    <StatusBadge status={apt.appointment_state || apt.status} />
+                                    <div className="w-fit">
+                                        <StatusBadge status={apt.appointment_state || apt.status} />
+                                    </div>
                                 </div>
 
                                 {/* Customer Info */}
-                                <div className="flex-1 space-y-4">
+                                <div className="flex-1 space-y-4 text-left">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Status</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t('common.status')}</p>
                                         <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-4">
-                                            <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || 'Guest'}</span>
+                                            <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || t('queue.guest')}</span>
 
                                             {(() => {
                                                 const isToday = new Date(apt.start_time).toDateString() === new Date().toDateString();
@@ -323,13 +340,19 @@ export default function AppointmentsPage() {
                                                         const profile = apt.profiles;
                                                         if (!profile || !business) return;
 
-                                                        const formatDate = (date: string | Date) => new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                                                        const locale = language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-GB';
+                                                        const formatDate = (date: string | Date) => new Date(date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
                                                         const formatTime12 = (dateString: string) => {
                                                             const d = new Date(dateString);
-                                                            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                                                            return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: true });
                                                         };
 
-                                                        const text = `Hello ${profile.full_name}, \n\nYour appointment at ${business.name} has been successfully confirmed.\n\nDate: ${formatDate(apt.start_time)}\nTime: ${formatTime12(apt.start_time)}\n\nWe look forward to serving you.`;
+                                                        const text = t('queue.wa_appt_msg', {
+                                                            name: profile.full_name,
+                                                            business: business.name,
+                                                            date: formatDate(apt.start_time),
+                                                            time: formatTime12(apt.start_time)
+                                                        });
 
                                                         let phoneStr = profile.phone.replace(/\D/g, '');
                                                         if (phoneStr.length === 10) phoneStr = `91${phoneStr}`;
@@ -337,7 +360,7 @@ export default function AppointmentsPage() {
                                                         window.open(`https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`, '_blank');
                                                     }}
                                                     className="p-2.5 bg-[#25D366]/10 text-[#25D366] rounded-2xl hover:bg-[#25D366] hover:text-white transition-all shadow-sm border border-[#25D366]/20"
-                                                    title="WhatsApp customer"
+                                                    title={t('appointments.whatsapp_customer')}
                                                 >
                                                     <MessageCircle className="h-4.5 w-4.5" />
                                                 </button>
@@ -349,7 +372,7 @@ export default function AppointmentsPage() {
                                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 max-w-[300px]">
                                             <CalendarDays className="h-4 w-4 text-indigo-600 shrink-0" />
                                             <span className="text-xs font-bold text-slate-700 truncate">
-                                                {(apt as any).appointment_services?.map((as: any) => as.services?.name).join(', ') || 'Standard Service'}
+                                                {getTranslatedServiceNames(apt)}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -363,13 +386,13 @@ export default function AppointmentsPage() {
                                         {apt.payment_status === 'paid' ? (
                                             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl text-xs font-bold shadow-sm">
                                                 <CheckCheck className="h-3.5 w-3.5" />
-                                                <span className="capitalize">{apt.payment_method}</span> Paid
+                                                <span className="capitalize">{apt.payment_method}</span> {t('status.paid')}
                                             </div>
                                         ) : (
                                             /* Hide payment buttons if checked in or in service */
                                             (apt.status !== 'checked_in' && apt.status !== 'in_service') ? (
                                                 <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                                                    <span className="px-2 text-[10px] font-bold text-slate-400 uppercase">Pay:</span>
+                                                    <span className="px-2 text-[10px] font-bold text-slate-400 uppercase">{t('appointments.pay')}:</span>
                                                     <button onClick={() => handleUpdatePayment(apt.id, 'cash')} className="px-3 py-1.5 bg-white text-emerald-600 hover:bg-emerald-50 rounded-lg text-xs font-bold border shadow-sm transition-all flex items-center gap-1.5">
                                                         Cash
                                                     </button>
@@ -379,7 +402,7 @@ export default function AppointmentsPage() {
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-xl text-[10px] font-bold shadow-sm uppercase">
-                                                    Payment in Queue
+                                                    {t('appointments.payment_in_queue')}
                                                 </div>
                                             )
                                         )}
@@ -390,14 +413,14 @@ export default function AppointmentsPage() {
                                         <div className="mt-4 p-3.5 bg-amber-50 border border-amber-100 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-300">
                                             <div className="flex items-center gap-2 text-amber-700">
                                                 <AlertCircle className="w-5 h-5 shrink-0" />
-                                                <span className="text-xs font-bold uppercase leading-tight">Running <span className="text-amber-900">{apt.delay_minutes} min</span> late</span>
+                                                <span className="text-xs font-bold uppercase leading-tight">{t('appointments.running_late', { min: apt.delay_minutes })}</span>
                                             </div>
                                             <div className="flex items-center gap-2 w-full sm:w-auto">
                                                 <button onClick={() => setDismissedDelays(p => [...p, apt.id])} className="flex-1 sm:flex-none px-3 py-1.5 bg-amber-100/50 text-amber-700 hover:bg-amber-100 text-xs font-bold rounded-lg transition-colors border border-amber-200/50">
-                                                    Keep as is
+                                                    {t('appointments.keep_as_is')}
                                                 </button>
                                                 <button onClick={() => handleReschedule(apt.id)} className="flex-1 sm:flex-none px-3 py-1.5 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-xs font-bold rounded-lg transition-colors shadow-sm">
-                                                    Reschedule
+                                                    {t('appointments.reschedule')}
                                                 </button>
                                             </div>
                                         </div>
@@ -405,7 +428,7 @@ export default function AppointmentsPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex items-center gap-2 md:border-l md:border-slate-100 md:pl-6">
+                                <div className={cn("flex items-center gap-2 border-slate-100", isRTL ? "md:border-r md:pr-6 pr-0 border-none" : "md:border-l md:pl-6 pl-0 border-none")}>
                                     {(apt.status === 'pending' || apt.status === 'scheduled' || apt.status === 'requested' || apt.status === 'rescheduled') && (
                                         <>
                                             <button
@@ -414,13 +437,13 @@ export default function AppointmentsPage() {
                                                 className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
                                             >
                                                 {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                                Confirm
+                                                {t('common.confirm')}
                                             </button>
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleReschedule(apt.id)}
                                                 className="h-10 w-10 border-2 border-slate-100 text-indigo-500 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
-                                                title="Reschedule Appointment"
+                                                title={t('appointments.reschedule_appointment')}
                                             >
                                                 <CalendarDays className="h-5 w-5" />
                                             </button>
@@ -428,7 +451,7 @@ export default function AppointmentsPage() {
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleCancel(apt.id)}
                                                 className="h-10 w-10 border-2 border-slate-100 text-red-500 rounded-xl hover:bg-red-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
-                                                title="Cancel Appointment"
+                                                title={t('appointments.cancel_appointment')}
                                             >
                                                 <XCircle className="h-5 w-5" />
                                             </button>
@@ -440,14 +463,14 @@ export default function AppointmentsPage() {
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'alert')}
                                                 className="flex items-center justify-center h-10 w-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 active:scale-90"
-                                                title="WhatsApp: You're Next"
+                                                title={t('appointments.whatsapp_next')}
                                             >
                                                 <Megaphone className="h-4.5 w-4.5" />
                                             </button>
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'call')}
                                                 className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-90"
-                                                title="WhatsApp: Turn Ready"
+                                                title={t('appointments.whatsapp_ready')}
                                             >
                                                 <MessageCircle className="h-4.5 w-4.5" />
                                             </button>
@@ -457,7 +480,7 @@ export default function AppointmentsPage() {
                                                 className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
-                                                Check In
+                                                {t('appointments.check_in')}
                                             </button>
                                         </div>
                                     )}
@@ -465,14 +488,14 @@ export default function AppointmentsPage() {
                                     {(apt.status === 'checked_in' || apt.status === 'in_service') && (
                                         <div className="flex items-center gap-2">
                                             <div className="px-6 py-2 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                                Active in Live Queue
+                                                {t('appointments.active_in_queue')}
                                             </div>
                                         </div>
                                     )}
 
                                     {(apt.status === 'completed' || apt.status === 'cancelled') && (
                                         <div className="px-5 py-2.5 bg-slate-50 rounded-xl text-xs font-bold text-slate-400 uppercase tracking-wider border border-slate-100">
-                                            {apt.status === 'completed' ? 'Finished' : 'Archived'}
+                                            {apt.status === 'completed' ? t('common.finished') : t('common.archived')}
                                         </div>
                                     )}
                                 </div>

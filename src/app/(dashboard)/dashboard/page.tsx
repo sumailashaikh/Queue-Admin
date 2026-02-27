@@ -14,10 +14,10 @@ export default function DashboardPage() {
     const { user } = useAuth();
     const { t } = useLanguage();
     const [stats, setStats] = useState([
-        { name: 'Total Visitors', value: '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { name: 'Completed Visits', value: '0', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-        { name: 'Today\'s Revenue', value: '0', icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        { name: 'Avg. Wait Time', value: '0m', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { name: t('dashboard.total_visitors'), value: '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { name: t('dashboard.completed_visits'), value: '0', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+        { name: t('dashboard.today_revenue'), value: '0', icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { name: t('dashboard.avg_wait_time'), value: '0m', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
     ]);
     const [loading, setLoading] = useState(true);
     const [business, setBusiness] = useState<any>(null); // State to hold business data
@@ -130,12 +130,12 @@ export default function DashboardPage() {
                         <div className="h-20 w-20 bg-amber-50 rounded-[32px] flex items-center justify-center mx-auto mb-8">
                             <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-4">Verification Pending</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-4">{t('dashboard.verification_pending')}</h2>
                         <p className="text-slate-500 font-medium mb-8 leading-relaxed">
-                            Aapka account review mein hai. Admin ki approval ke baad hi aap queues aur appointments manage kar payenge.
+                            {t('dashboard.verification_desc')}
                         </p>
                         <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                            Expect approval within 24 hours
+                            {t('dashboard.approval_24h')}
                         </div>
                     </div>
                 </div>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                                     <button
                                         onClick={() => {
                                             if (!business?.slug) {
-                                                alert("Business details still loading...");
+                                                alert(t('dashboard.loading_business_details'));
                                                 return;
                                             }
                                             const url = `${window.location.origin}/p/${business.slug}`;
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                     <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
                             <Users className="h-5 w-5 text-white/50" />
-                            <p className="text-sm font-bold uppercase tracking-wider">Link Copied to Clipboard!</p>
+                            <p className="text-sm font-bold uppercase tracking-wider">{t('dashboard.link_copied_toast')}</p>
                         </div>
                     </div>
                 )}

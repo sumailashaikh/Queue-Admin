@@ -96,14 +96,14 @@ export default function SettingsPage() {
 
     const handleDelete = async () => {
         if (!business?.id) return;
-        const confirmed = confirm("WARNING: This will permanently delete your business and all associated data. This action cannot be undone. Proceed?");
+        const confirmed = confirm(t('settings.delete_confirm'));
         if (!confirmed) return;
 
         try {
             await businessService.deleteBusiness(business.id);
             window.location.href = '/setup';
         } catch (err) {
-            alert("Failed to delete business");
+            alert(t('settings.delete_error'));
         }
     };
 
@@ -387,7 +387,7 @@ export default function SettingsPage() {
                                     onClick={() => {
                                         const url = `${window.location.origin}/p/${business?.slug}`;
                                         navigator.clipboard.writeText(url);
-                                        setToastMessage("Link copied to clipboard!");
+                                        setToastMessage(t('settings.link_copied'));
                                         setTimeout(() => setToastMessage(null), 3000);
                                     }}
                                     className="flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-500/20"
@@ -403,7 +403,7 @@ export default function SettingsPage() {
                                 className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider hover:text-slate-900 transition-colors"
                             >
                                 <ExternalLink className="h-3 w-3" />
-                                Open Public Page
+                                {t('settings.open_public_page')}
                             </a>
                         </div>
                     </div>

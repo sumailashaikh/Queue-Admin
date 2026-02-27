@@ -181,10 +181,10 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => {
-                                if (!item.phone || !business) { onShowToast("No phone", "error"); return; }
+                                if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
                                 const cleanPhone = item.phone.replace(/\D/g, '');
-                                const name = item.customer_name || 'Guest';
-                                const message = encodeURIComponent(`Hi ${name}, we apologize for the delay at ${business.name}. Your service will begin shortly. Thank you for your patience.`);
+                                const name = item.customer_name || t('queue.guest');
+                                const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }));
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                 sessionStorage.setItem(delayKey, 'true');
                                 setHasNotifiedDelay(true);
@@ -199,10 +199,10 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                         </button>
                         <button
                             onClick={() => {
-                                if (!item.phone || !business) { onShowToast("No phone", "error"); return; }
+                                if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
                                 const cleanPhone = item.phone.replace(/\D/g, '');
-                                const name = item.customer_name || 'Guest';
-                                const message = encodeURIComponent(`Hi ${name}, you’re next in line at ${business.name}. Please stay nearby. We’ll notify you shortly.`);
+                                const name = item.customer_name || t('queue.guest');
+                                const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }));
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                             }}
                             className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90"
@@ -214,8 +214,8 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             onClick={() => {
                                 if (!item.phone || !business) return;
                                 const cleanPhone = item.phone.replace(/\D/g, '');
-                                const name = item.customer_name || 'Guest';
-                                const message = encodeURIComponent(`Hi ${name}, your turn at ${business.name} is ready. Please proceed to the service counter. Thank you.`);
+                                const name = item.customer_name || t('queue.guest');
+                                const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }));
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                             }}
                             className="h-10 w-10 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20"
