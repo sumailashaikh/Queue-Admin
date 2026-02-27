@@ -1,0 +1,384 @@
+type Dictionary = Record<string, any>;
+
+const dictionaries: Record<string, Dictionary> = {
+    en: {
+        public: {
+            welcome: "Welcome to",
+            select_service: "Select Service",
+            join_queue: "Join Queue",
+            book_appointment: "Book Appointment",
+            wait_time: "wait time",
+            continue: "Continue to Details",
+            full_name: "Full Name",
+            whatsapp: "WhatsApp Number",
+            confirm_queue: "Confirm Joining Queue",
+            request_appt: "Request Appointment",
+            you_are_in_line: "You're in line!",
+            request_sent: "Request Sent!",
+            view_pass: "View Live Status Pass",
+            min: "min",
+            no_queue: "No open queue available right now.",
+            door_closed: "Door's Closed!",
+            door_closed_desc: "We couldn't find this business. Please check the link and try again.",
+            fully_booked: "We're Fully Booked for Today",
+            fully_booked_desc: "Thank you for your interest. We're unable to accept new queue entries today. Please book an appointment for tomorrow.",
+            book_tomorrow: "Book for Tomorrow",
+            go_back: "Go Back Home",
+            change_selection: "Change Selection",
+            personal_details: "Personal Details",
+            provide_info: "Provide info to secure your spot",
+            appointment_request_for: "Appointment request for",
+            virtual_ticket_at: "Your virtual ticket at",
+            selected_services: "Selected Services",
+            time_slot: "Time Slot",
+            total_fee: "Total Fee",
+            queue_ticket_no: "Queue Ticket No.",
+            your_position: "Your Position",
+            est_wait: "Est. Wait",
+            owner_will_review: "The owner will review your request and confirm via WhatsApp. Please keep your phone nearby.",
+            we_will_notify: "We'll notify you on WhatsApp when it's almost your turn. You don't need to stand in line!",
+            business_closed: "Business is Closed",
+            closed_desc: "We are currently not accepting new queue entries or appointments.",
+            our_hours: "Our hours:",
+            currently_closed: "Currently Closed",
+            open_now: "Open Now",
+            msg_whatsapp: "Message on WhatsApp",
+            powered_by: "Powered by QueueUp",
+            wa_hello: "Hello,",
+            wa_req_appt: "I would like to request an appointment at",
+            wa_services: "Services:",
+            wa_date: "Date:",
+            wa_time: "Time:",
+            wa_name: "Name:",
+            wa_thank_you: "Thank you.",
+            wa_join_queue: "I have joined the live queue at",
+            wa_ticket: "Ticket Number:",
+            wa_track: "Track my live status:"
+        },
+        status: {
+            access_denied: "Access Denied",
+            invalid_token: "Invalid status token",
+            try_again: "Try Again",
+            live_status_pass: "LIVE STATUS PASS",
+            digital_entry_protocol: "Digital Entry Protocol",
+            pass_id: "Pass ID",
+            position: "Position",
+            wait_time: "Wait Time",
+            currently_serving: "Currently Serving",
+            now_serving_appear: "Now serving will appear here",
+            sync: "Sync:",
+            you_are_next: "You’re next in line — please be ready.",
+            stay_nearby: "Please stay nearby. We’ll call you shortly.",
+            waiting_turn: "Waiting for Turn",
+            notify_approaches: "Please wait — we’ll notify you as your turn approaches.",
+            message_official: "Message Official",
+            concierge_protocol: "QueueUp Concierge Protocol",
+            force_refresh: "Tap to force refresh",
+            wa_checking_status: "Hello, I'm checking my status for ticket"
+        },
+        login: {
+            title: "Business Login",
+            subtitle: "Manage your live queue and appointments. Enter your phone number to continue.",
+            phone_lbl: "Phone Number",
+            send_otp: "Send OTP",
+            verify_lbl: "Verification Code",
+            verify_btn: "Verify & Login",
+            code_sent: "Code sent to"
+        }
+    },
+    es: {
+        public: {
+            welcome: "Bienvenido a",
+            select_service: "Seleccionar Servicio",
+            join_queue: "Unirse a la Fila",
+            book_appointment: "Reservar Cita",
+            wait_time: "tiempo de espera",
+            continue: "Continuar a Detalles",
+            full_name: "Nombre Completo",
+            whatsapp: "Número de WhatsApp",
+            confirm_queue: "Confirmar Unión a Fila",
+            request_appt: "Solicitar Cita",
+            you_are_in_line: "¡Estás en la fila!",
+            request_sent: "¡Solicitud Enviada!",
+            view_pass: "Ver Pase de Estado en Vivo",
+            min: "min",
+            no_queue: "No hay fila abierta en este momento.",
+            door_closed: "¡Puerta Cerrada!",
+            door_closed_desc: "No pudimos encontrar este negocio. Por favor verifica el enlace.",
+            fully_booked: "Estamos completamente reservados por hoy",
+            fully_booked_desc: "Gracias por tu interés. No podemos aceptar nuevas entradas a la fila hoy. Por favor reserva para mañana.",
+            book_tomorrow: "Reservar para Mañana",
+            go_back: "Volver al Inicio",
+            change_selection: "Cambiar Selección",
+            personal_details: "Detalles Personales",
+            provide_info: "Proporciona información para asegurar tu lugar",
+            appointment_request_for: "Solicitud de cita para",
+            virtual_ticket_at: "Tu boleto virtual en",
+            selected_services: "Servicios Seleccionados",
+            time_slot: "Horario",
+            total_fee: "Tarifa Total",
+            queue_ticket_no: "No. de Boleto de Fila",
+            your_position: "Tu Posición",
+            est_wait: "Espera Est.",
+            owner_will_review: "El dueño revisará tu solicitud y confirmará por WhatsApp. Por favor, mantén tu teléfono cerca.",
+            we_will_notify: "Te notificaremos por WhatsApp cuando sea casi tu turno. ¡No necesitas hacer fila!",
+            business_closed: "Negocio Cerrado",
+            closed_desc: "Actualmente no aceptamos nuevas entradas a la fila ni citas.",
+            our_hours: "Nuestro horario:",
+            currently_closed: "Cerrado Actualmente",
+            open_now: "Abierto Ahora",
+            msg_whatsapp: "Mensaje en WhatsApp",
+            powered_by: "Desarrollado por QueueUp",
+            wa_hello: "Hola,",
+            wa_req_appt: "Me gustaría solicitar una cita en",
+            wa_services: "Servicios:",
+            wa_date: "Fecha:",
+            wa_time: "Hora:",
+            wa_name: "Nombre:",
+            wa_thank_you: "Gracias.",
+            wa_join_queue: "Me he unido a la fila en vivo en",
+            wa_ticket: "Número de Boleto:",
+            wa_track: "Rastrea mi estado en vivo:"
+        },
+        status: {
+            access_denied: "Acceso Denegado",
+            invalid_token: "Token de estado no válido",
+            try_again: "Intentar de Nuevo",
+            live_status_pass: "PASE DE ESTADO EN VIVO",
+            digital_entry_protocol: "Protocolo de Entrada Digital",
+            pass_id: "ID de Pase",
+            position: "Posición",
+            wait_time: "Tiempo de Espera",
+            currently_serving: "Atendiendo Actualmente",
+            now_serving_appear: "Atendiendo ahora aparecerá aquí",
+            sync: "Sincronización:",
+            you_are_next: "Eres el siguiente en la fila — por favor prepárate.",
+            stay_nearby: "Por favor, mantente cerca. Te llamaremos en breve.",
+            waiting_turn: "Esperando el Turno",
+            notify_approaches: "Por favor espera — te avisaremos cuando se acerque tu turno.",
+            message_official: "Mensaje Oficial",
+            concierge_protocol: "Protocolo de Conserjería QueueUp",
+            force_refresh: "Toca para forzar recarga",
+            wa_checking_status: "Hola, estoy revisando el estado de mi boleto"
+        },
+        login: {
+            title: "Acceso a Negocios",
+            subtitle: "Gestiona tu fila en vivo y citas. Ingresa tu número de teléfono para continuar.",
+            phone_lbl: "Número de Teléfono",
+            send_otp: "Enviar Código",
+            verify_lbl: "Código de Verificación",
+            verify_btn: "Verificar y Entrar",
+            code_sent: "Código enviado a"
+        }
+    },
+    hi: {
+        public: {
+            welcome: "में आपका स्वागत है",
+            select_service: "सेवा चुनें",
+            join_queue: "कतार में शामिल हों",
+            book_appointment: "अपॉइंटमेंट बुक करें",
+            wait_time: "प्रतीक्षा समय",
+            continue: "विवरण पर जारी रखें",
+            full_name: "पूरा नाम",
+            whatsapp: "व्हाट्सएप नंबर",
+            confirm_queue: "कतार में शामिल होने की पुष्टि करें",
+            request_appt: "अपॉइंटमेंट का अनुरोध करें",
+            you_are_in_line: "आप कतार में हैं!",
+            request_sent: "अनुरोध भेजा गया!",
+            view_pass: "लाइव स्थिति पास देखें",
+            min: "मिनट",
+            no_queue: "अभी कोई खुली कतार उपलब्ध नहीं है।",
+            door_closed: "दरवाजा बंद है!",
+            door_closed_desc: "हम इस व्यवसाय को नहीं ढूंढ सके। कृपया लिंक की जांच करें।",
+            fully_booked: "हम आज के लिए पूरी तरह से बुक हैं",
+            fully_booked_desc: "आपकी रुचि के लिए धन्यवाद। हम आज कतार में नई प्रविष्टियां स्वीकार करने में असमर्थ हैं। कृपया कल के लिए अपॉइंटमेंट बुक करें।",
+            book_tomorrow: "कल के लिए बुक करें",
+            go_back: "वापस घर जाएं",
+            change_selection: "चयन बदलें",
+            personal_details: "व्यक्तिगत विवरण",
+            provide_info: "अपना स्थान सुरक्षित करने के लिए जानकारी प्रदान करें",
+            appointment_request_for: "के लिए अपॉइंटमेंट अनुरोध",
+            virtual_ticket_at: "में आपका वर्चुअल टिकट",
+            selected_services: "चयनित सेवाएं",
+            time_slot: "समय स्लॉट",
+            total_fee: "कुल शुल्क",
+            queue_ticket_no: "कतार टिकट नं.",
+            your_position: "आपकी स्थिति",
+            est_wait: "अनुमानित प्रतीक्षा",
+            owner_will_review: "मालिक आपके अनुरोध की समीक्षा करेगा और व्हाट्सएप के माध्यम से पुष्टि करेगा। कृपया अपना फोन पास रखें।",
+            we_will_notify: "जब आपकी बारी आने वाली होगी तो हम आपको व्हाट्सएप पर सूचित करेंगे। आपको लाइन में खड़े होने की आवश्यकता नहीं है!",
+            business_closed: "व्यवसाय बंद है",
+            closed_desc: "हम वर्तमान में नई कतार प्रविष्टियां या नियुक्तियां स्वीकार नहीं कर रहे हैं।",
+            our_hours: "हमारा समय:",
+            currently_closed: "वर्तमान में बंद है",
+            open_now: "अभी खुला है",
+            msg_whatsapp: "व्हाट्सएप पर संदेश भेजें",
+            powered_by: "QueueUp द्वारा संचालित",
+            wa_hello: "नमस्ते,",
+            wa_req_appt: "मैं अपॉइंटमेंट का अनुरोध करना चाहता हूं। व्यवसाय: ",
+            wa_services: "सेवाएं:",
+            wa_date: "दिनांक:",
+            wa_time: "समय:",
+            wa_name: "नाम:",
+            wa_thank_you: "धन्यवाद।",
+            wa_join_queue: "मैं लाइव कतार में शामिल हो गया हूं। व्यवसाय: ",
+            wa_ticket: "टिकट संख्या:",
+            wa_track: "मेरी लाइव स्थिति ट्रैक करें:"
+        },
+        status: {
+            access_denied: "पहुंच अस्वीकृत",
+            invalid_token: "अमान्य स्थिति टोकन",
+            try_again: "पुनः प्रयास करें",
+            live_status_pass: "लाइव स्थिति पास",
+            digital_entry_protocol: "डिजिटल प्रवेश प्रोटोकॉल",
+            pass_id: "पास आईडी",
+            position: "स्थिति",
+            wait_time: "प्रतीक्षा समय",
+            currently_serving: "वर्तमान में सेवारत",
+            now_serving_appear: "अब सर्विंग यहां दिखाई देगा",
+            sync: "सिंक: ",
+            you_are_next: "आप कतार में अगले हैं - कृपया तैयार रहें।",
+            stay_nearby: "कृपया पास ही रहें। हम आपको शीघ्र ही बुलाएंगे।",
+            waiting_turn: "बारी का इंतजार",
+            notify_approaches: "कृपया प्रतीक्षा करें - आपकी बारी आने पर हम आपको सूचित करेंगे।",
+            message_official: "अधिकारी को संदेश दें",
+            concierge_protocol: "QueueUp कंसीयज प्रोटोकॉल",
+            force_refresh: "रीफ्रेश करने के लिए टैप करें",
+            wa_checking_status: "नमस्ते, मैं अपने टिकट की स्थिति जांच रहा हूं"
+        },
+        login: {
+            title: "व्यवसाय लॉगिन",
+            subtitle: "अपनी लाइव कतार और अपॉइंटमेंट प्रबंधित करें। जारी रखने के लिए अपना फ़ोन नंबर दर्ज करें।",
+            phone_lbl: "फ़ोन नंबर",
+            send_otp: "OTP भेजें",
+            verify_lbl: "सत्यापन कोड",
+            verify_btn: "सत्यापित करें और लॉगिन करें",
+            code_sent: "कोड भेजा गया"
+        }
+    },
+    ar: {
+        public: {
+            welcome: "مرحباً بك في",
+            select_service: "اختر الخدمة",
+            join_queue: "انضمام للطابور",
+            book_appointment: "حجز موعد",
+            wait_time: "وقت الانتظار",
+            continue: "المتابعة للتفاصيل",
+            full_name: "الاسم الكامل",
+            whatsapp: "رقم الواتساب",
+            confirm_queue: "تأكيد الانضمام للطابور",
+            request_appt: "طلب موعد",
+            you_are_in_line: "أنت في الطابور!",
+            request_sent: "تم إرسال الطلب!",
+            view_pass: "عرض بطاقة الحالة المباشرة",
+            min: "دقيقة",
+            no_queue: "لا يوجد طابور مفتوح حالياً.",
+            door_closed: "الباب مغلق!",
+            door_closed_desc: "لم نتمكن من العثور على هذا العمل. يرجى التحقق من الرابط.",
+            fully_booked: "نحن محجوزون بالكامل لهذا اليوم",
+            fully_booked_desc: "شكراً لاهتمامك. لا يمكننا قبول طلبات طابور جديدة اليوم. يرجى حجز موعد للغد.",
+            book_tomorrow: "احجز للغد",
+            go_back: "العودة للرئيسية",
+            change_selection: "تغيير الاختيار",
+            personal_details: "التفاصيل الشخصية",
+            provide_info: "قدم المعلومات لتأمين مكانك",
+            appointment_request_for: "طلب موعد لـ",
+            virtual_ticket_at: "تذكرتك الافتراضية في",
+            selected_services: "الخدمات المحددة",
+            time_slot: "وقت الموعد",
+            total_fee: "الرسوم الكلية",
+            queue_ticket_no: "رقم تذكرة الطابور",
+            your_position: "موقعك",
+            est_wait: "الانتظار المقدر",
+            owner_will_review: "سيقوم المالك بمراجعة طلبك وتأكيده عبر الواتساب. يرجى إبقاء هاتفك قريباً.",
+            we_will_notify: "سنعلمك على الواتساب عندما يقترب دورك. لا تحتاج للوقوف في الطابور!",
+            business_closed: "العمل مغلق",
+            closed_desc: "نحن لا نقبل حالياً أي إدخالات طابور أو مواعيد جديدة.",
+            our_hours: "ساعات عملنا:",
+            currently_closed: "مغلق حالياً",
+            open_now: "مفتوح الآن",
+            msg_whatsapp: "رسالة على الواتساب",
+            powered_by: "مدعوم من QueueUp",
+            wa_hello: "مرحباً،",
+            wa_req_appt: "أود طلب موعد في",
+            wa_services: "الخدمات:",
+            wa_date: "التاريخ:",
+            wa_time: "الوقت:",
+            wa_name: "الاسم:",
+            wa_thank_you: "شكراً لك.",
+            wa_join_queue: "لقد انضممت إلى الطابور المباشر في",
+            wa_ticket: "رقم التذكرة:",
+            wa_track: "تتبع حالتي المباشرة:"
+        },
+        status: {
+            access_denied: "تم رفض الوصول",
+            invalid_token: "رمز حالة غير صالح",
+            try_again: "حاول مرة أخرى",
+            live_status_pass: "بطاقة الحالة المباشرة",
+            digital_entry_protocol: "بروتوكول الدخول الرقمي",
+            pass_id: "معرف البطاقة",
+            position: "الموقع",
+            wait_time: "وقت الانتظار",
+            currently_serving: "يخدم حالياً",
+            now_serving_appear: "ستظهر الخدمة الحالية هنا",
+            sync: "مزامنة: ",
+            you_are_next: "أنت التالي في الطابور - استعد من فضلك.",
+            stay_nearby: "يرجى البقاء بالقرب. سنتصل بك قريباً.",
+            waiting_turn: "في انتظار الدور",
+            notify_approaches: "يرجى الانتظار - سنعلمك عند اقتراب دورك.",
+            message_official: "رسالة رسمية",
+            concierge_protocol: "بروتوكول QueueUp",
+            force_refresh: "انقر للتحديث",
+            wa_checking_status: "مرحباً، أتحقق من حالة تذكرتي"
+        },
+        login: {
+            title: "تسجيل دخول الأعمال",
+            subtitle: "إدارة الطابور والمواعيد. أدخل رقم هاتفك للمتابعة.",
+            phone_lbl: "رقم الهاتف",
+            send_otp: "إرسال الرمز",
+            verify_lbl: "رمز التحقق",
+            verify_btn: "التحقق والدخول",
+            code_sent: "تم إرسال الرمز إلى"
+        }
+    }
+};
+
+export const i18n = {
+    /**
+     * Translates a key based on the provided language code.
+     * Fallbacks to English ('en') if key or language is not found.
+     * 
+     * @param lang Language code (e.g., 'en', 'es', 'hi')
+     * @param key Dot-notated string (e.g., 'dashboard')
+     */
+    t: (lang: string = 'en', key: string): string => {
+        const dictionary = dictionaries[lang] || dictionaries['en'];
+        const keys = key.split('.');
+
+        let result: any = dictionary;
+        for (const k of keys) {
+            if (result && result[k] !== undefined) {
+                result = result[k];
+            } else {
+                result = undefined;
+                break;
+            }
+        }
+
+        if (typeof result === 'string') {
+            return result;
+        }
+
+        // Fallback to English dictionary
+        let fallback: any = dictionaries['en'];
+        for (const fk of keys) {
+            if (fallback && fallback[fk] !== undefined) {
+                fallback = fallback[fk];
+            } else {
+                return key;
+            }
+        }
+
+        return typeof fallback === 'string' ? fallback : key;
+    }
+};

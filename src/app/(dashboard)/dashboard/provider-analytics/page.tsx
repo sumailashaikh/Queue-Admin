@@ -20,11 +20,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { analyticsService, ProviderAnalytics, AnalyticsSummaryStats } from "@/services/analyticsService";
 import { format } from "date-fns";
 import { ProviderServiceBreakdownModal } from "./components/ProviderServiceBreakdownModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 type Range = 'daily' | 'weekly' | 'monthly';
 
 export default function ProviderAnalyticsPage() {
     const { business } = useAuth();
+    const { t } = useLanguage();
     const [range, setRange] = useState<Range>('daily');
     const [date, setDate] = useState(new Date());
     const [loading, setLoading] = useState(true);
@@ -104,10 +106,10 @@ export default function ProviderAnalyticsPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <TrendingUp className="h-6 w-6 text-primary" />
-                        Provider Analytics
+                        {t('provider_analytics.title')}
                     </h1>
                     <p className="text-slate-500 text-sm mt-1 uppercase tracking-wider font-semibold">
-                        Performance & Utilization Metrics
+                        {t('provider_analytics.subtitle')}
                     </p>
                 </div>
 
@@ -126,7 +128,7 @@ export default function ProviderAnalyticsPage() {
                                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                             )}
                         >
-                            {r}
+                            {t(`provider_analytics.${r}`)}
                         </button>
                     ))}
                 </div>
@@ -146,7 +148,7 @@ export default function ProviderAnalyticsPage() {
                             {periodLabel()}
                         </span>
                         <span className="text-xs font-bold uppercase text-slate-400 tracking-[0.2em]">
-                            Selected Period
+                            {t('provider_analytics.selected_period')}
                         </span>
                     </div>
                     <button
@@ -161,7 +163,7 @@ export default function ProviderAnalyticsPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Search Expert..."
+                        placeholder={t('provider_analytics.search_expert')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium"
@@ -172,9 +174,9 @@ export default function ProviderAnalyticsPage() {
             {/* Summary Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: 'Total Services', value: summary?.total_services || 0, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: 'Total Revenue', value: `₹${(summary?.total_revenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: 'Avg Service Time', value: `${summary?.avg_service_time || 0}m`, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
+                    { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { label: t('provider_analytics.total_revenue'), value: `₹${(summary?.total_revenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { label: t('provider_analytics.avg_service_time'), value: `${summary?.avg_service_time || 0}m`, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between">
@@ -197,11 +199,11 @@ export default function ProviderAnalyticsPage() {
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
                         <Users className="h-4 w-4 text-slate-400" />
-                        Expert Performance
+                        {t('provider_analytics.expert_performance')}
                     </h3>
                     <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400 tracking-wider">
                         <Filter className="h-3 w-3" />
-                        Refined Metrics
+                        {t('provider_analytics.refined_metrics')}
                     </div>
                 </div>
 
@@ -209,12 +211,12 @@ export default function ProviderAnalyticsPage() {
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="bg-white border-b border-slate-100">
-                                <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-[0.15em] text-slate-400">Expert</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">Services</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">Revenue</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">Avg Time</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">Active Mins</th>
-                                <th className="px-6 py-4 text-right text-sm font-bold uppercase tracking-[0.15em] text-slate-400">Actions</th>
+                                <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.expert')}</th>
+                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.services')}</th>
+                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.revenue')}</th>
+                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.avg_time')}</th>
+                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.active_mins')}</th>
+                                <th className="px-6 py-4 text-right text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.actions')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -222,13 +224,13 @@ export default function ProviderAnalyticsPage() {
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center">
                                         <Loader2 className="h-8 w-8 animate-spin text-primary/20 mx-auto" />
-                                        <p className="text-sm font-bold text-slate-400 mt-4 uppercase tracking-wider">Crunching Numbers...</p>
+                                        <p className="text-sm font-bold text-slate-400 mt-4 uppercase tracking-wider">{t('provider_analytics.crunching_numbers')}</p>
                                     </td>
                                 </tr>
                             ) : filteredData.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-slate-400 italic font-medium">
-                                        No metrics found for this period
+                                        {t('provider_analytics.no_metrics')}
                                     </td>
                                 </tr>
                             ) : (
@@ -245,7 +247,7 @@ export default function ProviderAnalyticsPage() {
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-slate-900 uppercase text-sm tracking-tight">{p.provider_name}</span>
-                                                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider opacity-60">ID: {p.provider_id.slice(0, 8)}</span>
+                                                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider opacity-60">{t('provider_analytics.id')}: {p.provider_id.slice(0, 8)}</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -260,7 +262,7 @@ export default function ProviderAnalyticsPage() {
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex flex-col items-center">
                                                 <span className="font-bold text-slate-700 text-sm tracking-tight">{p.avg_service_time_minutes}m</span>
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider opacity-60">Avg Time</span>
+                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider opacity-60">{t('provider_analytics.avg_time')}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center text-sm font-bold text-slate-500 uppercase tracking-wider">
@@ -274,7 +276,7 @@ export default function ProviderAnalyticsPage() {
                                                 }}
                                                 className="px-4 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm group-hover:scale-105"
                                             >
-                                                Details
+                                                {t('provider_analytics.details')}
                                             </button>
                                         </td>
                                     </tr>

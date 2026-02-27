@@ -12,6 +12,7 @@ import {
     Clock,
     Info
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ServiceExecutionStripProps {
     services: QueueEntryService[];
@@ -34,6 +35,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     onStartTask,
     onCompleteTask
 }) => {
+    const { t } = useLanguage();
     if (!services || services.length === 0) return null;
 
     // For simplicity, we'll focus on the first service if multiple exist, 
@@ -59,13 +61,13 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                                     (isDone || isInProgress) && "cursor-default border-transparent bg-indigo-50/50 text-indigo-600 px-0 shadow-none text-xs"
                                 )}
                             >
-                                <option value="" className="text-slate-400">SELECT EXPERT...</option>
+                                <option value="" className="text-slate-400">{t('queue.select_expert')}</option>
                                 {providers.filter(p => p.is_active || p.id === s.assigned_provider_id).map(p => {
                                     const isBusy = p.current_tasks_count > 0;
                                     const onLeave = p.is_available === false;
                                     return (
                                         <option key={p.id} value={p.id} className="font-sans py-2 text-slate-900">
-                                            {p.name} {isBusy ? "· Busy" : onLeave ? "· Away" : ""}
+                                            {p.name} {isBusy ? `· ${t('queue.busy')}` : onLeave ? `· ${t('queue.away')}` : ""}
                                         </option>
                                     );
                                 })}
@@ -80,18 +82,20 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                             <button
                                 onClick={() => onStartTask(s.id)}
                                 disabled={!s.assigned_provider_id}
-                                className="w-full h-10 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-20 shadow-lg shadow-slate-200"
+                                className="w-full h-10 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-20 shadow-lg shadow-slate-200 flex items-center justify-center gap-2"
                             >
-                                Start Service
+                                <Play className="h-3 w-3 fill-current" />
+                                {t('queue.start_service')}
                             </button>
                         )}
 
                         {isInProgress && (
                             <button
                                 onClick={() => onCompleteTask(s.id)}
-                                className="w-full h-10 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-emerald-200"
+                                className="w-full h-10 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2"
                             >
-                                Done
+                                <CheckCircle2 className="h-3 w-3" />
+                                {t('queue.done')}
                             </button>
                         )}
                     </div>

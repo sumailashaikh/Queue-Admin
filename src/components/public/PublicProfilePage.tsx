@@ -17,12 +17,15 @@ import {
     ArrowLeft,
     User,
     Sparkles,
-    ArrowRight
+    ArrowRight,
+    Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { businessService, Business } from "@/services/businessService";
 import { queueService, QueueEntry } from "@/services/queueService";
 import { appointmentService } from "@/services/appointmentService";
+import { formatGlobalPhone } from "@/lib/phoneUtils";
+import { i18n } from "@/lib/i18n";
 
 interface PublicProfilePageProps {
     slug: string;
@@ -58,6 +61,15 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
     const totalDuration = selectedServices.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
     const totalPrice = selectedServices.reduce((acc, s) => acc + (s.price || 0), 0);
+
+    const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
+
+    const lang = customerLangOverride || business?.language || 'en';
+    const currency = business?.currency || 'USD';
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat(lang, { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(amount);
+    };
 
     const formatTime12 = (timeStr: string) => {
         if (!timeStr) return "";
@@ -154,6 +166,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
         try {
             const service_ids = selectedServices.map(s => s.id);
+            const formattedPhone = formatGlobalPhone(phone, 'IN') || phone;
 
             if (activeView === 'queue') {
                 const openQueue = business!.queues?.find(q => q.status === 'open');
@@ -165,7 +178,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 const entry = await queueService.joinQueue({
                     queue_id: openQueue.id,
                     customer_name: name,
-                    phone: phone,
+                    phone: formattedPhone,
                     service_ids: service_ids
                 });
                 setTicket(entry);
@@ -178,7 +191,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     service_ids: service_ids,
                     start_time: startTime.toISOString(),
                     customer_name: name,
-                    phone: phone
+                    phone: formattedPhone
                 });
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
                 setIsAppointmentMode(true);
@@ -213,13 +226,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 </div>
 
                 <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 tracking-tight max-w-sm mx-auto">
-                    {isFullyBooked ? "We’re Fully Booked for Today" : "Door's Closed!"}
+                    {isFullyBooked ? i18n.t(lang, 'public.fully_booked') : i18n.t(lang, 'public.door_closed')}
                 </h1>
 
                 <p className="text-slate-500 font-bold mb-10 max-w-sm mx-auto leading-relaxed text-sm">
                     {isFullyBooked
-                        ? "Thank you for your interest. We’re unable to accept new queue entries today as service availability has reached closing time. Please book an appointment for tomorrow to secure your visit."
-                        : (error || "We couldn't find this business. Please check the link and try again.")
+                        ? i18n.t(lang, 'public.fully_booked_desc')
+                        : (error || i18n.t(lang, 'public.door_closed_desc'))
                     }
                 </p>
 
@@ -237,7 +250,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             className="w-full py-3.5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-widest shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                         >
                             <Calendar className="h-4 w-4" />
-                            Book for Tomorrow
+                            {i18n.t(lang, 'public.book_tomorrow')}
                         </button>
                     )}
 
@@ -245,7 +258,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                         onClick={() => router.push('/')}
                         className="flex items-center justify-center gap-2 text-slate-400 hover:text-primary font-bold uppercase tracking-wider text-xs transition-colors"
                     >
-                        <ArrowLeft className="h-4 w-4" /> Go Back Home
+                        <ArrowLeft className="h-4 w-4" /> {i18n.t(lang, 'public.go_back')}
                     </button>
                 </div>
             </div>
@@ -262,14 +275,32 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                         <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center font-bold text-xl">
                             {business.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className={cn(
-                            "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border",
-                            isOpen
-                                ? "bg-emerald-500 text-white border-emerald-400"
-                                : "bg-red-500 text-white border-red-400"
-                        )}>
-                            <div className={cn("h-1.5 w-1.5 rounded-full bg-white", isOpen && "animate-pulse")} />
-                            {isOpen ? "Open Now" : "Currently Closed"}
+                        <div className="flex items-center gap-3">
+                            <div className="relative group">
+                                <button className="h-8 w-8 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition-colors">
+                                    <Globe className="h-4 w-4" />
+                                </button>
+                                <div className="absolute right-0 top-10 w-32 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100] overflow-hidden">
+                                    {['en', 'es', 'hi', 'ar'].map(l => (
+                                        <button
+                                            key={l}
+                                            onClick={() => setCustomerLangOverride(l)}
+                                            className={cn("w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-slate-50 transition-colors", lang === l ? "text-primary bg-primary/5" : "text-slate-600")}
+                                        >
+                                            {l === 'en' ? 'English' : l === 'es' ? 'Español' : l === 'hi' ? 'हिंदी' : 'العربية'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className={cn(
+                                "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border",
+                                isOpen
+                                    ? "bg-emerald-500 text-white border-emerald-400"
+                                    : "bg-red-500 text-white border-red-400"
+                            )}>
+                                <div className={cn("h-1.5 w-1.5 rounded-full bg-white", isOpen && "animate-pulse")} />
+                                {isOpen ? i18n.t(lang, 'public.open_now') : i18n.t(lang, 'public.currently_closed')}
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -304,20 +335,20 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <button
                                     onClick={() => { setActiveView('queue'); setStep(1); }}
                                     className={cn(
-                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all shadow-sm",
-                                        activeView === 'queue' ? "bg-white text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all shadow-sm border border-transparent",
+                                        activeView === 'queue' ? "bg-white text-slate-900 border-slate-200 shadow-md" : "text-slate-500 hover:text-slate-700 hover:bg-white hover:border-slate-100 hover:shadow-sm active:scale-[0.98]"
                                     )}
                                 >
-                                    Join Walk-in Queue
+                                    {i18n.t(lang, 'public.join_queue')}
                                 </button>
                                 <button
                                     onClick={() => { setActiveView('appointment'); setStep(1); }}
                                     className={cn(
-                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all shadow-sm",
-                                        activeView === 'appointment' ? "bg-white text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all shadow-sm border border-transparent",
+                                        activeView === 'appointment' ? "bg-white text-slate-900 border-slate-200 shadow-md" : "text-slate-500 hover:text-slate-700 hover:bg-white hover:border-slate-100 hover:shadow-sm active:scale-[0.98]"
                                     )}
                                 >
-                                    Book Appointment
+                                    {i18n.t(lang, 'public.book_appointment')}
                                 </button>
                             </div>
 
@@ -325,10 +356,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
                                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
-                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">Business is Closed</p>
+                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">{i18n.t(lang, 'public.business_closed')}</p>
                                         <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
-                                            We are currently not accepting new queue entries or appointments.
-                                            Our hours: <span className="text-amber-900">{formatTime12(business.open_time)} - {formatTime12(business.close_time)}</span>
+                                            {i18n.t(lang, 'public.closed_desc')}
+                                            <br />
+                                            {i18n.t(lang, 'public.our_hours')} <span className="text-amber-900">{formatTime12(business.open_time)} - {formatTime12(business.close_time)}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -340,12 +372,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20 md:pb-0">
                             <div className="flex justify-between items-end">
                                 <div className="space-y-1">
-                                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">Select Services</h2>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select all the services you need</p>
+                                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">{i18n.t(lang, 'public.select_service')}</h2>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.select_service')}</p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-2xl font-bold text-indigo-600 tracking-tighter">₹{totalPrice}</span>
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{totalDuration}m total</p>
+                                    <span className="text-2xl font-bold text-indigo-600 tracking-tighter">{formatCurrency(totalPrice)}</span>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{totalDuration} {i18n.t(lang, 'public.min')} total</p>
                                 </div>
                             </div>
 
@@ -356,13 +388,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         <button
                                             key={s.id}
                                             onClick={() => toggleService(s)}
-                                            disabled={!isOpen}
+                                            disabled={!isOpen && activeView === 'queue'}
                                             className={cn(
                                                 "w-full p-6 rounded-[28px] border-2 text-left transition-all duration-300 flex items-center gap-5 group relative overflow-hidden",
                                                 isSelected
                                                     ? "bg-slate-900 border-slate-900 text-white scale-[1.02] shadow-xl shadow-slate-200"
                                                     : "border-slate-50 bg-white hover:border-slate-200 shadow-sm",
-                                                !isOpen && "opacity-60 grayscale-[0.5] cursor-not-allowed"
+                                                !isOpen && activeView === 'queue' && "opacity-60 grayscale-[0.5] cursor-not-allowed"
                                             )}
                                         >
                                             <div className={cn(
@@ -374,9 +406,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             <div className="flex-1 relative z-10">
                                                 <h3 className={cn("font-bold text-sm tracking-tight", isSelected ? "text-white" : "text-slate-800")}>{s.name}</h3>
                                                 <div className="flex items-center gap-3 mt-1 text-[10px] font-bold uppercase tracking-widest opacity-60">
-                                                    <span>₹{s.price}</span>
+                                                    <span>{formatCurrency(s.price)}</span>
                                                     <span>•</span>
-                                                    <span>{s.duration_minutes} min</span>
+                                                    <span>{s.duration_minutes} {i18n.t(lang, 'public.min')}</span>
                                                 </div>
                                             </div>
                                         </button>
@@ -450,11 +482,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <div className="fixed bottom-0 left-0 right-0 md:relative md:mt-auto p-6 bg-white border-t border-slate-100 md:border-none md:p-0 md:pt-4 animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0">
                                     <button
                                         onClick={() => setStep(2)}
-                                        disabled={(activeView === 'appointment' && !bookingTime) || !isOpen}
+                                        disabled={(activeView === 'appointment' && !bookingTime) || (!isOpen && activeView === 'queue')}
                                         className="w-full h-16 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] shadow-md active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                                     >
-                                        {!isOpen ? "Check-in Unavailable" : "Continue to Details"}
-                                        {isOpen && <ArrowRight className="h-4 w-4" />}
+                                        {(!isOpen && activeView === 'queue') ? "Check-in Unavailable" : i18n.t(lang, 'public.continue')}
+                                        {(isOpen || activeView === 'appointment') && <ArrowRight className="h-4 w-4" />}
                                     </button>
                                 </div>
                             )}
@@ -467,24 +499,23 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 onClick={() => setStep(1)}
                                 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
                             >
-                                <ArrowLeft className="h-3 w-3" /> Change Selection
+                                <ArrowLeft className="h-3 w-3" /> {i18n.t(lang, 'public.change_selection')}
                             </button>
 
                             <div className="space-y-1">
-                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Personal Details</h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Provide info to secure your spot</p>
+                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{i18n.t(lang, 'public.personal_details')}</h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.provide_info')}</p>
                             </div>
 
                             <form onSubmit={handleJoin} className="space-y-6">
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{i18n.t(lang, 'public.full_name')}</label>
                                         <div className="relative">
                                             <User className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                             <input
                                                 required
                                                 type="text"
-                                                placeholder="Enter your name"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
                                                 className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-600/10 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
@@ -493,13 +524,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp Number</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{i18n.t(lang, 'public.whatsapp')}</label>
                                         <div className="relative">
                                             <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                             <input
                                                 required
                                                 type="tel"
-                                                placeholder="10-digit number"
                                                 value={phone}
                                                 onChange={(e) => setPhone(e.target.value)}
                                                 className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-600/10 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
@@ -513,7 +543,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     disabled={isSubmitting}
                                     className="w-full py-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] shadow-md transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
                                 >
-                                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (activeView === 'queue' ? "Confirm Joining Queue" : "Request Appointment")}
+                                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (activeView === 'queue' ? i18n.t(lang, 'public.confirm_queue') : i18n.t(lang, 'public.request_appt'))}
                                 </button>
                             </form>
                         </div>
@@ -530,12 +560,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-                                    {isAppointmentMode ? "Request Sent!" : "You're in line!"}
+                                    {isAppointmentMode ? i18n.t(lang, 'public.request_sent') : i18n.t(lang, 'public.you_are_in_line')}
                                 </h2>
                                 <p className="text-sm font-bold text-slate-400">
                                     {isAppointmentMode
-                                        ? "Appointment request for "
-                                        : "Your virtual ticket at "
+                                        ? `${i18n.t(lang, 'public.appointment_request_for')} `
+                                        : `${i18n.t(lang, 'public.virtual_ticket_at')} `
                                     }
                                     <span className="text-slate-900 lowercase">{business.name}</span>
                                 </p>
@@ -545,35 +575,35 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 {isAppointmentMode ? (
                                     <div className="space-y-6">
                                         <div className="space-y-1">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selected Services</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.selected_services')}</p>
                                             <p className="text-xl font-bold text-[#0B1B3F] uppercase">{selectedServices.map(s => s.name).join(', ')}</p>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                                             <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Time Slot</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.time_slot')}</p>
                                                 <p className="text-sm font-bold text-slate-900">{formatTime12(bookingTime)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Fee</p>
-                                                <p className="text-sm font-bold text-slate-900">₹{totalPrice}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.total_fee')}</p>
+                                                <p className="text-sm font-bold text-slate-900">{formatCurrency(totalPrice)}</p>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
                                     <>
                                         <div className="text-center">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Queue Ticket No.</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.queue_ticket_no')}</p>
                                             <p className="text-6xl font-black text-[#0B1B3F] tracking-tighter">{ticket.ticket_number}</p>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                                             <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Your Position</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.your_position')}</p>
                                                 <p className="text-xl font-bold text-slate-900">#{ticket.position}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Est. Wait</p>
-                                                <p className="text-xl font-bold text-amber-500">~{totalDuration || 10}m</p>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.est_wait')}</p>
+                                                <p className="text-xl font-bold text-amber-500">~{totalDuration || 10}{i18n.t(lang, 'public.min')}</p>
                                             </div>
                                         </div>
                                     </>
@@ -583,8 +613,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             <div className="space-y-4 pt-4">
                                 <p className="text-[11px] font-bold text-slate-400 leading-relaxed max-w-xs mx-auto">
                                     {isAppointmentMode
-                                        ? "The owner will review your request and confirm via WhatsApp. Please keep your phone nearby."
-                                        : "We'll notify you on WhatsApp when it's almost your turn. You don't need to stand in line!"
+                                        ? i18n.t(lang, 'public.owner_will_review')
+                                        : i18n.t(lang, 'public.we_will_notify')
                                     }
                                 </p>
 
@@ -597,7 +627,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         }}
                                         className="w-full py-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
                                     >
-                                        <ExternalLink className="h-4 w-4" /> View Live Status Pass
+                                        <ExternalLink className="h-4 w-4" /> {i18n.t(lang, 'public.view_pass')}
                                     </button>
                                 )}
 
@@ -606,11 +636,24 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         const formatDate = (date: string | Date) => new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
                                         let text = "";
                                         const servicesList = selectedServices.map(s => s.name).join(', ');
+
+                                        const h = i18n.t(lang, 'public.wa_hello');
+                                        const req_appt = i18n.t(lang, 'public.wa_req_appt');
+                                        const srv = i18n.t(lang, 'public.wa_services');
+                                        const dt = i18n.t(lang, 'public.wa_date');
+                                        const tm = i18n.t(lang, 'public.wa_time');
+                                        const nm = i18n.t(lang, 'public.wa_name');
+                                        const ty = i18n.t(lang, 'public.wa_thank_you');
+
+                                        const jq = i18n.t(lang, 'public.wa_join_queue');
+                                        const tk = i18n.t(lang, 'public.wa_ticket');
+                                        const trk = i18n.t(lang, 'public.wa_track');
+
                                         if (isAppointmentMode) {
-                                            text = `Hello,\n\nI would like to request an appointment at ${business.name}.\n\nServices: ${servicesList}\nDate: ${formatDate(bookingDate)}\nTime: ${formatTime12(bookingTime)}\nName: ${name}\n\nThank you.`;
+                                            text = `${h}\n\n${req_appt} ${business.name}.\n\n${srv} ${servicesList}\n${dt} ${formatDate(bookingDate)}\n${tm} ${formatTime12(bookingTime)}\n${nm} ${name}\n\n${ty}`;
                                         } else {
                                             const statusLink = `${window.location.origin}/status?token=${ticket.token || ticket.status_token}`;
-                                            text = `Hello,\n\nI have joined the live queue at ${business.name}.\n\nTicket Number: ${ticket.ticket_number}\nServices: ${servicesList}\nName: ${name}\n\nTrack my live status: ${statusLink}\n\nThank you.`;
+                                            text = `${h}\n\n${jq} ${business.name}.\n\n${tk} ${ticket.ticket_number}\n${srv} ${servicesList}\n${nm} ${name}\n\n${trk} ${statusLink}\n\n${ty}`;
                                         }
                                         let phoneStr = (business.whatsapp_number || business.phone || "").replace(/\D/g, '');
                                         if (phoneStr.length === 10) phoneStr = `91${phoneStr}`;
@@ -618,7 +661,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     }}
                                     className="w-full py-5 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all group"
                                 >
-                                    <MessageCircle className="h-4 w-4 fill-current opacity-20 group-hover:opacity-40 transition-opacity" /> Message on WhatsApp
+                                    <MessageCircle className="h-4 w-4 fill-current opacity-20 group-hover:opacity-40 transition-opacity" /> {i18n.t(lang, 'public.msg_whatsapp')}
                                 </button>
                             </div>
                         </div>
@@ -627,9 +670,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                 {/* Footer Branding */}
                 <div className="p-8 text-center text-[10px] font-black text-slate-200 uppercase tracking-[0.4em]">
-                    Powered by QueueUp
+                    {i18n.t(lang, 'public.powered_by')}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

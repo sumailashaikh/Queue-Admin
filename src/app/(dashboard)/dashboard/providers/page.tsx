@@ -24,9 +24,11 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ProvidersPage() {
     const { business } = useAuth();
+    const { t } = useLanguage();
     const [providers, setProviders] = useState<ServiceProvider[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -276,7 +278,7 @@ export default function ProvidersPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">Loading Providers...</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">{t('dashboard.loading')}</p>
             </div>
         );
     }
@@ -288,10 +290,10 @@ export default function ProvidersPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                         <Users className="h-6 w-6 text-primary" />
-                        Service Providers
+                        {t('providers.title')}
                     </h1>
                     <p className="text-slate-500 text-sm mt-1 uppercase tracking-wider font-semibold">
-                        Manage your experts and their working hours
+                        {t('providers.subtitle')}
                     </p>
                 </div>
 
@@ -300,7 +302,7 @@ export default function ProvidersPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search providers..."
+                            placeholder={t('providers.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium shadow-sm"
@@ -315,7 +317,7 @@ export default function ProvidersPage() {
                         className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:bg-slate-800 active:scale-95"
                     >
                         <UserPlus className="h-4 w-4" />
-                        Add Provider
+                        {t('providers.add_provider')}
                     </button>
                 </div>
             </div>
@@ -327,8 +329,8 @@ export default function ProvidersPage() {
                         <div className="h-20 w-20 bg-slate-50 rounded-[32px] flex items-center justify-center text-slate-300 mb-6">
                             <Users className="h-10 w-10" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">No Providers Found</h3>
-                        <p className="text-sm font-semibold text-slate-400 mt-2 uppercase tracking-wider">Add your first expert to get started</p>
+                        <h3 className="text-xl font-bold text-slate-900">{t('providers.no_providers')}</h3>
+                        <p className="text-sm font-semibold text-slate-400 mt-2 uppercase tracking-wider">{t('providers.no_providers_desc')}</p>
                     </div>
                 ) : (
                     filteredProviders.map(provider => (
@@ -350,7 +352,7 @@ export default function ProvidersPage() {
                                             <button
                                                 onClick={() => handleEdit(provider)}
                                                 className="p-1 text-slate-300 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all shrink-0"
-                                                title="Edit Details"
+                                                title={t('providers.edit_details')}
                                             >
                                                 <Settings className="h-4 w-4" />
                                             </button>
@@ -370,13 +372,13 @@ export default function ProvidersPage() {
                                             "bg-emerald-50 text-emerald-600 border-emerald-100"
                                 )}>
                                     {provider.leave_status === 'on_leave' ? (
-                                        <span>On Leave</span>
+                                        <span>{t('providers.on_leave')}</span>
                                     ) : provider.leave_status === 'upcoming' ? (
-                                        <span>Upcoming Leave</span>
+                                        <span>{t('providers.upcoming_leave')}</span>
                                     ) : (
                                         <span className="flex items-center gap-1.5">
                                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            AVAILABLE
+                                            {t('providers.available')}
                                         </span>
                                     )}
                                 </div>
@@ -385,7 +387,7 @@ export default function ProvidersPage() {
                             {/* Contact Info (Compact) */}
                             <div className="flex items-center gap-2 text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50">
                                 <Phone className="h-3.5 w-3.5 text-slate-400" />
-                                <span className="text-xs font-bold tracking-tight">{provider.phone || 'No phone'}</span>
+                                <span className="text-xs font-bold tracking-tight">{provider.phone || t('providers.no_phone')}</span>
                                 {provider.department && (
                                     <>
                                         <span className="text-slate-200 ml-auto">•</span>
@@ -396,13 +398,13 @@ export default function ProvidersPage() {
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Assigned Services</h4>
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('providers.assigned_services')}</h4>
                                     <button
                                         onClick={() => openAssignModal(provider)}
                                         className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider hover:text-indigo-600 transition-colors flex items-center gap-1 group/btn"
                                     >
                                         <Plus className="h-3 w-3 group-hover/btn:rotate-90 transition-transform" />
-                                        Manage
+                                        {t('providers.manage')}
                                     </button>
                                 </div>
                                 <div className="flex flex-wrap gap-1.5 min-h-[32px]">
@@ -410,7 +412,7 @@ export default function ProvidersPage() {
                                     {(() => {
                                         const services = (provider as any).services || (provider as any).queue_entry_services || [];
                                         if (services.length === 0) {
-                                            return <span className="text-[10px] font-bold text-slate-400 italic">No services assigned</span>;
+                                            return <span className="text-[10px] font-bold text-slate-400 italic">{t('providers.no_services_assigned')}</span>;
                                         }
                                         const displayed = services.slice(0, 3);
                                         const remaining = services.length - 3;
@@ -418,12 +420,12 @@ export default function ProvidersPage() {
                                             <>
                                                 {displayed.map((s: any) => (
                                                     <span key={s.id || s} className="px-2 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100/50 rounded-lg text-[10px] font-bold">
-                                                        {s.name || 'Service'}
+                                                        {s.name || t('providers.service_placeholder')}
                                                     </span>
                                                 ))}
                                                 {remaining > 0 && (
                                                     <span className="px-2 py-1 bg-slate-50 text-slate-400 border border-slate-100 rounded-lg text-[10px] font-black uppercase tracking-tighter">
-                                                        +{remaining} more
+                                                        +{remaining} {t('providers.more')}
                                                     </span>
                                                 )}
                                             </>
@@ -432,14 +434,13 @@ export default function ProvidersPage() {
                                 </div>
                             </div>
 
-                            {/* Leave Section - Primary Action */}
                             <div className="pt-1">
                                 <button
                                     onClick={() => openLeaveModal(provider)}
                                     className="w-full py-2.5 border-2 border-amber-100 text-amber-600 bg-white rounded-xl text-[10px] font-bold uppercase tracking-[0.15em] hover:bg-amber-50 hover:border-amber-200 transition-all active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     <CalendarOff className="h-3.5 w-3.5" />
-                                    Manage Leave
+                                    {t('providers.manage_leave')}
                                 </button>
                             </div>
                         </div>
@@ -455,7 +456,7 @@ export default function ProvidersPage() {
                             <form onSubmit={handleSubmit} className="p-10 space-y-8">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-                                        {selectedProvider ? 'Update Professional' : 'Add New Professional'}
+                                        {selectedProvider ? t('providers.update_professional') : t('providers.add_new_professional')}
                                     </h3>
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                                         <X className="h-6 w-6 text-slate-400" />
@@ -464,11 +465,11 @@ export default function ProvidersPage() {
 
                                 <div className="space-y-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700 ml-1">Full Name</label>
+                                        <label className="text-xs font-bold text-slate-700 ml-1">{t('providers.full_name')}</label>
                                         <input
                                             required
                                             type="text"
-                                            placeholder="e.g. Jane Doe"
+                                            placeholder={t('providers.full_name_placeholder')}
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
@@ -476,20 +477,20 @@ export default function ProvidersPage() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-700 ml-1">Role</label>
+                                            <label className="text-xs font-bold text-slate-700 ml-1">{t('providers.role')}</label>
                                             <input
                                                 type="text"
-                                                placeholder="e.g. Specialist / Agent"
+                                                placeholder={t('providers.role_placeholder')}
                                                 value={formData.role}
                                                 onChange={e => setFormData({ ...formData, role: e.target.value })}
                                                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-700 ml-1">Department</label>
+                                            <label className="text-xs font-bold text-slate-700 ml-1">{t('providers.department')}</label>
                                             <input
                                                 type="text"
-                                                placeholder="e.g. General / Support"
+                                                placeholder={t('providers.department_placeholder')}
                                                 value={formData.department}
                                                 onChange={e => setFormData({ ...formData, department: e.target.value })}
                                                 className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
@@ -497,10 +498,10 @@ export default function ProvidersPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-700 ml-1">Phone Number</label>
+                                        <label className="text-xs font-bold text-slate-700 ml-1">{t('providers.phone_number')}</label>
                                         <input
                                             type="tel"
-                                            placeholder="e.g. 10 digit number"
+                                            placeholder={t('providers.phone_placeholder')}
                                             value={formData.phone}
                                             onChange={e => setFormData({ ...formData, phone: e.target.value })}
                                             className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
@@ -515,7 +516,7 @@ export default function ProvidersPage() {
                                         className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
                                     >
                                         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                                        {selectedProvider ? 'Save Changes' : 'Confirm & Add'}
+                                        {selectedProvider ? t('providers.save_changes') : t('providers.confirm_add')}
                                     </button>
                                 </div>
                             </form>
@@ -532,7 +533,7 @@ export default function ProvidersPage() {
                             <div className="p-10 space-y-8">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Assign Services</h3>
+                                        <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.assign_services')}</h3>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{selectedProvider.name}</p>
                                     </div>
                                     <button onClick={() => setIsAssignModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
@@ -576,7 +577,7 @@ export default function ProvidersPage() {
                                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                                 >
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
-                                    Update Assignments
+                                    {t('providers.update_assignments')}
                                 </button>
                             </div>
                         </div>
@@ -592,7 +593,7 @@ export default function ProvidersPage() {
                             <div className="p-10 space-y-8">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Weekly Schedule</h3>
+                                        <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.weekly_schedule')}</h3>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{selectedProvider.name}</p>
                                     </div>
                                     <button onClick={() => setIsAvailabilityModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
@@ -643,7 +644,7 @@ export default function ProvidersPage() {
                                                         }}
                                                         className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none disabled:opacity-30"
                                                     />
-                                                    <span className="text-slate-300 font-bold px-1">to</span>
+                                                    <span className="text-slate-300 font-bold px-1">{t('providers.to')}</span>
                                                     <input
                                                         type="time"
                                                         disabled={!dayData.is_available}
@@ -668,7 +669,7 @@ export default function ProvidersPage() {
                                     className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
                                 >
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
-                                    Save Schedule
+                                    {t('providers.save_schedule')}
                                 </button>
                             </div>
                         </div>
@@ -685,8 +686,8 @@ export default function ProvidersPage() {
                                 {/* Sidebar: History List (2/5) */}
                                 <div className="md:col-span-2 border-r border-slate-100 bg-slate-50/50 flex flex-col">
                                     <div className="p-6 border-b border-slate-100 bg-white/50 backdrop-blur-sm">
-                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Active Leaves</h3>
-                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mt-1">Management Console</p>
+                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{t('providers.active_leaves')}</h3>
+                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mt-1">{t('providers.management_console')}</p>
                                     </div>
 
                                     <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
@@ -695,7 +696,7 @@ export default function ProvidersPage() {
                                                 <div className="h-12 w-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-300 mb-3">
                                                     <CalendarOff className="h-6 w-6" />
                                                 </div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No history found</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.no_history')}</p>
                                             </div>
                                         ) : (
                                             leavesData.sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime()).map((leave: any) => {
@@ -714,7 +715,7 @@ export default function ProvidersPage() {
                                                                         leave.leave_type === 'sick' ? "bg-rose-500" : "bg-amber-500"
                                                                 )} />
                                                                 <p className="text-[10px] font-black uppercase tracking-tighter text-slate-400 truncate">
-                                                                    {leave.leave_type} {isCurrent && "• Current"}
+                                                                    {leave.leave_type} {isCurrent && `• ${t('providers.current')}`}
                                                                 </p>
                                                             </div>
                                                             <p className="text-xs font-black text-slate-900 tracking-tight">
@@ -743,7 +744,7 @@ export default function ProvidersPage() {
                                             </div>
                                             <div>
                                                 <h4 className="text-lg font-bold text-slate-900 leading-none">{selectedProvider.name}</h4>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Plan New Absence</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{t('providers.plan_new_absence')}</p>
                                             </div>
                                         </div>
                                         <button onClick={() => setIsLeaveModalOpen(false)} className="h-10 w-10 hover:bg-slate-50 rounded-xl flex items-center justify-center transition-colors">
@@ -755,7 +756,7 @@ export default function ProvidersPage() {
                                         <form onSubmit={handleAddLeave} className="space-y-8">
                                             <div className="grid grid-cols-2 gap-6">
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Start Date</label>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.start_date')}</label>
                                                     <input
                                                         required
                                                         type="date"
@@ -765,7 +766,7 @@ export default function ProvidersPage() {
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">End Date</label>
+                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.end_date')}</label>
                                                     <input
                                                         required
                                                         type="date"
@@ -777,24 +778,24 @@ export default function ProvidersPage() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Leave Category</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.leave_category')}</label>
                                                 <select
                                                     required
                                                     value={leaveFormData.leave_type}
                                                     onChange={(e) => setLeaveFormData({ ...leaveFormData, leave_type: e.target.value })}
                                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-sm font-bold text-slate-900 focus:bg-white focus:border-slate-900 outline-none transition-all appearance-none"
                                                 >
-                                                    <option value="holiday">🏝️ Holiday / Vacation</option>
-                                                    <option value="sick">🤒 Sick Leave</option>
-                                                    <option value="emergency">🚨 Emergency</option>
-                                                    <option value="other">📝 Other Reason</option>
+                                                    <option value="holiday">{t('providers.holiday')}</option>
+                                                    <option value="sick">{t('providers.sick')}</option>
+                                                    <option value="emergency">{t('providers.emergency')}</option>
+                                                    <option value="other">{t('providers.other')}</option>
                                                 </select>
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Notes (Internal only)</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.notes')}</label>
                                                 <textarea
-                                                    placeholder="Briefly describe the reason..."
+                                                    placeholder={t('providers.notes_placeholder')}
                                                     rows={2}
                                                     value={leaveFormData.note}
                                                     onChange={(e) => setLeaveFormData({ ...leaveFormData, note: e.target.value })}
@@ -808,7 +809,7 @@ export default function ProvidersPage() {
                                                 className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-xl shadow-slate-200"
                                             >
                                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                                Submit Leave
+                                                {t('providers.submit_leave')}
                                             </button>
                                         </form>
                                     </div>
@@ -828,24 +829,24 @@ export default function ProvidersPage() {
                                 <div className="h-20 w-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mx-auto mb-6">
                                     <Trash2 className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight mb-2">Deactivate Expert?</h3>
+                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight mb-2">{t('providers.deactivate_expert')}</h3>
                                 <p className="text-sm font-bold text-slate-500 uppercase tracking-wider leading-relaxed mb-8">
-                                    Are you sure you want to deactivate <span className="text-slate-900 border-b-2 border-slate-100">{deleteModal.provider.name}</span>?
-                                    They will no longer appear in the active roster.
+                                    {t('providers.deactivate_desc')} <span className="text-slate-900 border-b-2 border-slate-100">{deleteModal.provider.name}</span>?
+                                    {t('providers.deactivate_warning')}
                                 </p>
                                 <div className="grid grid-cols-2 gap-4">
                                     <button
                                         onClick={() => setDeleteModal({ isOpen: false, provider: null })}
                                         className="py-4 bg-slate-50 text-slate-600 rounded-[20px] text-xs font-bold uppercase tracking-wider hover:bg-slate-100 transition-all"
                                     >
-                                        Cancel
+                                        {t('providers.cancel')}
                                     </button>
                                     <button
                                         onClick={confirmDelete}
                                         disabled={isSubmitting}
                                         className="py-4 bg-red-500 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-200 hover:bg-red-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                                     >
-                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Deactivate"}
+                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.deactivate')}
                                     </button>
                                 </div>
                             </div>

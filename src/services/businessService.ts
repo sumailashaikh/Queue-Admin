@@ -12,6 +12,9 @@ export interface Business {
     open_time: string;
     close_time: string;
     is_closed: boolean;
+    currency?: string;
+    timezone?: string;
+    language?: string;
 }
 
 export const businessService = {

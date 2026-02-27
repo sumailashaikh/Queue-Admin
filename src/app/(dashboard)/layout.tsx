@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,7 @@ export default function DashboardLayout({
                         </div>
 
                         <div className="flex items-center gap-6">
+                            <LanguageSwitcher />
                             <div className="hidden sm:flex flex-col items-end">
                                 <p className="text-sm font-bold text-slate-900">Business Portal</p>
                                 <button

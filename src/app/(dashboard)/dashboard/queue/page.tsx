@@ -25,7 +25,8 @@ import {
     Phone,
     Monitor,
     Bell,
-    Calendar
+    Calendar,
+    Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,11 +36,13 @@ import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { QRCodeSVG } from "qrcode.react";
 import { QueueRow } from "./components/QueueRow";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Local types have been replaced by imports from @/services/queueService
 
 export default function LiveQueuePage() {
     const { business } = useAuth();
+    const { t } = useLanguage();
     const [queues, setQueues] = useState<Queue[]>([]);
     const [selectedQueue, setSelectedQueue] = useState<Queue | null>(null);
     const [entries, setEntries] = useState<QueueEntry[]>([]);
@@ -477,7 +480,7 @@ export default function LiveQueuePage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">Initializing Queues...</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider animate-pulse">{t('queue.refreshing_live_queue')}</p>
             </div>
         );
     }
@@ -488,7 +491,7 @@ export default function LiveQueuePage() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-4">
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-                        Live Queue
+                        {t('queue.title')}
                         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                     </h1>
                     <div className="flex flex-wrap items-center gap-3">
@@ -504,7 +507,7 @@ export default function LiveQueuePage() {
                                     )}
                                 >
                                     {isCopied ? <CheckCircle2 className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-                                    <span className="hidden sm:inline">{isCopied ? 'Link Copied' : 'Join Link'}</span>
+                                    <span className="hidden sm:inline">{isCopied ? t('queue.link_copied') : t('queue.join_link')}</span>
                                 </button>
                                 <div className="w-px h-4 bg-slate-200 mx-1"></div>
                                 <button
@@ -517,7 +520,7 @@ export default function LiveQueuePage() {
                                     className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold tracking-wide transition-all hover:bg-slate-800 shadow-sm"
                                 >
                                     <Monitor className="h-4 w-4" />
-                                    <span className="hidden sm:inline">TV Mode</span>
+                                    <span className="hidden sm:inline">{t('queue.tv_mode')}</span>
                                 </button>
                             </div>
                         )}
@@ -530,7 +533,7 @@ export default function LiveQueuePage() {
                                     className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-semibold tracking-wide transition-all hover:bg-primary/90 disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
                                 >
                                     <ChevronRight className="h-4 w-4" />
-                                    Next Customer
+                                    {t('queue.next_customer')}
                                 </button>
                             )}
                             {business && (
@@ -539,7 +542,7 @@ export default function LiveQueuePage() {
                                     className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:scale-105 active:scale-95"
                                 >
                                     <Phone className="h-4 w-4" />
-                                    <span className="hidden sm:inline">WhatsApp Invite</span>
+                                    <span className="hidden sm:inline">{t('queue.whatsapp_invite')}</span>
                                 </button>
                             )}
                         </div>
@@ -550,23 +553,23 @@ export default function LiveQueuePage() {
                             <button
                                 onClick={openEditModal}
                                 className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                                title="Queue Settings"
+                                title={t('queue.queue_settings')}
                             >
                                 <Settings2 className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => setDeleteModal({ isOpen: true, queueId: selectedQueue.id, queueName: selectedQueue.name })}
                                 className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                title="Delete Queue"
+                                title={t('queue.delete_queue')}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => setIsResetModalOpen(true)}
                                 className="px-3 py-2 text-primary hover:bg-primary/5 rounded-xl transition-all text-xs font-semibold tracking-wide border border-primary/10"
-                                title="Clear Today's Entries"
+                                title={t('queue.reset_today')}
                             >
-                                Reset Today
+                                {t('queue.reset_today')}
                             </button>
                         </div>
                     )}
@@ -578,7 +581,7 @@ export default function LiveQueuePage() {
                     <Search className="absolute left-6 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input
                         type="text"
-                        placeholder="Search customers..."
+                        placeholder={t('queue.search_customers')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-12 pr-6 py-3.5 bg-white border-2 border-slate-100 rounded-3xl text-sm font-semibold text-slate-900 focus:border-primary/20 focus:ring-4 focus:ring-primary/5 outline-none transition-all w-full shadow-sm placeholder:text-slate-400 placeholder:font-medium"
@@ -595,7 +598,7 @@ export default function LiveQueuePage() {
                                 : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        Active Queue ({entries.filter(e => e.status !== 'no_show').length})
+                        {t('queue.active_queue')} ({entries.filter(e => e.status !== 'no_show').length})
                     </button>
                     <button
                         onClick={() => setViewMode('noshow')}
@@ -606,14 +609,13 @@ export default function LiveQueuePage() {
                                 : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        No-Shows ({entries.filter(e => e.status === 'no_show').length})
+                        {t('queue.no_shows')} ({entries.filter(e => e.status === 'no_show').length})
                     </button>
                 </div>
 
-                {/* Mobile Scroll Hint */}
                 <div className="flex md:hidden items-center justify-center gap-2 mb-2 animate-pulse">
                     <div className="px-3 py-1 bg-slate-100 rounded-full flex items-center gap-1.5">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">↔ Scroll to see actions</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">↔ {t('queue.scroll_hint')}</span>
                     </div>
                 </div>
             </div>
@@ -622,38 +624,39 @@ export default function LiveQueuePage() {
             {selectedQueue && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                        <div className="h-12 w-12 bg-indigo-50/50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100/50">
                             <Users className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Visitors</p>
-                            <p className="text-2xl font-bold text-slate-900">{entries.length}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-0.5">{t('queue.active_guests')}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">{entries.length}</p>
                         </div>
                     </div>
                     <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className="h-12 w-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+                        <div className="h-12 w-12 bg-amber-50/50 rounded-2xl flex items-center justify-center text-amber-600 border border-amber-100/50">
                             <Clock className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Est. Wait Time</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-0.5">{t('queue.estimated_wait')}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">
                                 {entries
                                     .filter(e => e.status === 'waiting')
                                     .reduce((acc, e) => {
                                         const serviceDuration = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.duration_minutes || 0), 0) || (selectedQueue?.current_wait_time_minutes || 0);
                                         return acc + serviceDuration;
-                                    }, 0)} min
+                                    }, 0)}<span className="text-sm ml-1 uppercase text-slate-400 tracking-tighter">{t('queue.min')}</span>
                             </p>
                         </div>
                     </div>
                     <div className="bg-white p-5 rounded-[24px] border-2 border-slate-50 shadow-sm flex items-center gap-4">
-                        <div className="h-12 w-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
-                            <IndianRupee className="h-6 w-6" />
+                        <div className="h-12 w-12 bg-emerald-50/50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100/50">
+                            <Wallet className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Expected Revenue</p>
-                            <p className="text-2xl font-bold text-slate-900">
-                                ₹{entries
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-0.5">{t('queue.payment_received')}</p>
+                            <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">
+                                <span className="text-sm mr-1.5 uppercase text-slate-400 tracking-tighter">{business?.currency || 'USD'}</span>
+                                {entries
                                     .reduce((acc, e) => {
                                         const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.price || 0), 0) || (selectedQueue?.services?.price || 0);
                                         return acc + entryPrice;
@@ -669,8 +672,10 @@ export default function LiveQueuePage() {
                             <div className={cn("h-3 w-3 rounded-full", selectedQueue.status === 'open' ? "bg-indigo-600" : "bg-red-600")} />
                         </div>
                         <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</p>
-                            <p className="text-2xl font-bold text-slate-900 uppercase">{selectedQueue.status}</p>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('queue.status')}</p>
+                            <p className="text-2xl font-bold text-slate-900 uppercase">
+                                {selectedQueue.status === 'open' ? t('queue.active_open') : selectedQueue.status === 'closed' ? t('queue.closed') : t('queue.paused')}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -681,15 +686,15 @@ export default function LiveQueuePage() {
                 {entriesLoading ? (
                     <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-white rounded-[32px] border-2 border-slate-50">
                         <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Refreshing Live Queue...</p>
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 overflow-x-auto pb-4 scrollbar-hide">
                         {/* List Header (Hidden on Mobile) */}
-                        <div className="flex flex-row items-center gap-0 px-0 py-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 min-w-[850px]">
-                            <div className="w-[220px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer Profile</div>
-                            <div className="flex-1 min-w-[380px] px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Active Services & Experts</div>
-                            <div className="w-[250px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status & Billing</div>
+                        <div className="flex flex-row items-center gap-0 px-6 py-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 min-w-[850px] mb-2">
+                            <div className="w-[336px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('queue.guest_details')}</div>
+                            <div className="flex-1 px-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">{t('queue.execution_experts')}</div>
+                            <div className="w-[250px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">{t('queue.status_billing')}</div>
                         </div>
 
                         {filteredEntries.length === 0 ? (
@@ -699,11 +704,11 @@ export default function LiveQueuePage() {
                                         <Users className="h-12 w-12" />
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-xl font-black text-slate-900">Queue is Clear</p>
+                                        <p className="text-xl font-black text-slate-900">{t('queue.queue_is_clear')}</p>
                                         <p className="text-sm font-bold text-slate-400 leading-relaxed">
                                             {selectedQueue
-                                                ? "No customers are currently in line. Great time to catch up on maintenance!"
-                                                : "Select a queue from the sidebar to start managing your business live."}
+                                                ? t('queue.no_customers')
+                                                : t('queue.select_queue_hint')}
                                         </p>
                                     </div>
                                 </div>
@@ -792,6 +797,7 @@ export default function LiveQueuePage() {
 }
 
 const InviteModal = ({ isOpen, onClose, business }: any) => {
+    const { t } = useLanguage();
     const [inviteData, setInviteData] = useState({ name: '', phone: '' });
     if (!isOpen) return null;
 
@@ -809,29 +815,29 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-900 uppercase">WhatsApp Invite</h2>
+                    <h2 className="text-xl font-bold text-slate-900 uppercase">{t('queue.whatsapp_invite')}</h2>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                         <X className="h-5 w-5 text-slate-400" />
                     </button>
                 </div>
                 <form onSubmit={handleSendInvite} className="space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Customer Name</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.customer_name')}</label>
                         <input
                             required
                             type="text"
-                            placeholder="e.g. Rahul Sharma"
+                            placeholder={t('queue.customer_name_placeholder')}
                             value={inviteData.name}
                             onChange={(e) => setInviteData({ ...inviteData, name: e.target.value })}
                             className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">WhatsApp Number</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
                         <input
                             required
                             type="tel"
-                            placeholder="Phone number"
+                            placeholder={t('queue.whatsapp_number_placeholder')}
                             value={inviteData.phone}
                             onChange={(e) => setInviteData({ ...inviteData, phone: e.target.value })}
                             className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
@@ -841,7 +847,7 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
                         type="submit"
                         className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-bold uppercase tracking-wider shadow-xl shadow-emerald-500/10 transition-all active:scale-95"
                     >
-                        GENERATING INVITE & OPEN WHATSAPP
+                        {t('queue.generating_invite')}
                     </button>
                 </form>
             </div>
@@ -850,6 +856,7 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
 };
 
 const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isSubmitting, error, mode }: any) => {
+    const { t } = useLanguage();
     if (!isOpen) return null;
 
     return (
@@ -859,10 +866,10 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                                {mode === 'create' ? 'Create New Queue' : 'Queue Settings'}
+                                {mode === 'create' ? t('queue.create_queue') : t('queue.update_queue_config')}
                             </h2>
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">
-                                {mode === 'create' ? 'Define a new visitor flow' : 'Update queue configuration'}
+                                {mode === 'create' ? t('queue.define_new_flow') : t('queue.update_queue_config')}
                             </p>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
@@ -879,11 +886,11 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Queue Identity</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.queue_identity')}</label>
                             <input
                                 required
                                 type="text"
-                                placeholder="e.g., General Inquiries, Technical Support"
+                                placeholder={t('queue.queue_identity_placeholder')}
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300"
@@ -891,10 +898,10 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Description (Optional)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.description_optional')}</label>
                             <textarea
                                 rows={2}
-                                placeholder="What is this queue for?"
+                                placeholder={t('queue.description_placeholder')}
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-sm font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 resize-none"
@@ -903,7 +910,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Avg. Time / Person</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.avg_time_person')}</label>
                                 <input
                                     type="number"
                                     value={formData.current_wait_time_minutes || ""}
@@ -915,15 +922,15 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Daily Status</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.daily_status')}</label>
                                 <select
                                     value={formData.status}
                                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                     className="w-full px-5 py-4 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-sm font-bold text-slate-900 outline-none transition-all appearance-none"
                                 >
-                                    <option value="open">ACTIVE / OPEN</option>
-                                    <option value="closed">CLOSED</option>
-                                    <option value="paused">PAUSED</option>
+                                    <option value="open">{t('queue.active_open')}</option>
+                                    <option value="closed">{t('queue.closed')}</option>
+                                    <option value="paused">{t('queue.paused')}</option>
                                 </select>
                             </div>
                         </div>
@@ -936,7 +943,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                             {isSubmitting ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
-                                mode === 'create' ? 'Initialize Queue' : 'Save Configuration'
+                                mode === 'create' ? t('queue.initialize_queue') : t('queue.save_configuration')
                             )}
                         </button>
                     </form>
@@ -947,6 +954,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 };
 
 const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any) => {
+    const { t } = useLanguage();
     if (!isOpen) return null;
 
     return (
@@ -957,9 +965,9 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
                         <Trash2 className="h-12 w-12" />
                     </div>
                     <div className="space-y-3">
-                        <h3 className="text-2xl font-bold text-slate-900">Delete Queue?</h3>
+                        <h3 className="text-2xl font-bold text-slate-900">{t('queue.delete_queue_confirm')}</h3>
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-2">
-                            Are you sure you want to remove <span className="text-slate-900">{queueName}</span>? All history for this queue will be archived.
+                            {t('queue.delete_queue_desc_1')} <span className="text-slate-900">{queueName}</span>{t('queue.delete_queue_desc_2')}
                         </p>
                     </div>
                     <div className="flex flex-col gap-3">
@@ -968,13 +976,13 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
                             onClick={onConfirm}
                             className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-red-500/10 active:scale-95 flex items-center justify-center gap-2"
                         >
-                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "CONFIRM DELETE"}
+                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('queue.confirm_delete')}
                         </button>
                         <button
                             onClick={onClose}
                             className="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all"
                         >
-                            CANCEL
+                            {t('queue.cancel')}
                         </button>
                     </div>
                 </div>
@@ -983,6 +991,7 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
     );
 };
 const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
+    const { t } = useLanguage();
     if (!isOpen) return null;
 
     return (
@@ -993,9 +1002,9 @@ const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
                         <AlertCircle className="h-10 w-10" />
                     </div>
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Clear Today's Queue?</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">{t('queue.clear_todays_queue')}</h2>
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
-                            This will remove ALL customers who joined today. This action cannot be undone.
+                            {t('queue.clear_todays_queue_desc')}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1003,14 +1012,14 @@ const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
                             onClick={onClose}
                             className="flex-1 h-14 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-2xl transition-all"
                         >
-                            KEEP ENTRIES
+                            {t('queue.keep_entries')}
                         </button>
                         <button
                             onClick={onConfirm}
                             disabled={isDeleting}
                             className="flex-1 h-14 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider rounded-2xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
                         >
-                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "YES, CLEAR"}
+                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('queue.yes_clear')}
                         </button>
                     </div>
                 </div>

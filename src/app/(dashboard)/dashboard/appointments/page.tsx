@@ -22,6 +22,7 @@ import { appointmentService, Appointment } from "@/services/appointmentService";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { StatusBadge } from "@/components/dashboard/DashboardUI";
 
 type AppointmentStatus = Appointment['status'];
 
@@ -279,10 +280,10 @@ export default function AppointmentsPage() {
                                 )} />
 
                                 {/* Time/Date Column */}
-                                <div className="flex flex-col space-y-1 min-w-[140px]">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider leading-none">{date}</p>
+                                <div className="flex flex-col space-y-2 min-w-[140px] shrink-0 border-r border-slate-50 pr-8">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-1">{date}</p>
 
-                                    <p className={cn("text-xl font-bold tracking-tight", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
+                                    <p className={cn("text-2xl font-black tracking-tighter tabular-nums leading-none", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
                                         {time}
                                     </p>
 
@@ -293,26 +294,15 @@ export default function AppointmentsPage() {
                                         </div>
                                     )}
 
-                                    <div className={cn(
-                                        "mt-3 inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider w-fit border shadow-sm",
-                                        (apt.appointment_state === 'LATE') ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                            (apt.appointment_state === 'IN_QUEUE') ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                                (apt.appointment_state === 'UPCOMING') ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                                    (apt.status === 'completed') ? "bg-slate-900 text-white border-slate-900" :
-                                                        (apt.status === 'cancelled') ? "bg-slate-100 text-slate-400 border-slate-200" :
-                                                            (apt.status === 'expired') ? "bg-slate-100 text-slate-500 border-slate-200" :
-                                                                "bg-slate-50 text-slate-600 border-slate-100"
-                                    )}>
-                                        {apt.appointment_state || apt.status}
-                                    </div>
+                                    <StatusBadge status={apt.appointment_state || apt.status} />
                                 </div>
 
                                 {/* Customer Info */}
                                 <div className="flex-1 space-y-4">
                                     <div className="space-y-1">
-                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Elite Guest</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Status</p>
                                         <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-4">
-                                            <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || 'Premium Guest'}</span>
+                                            <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || 'Guest'}</span>
 
                                             {(() => {
                                                 const isToday = new Date(apt.start_time).toDateString() === new Date().toDateString();
@@ -321,10 +311,7 @@ export default function AppointmentsPage() {
 
                                                 if (isToday && isActive && hasQueueData) {
                                                     return (
-                                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20 animate-pulse">
-                                                            <Loader2 className="h-3 w-3 animate-spin" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider">In Live Queue {apt.queue_entry?.ticket_number}</span>
-                                                        </div>
+                                                        <StatusBadge status="serving" className="bg-blue-600 text-white shadow-lg shadow-blue-600/20" />
                                                     );
                                                 }
                                                 return null;
@@ -452,19 +439,17 @@ export default function AppointmentsPage() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'alert')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-blue-100 transition-colors border border-blue-100"
+                                                className="flex items-center justify-center h-10 w-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 active:scale-90"
                                                 title="WhatsApp: You're Next"
                                             >
-                                                <Megaphone className="h-4 w-4" />
-                                                Alert
+                                                <Megaphone className="h-4.5 w-4.5" />
                                             </button>
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'call')}
-                                                className="flex items-center gap-2 px-3 py-2 bg-[#25D366]/10 text-[#25D366] rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#25D366] hover:text-white transition-colors border border-[#25D366]/20"
+                                                className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-90"
                                                 title="WhatsApp: Turn Ready"
                                             >
-                                                <MessageCircle className="h-4 w-4" />
-                                                Call
+                                                <MessageCircle className="h-4.5 w-4.5" />
                                             </button>
                                             <button
                                                 disabled={actionLoading === apt.id}

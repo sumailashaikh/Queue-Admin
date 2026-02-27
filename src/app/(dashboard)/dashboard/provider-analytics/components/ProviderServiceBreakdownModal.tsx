@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { ProviderAnalytics, ProviderServiceStats } from "@/services/analyticsService";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ProviderServiceBreakdownModalProps {
     isOpen: boolean;
@@ -25,6 +26,8 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
     provider,
     periodLabel
 }) => {
+    const { t } = useLanguage();
+
     if (!isOpen || !provider) return null;
 
     return (
@@ -43,7 +46,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                         </div>
                         <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mt-1.5 flex items-center gap-2">
                             <TrendingUp className="h-3 w-3" />
-                            Service Breakdown • {periodLabel}
+                            {t('provider_analytics.service_breakdown')} • {periodLabel}
                         </p>
                     </div>
                     <button
@@ -59,7 +62,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                     <div className="space-y-4">
                         {provider.service_breakdown.length === 0 ? (
                             <div className="text-center py-12 text-slate-400 italic">
-                                No service data available
+                                {t('provider_analytics.no_service_data')}
                             </div>
                         ) : (
                             provider.service_breakdown.map((s, idx) => (
@@ -76,11 +79,11 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
                                                     <Layout className="h-3 w-3" />
-                                                    {s.count} {s.count === 1 ? 'task' : 'tasks'}
+                                                    {s.count} {s.count === 1 ? t('provider_analytics.task') : t('provider_analytics.tasks')}
                                                 </span>
                                                 <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
                                                     <Clock className="h-3 w-3" />
-                                                    {s.avg_time}m avg
+                                                    {s.avg_time}m {t('provider_analytics.avg')}
                                                 </span>
                                             </div>
                                         </div>
@@ -91,7 +94,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                                             ₹{s.revenue.toLocaleString()}
                                         </div>
                                         <div className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter mt-0.5">
-                                            Total Revenue
+                                            {t('provider_analytics.total_revenue_stats')}
                                         </div>
                                     </div>
                                 </div>
@@ -104,12 +107,12 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                 <div className="px-8 py-6 bg-slate-900 flex items-center justify-between">
                     <div className="flex gap-8">
                         <div>
-                            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">Combined Output</p>
+                            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.combined_output')}</p>
                             <p className="text-lg font-bold text-white tracking-tight">₹{provider.total_revenue.toLocaleString()}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">Efficiency</p>
-                            <p className="text-lg font-bold text-white tracking-tight">{provider.avg_service_time_minutes}m avg</p>
+                            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.efficiency')}</p>
+                            <p className="text-lg font-bold text-white tracking-tight">{provider.avg_service_time_minutes}m {t('provider_analytics.avg')}</p>
                         </div>
                     </div>
 
@@ -117,7 +120,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                         onClick={onClose}
                         className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all uppercase tracking-wider"
                     >
-                        Close Portal
+                        {t('provider_analytics.close_portal')}
                     </button>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import {
     LayoutDashboard,
     Users,
@@ -19,18 +20,19 @@ import {
 } from "lucide-react";
 
 const navigation = [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Live Queue', href: '/dashboard/queue', icon: Users },
-    { name: 'Providers', href: '/dashboard/providers', icon: Briefcase },
-    { name: 'Expert Analytics', href: '/dashboard/provider-analytics', icon: TrendingUp },
-    { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
-    { name: 'Services', href: '/dashboard/services', icon: Sparkles },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { transKey: 'sidebar.overview', href: '/dashboard', icon: LayoutDashboard },
+    { transKey: 'sidebar.live_queue', href: '/dashboard/queue', icon: Users },
+    { transKey: 'sidebar.providers', href: '/dashboard/providers', icon: Briefcase },
+    { transKey: 'sidebar.expert_analytics', href: '/dashboard/provider-analytics', icon: TrendingUp },
+    { transKey: 'sidebar.appointments', href: '/dashboard/appointments', icon: Calendar },
+    { transKey: 'sidebar.services', href: '/dashboard/services', icon: Sparkles },
+    { transKey: 'sidebar.settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: () => void, isCollapsed?: boolean }) {
     const pathname = usePathname();
     const { user, business, logout } = useAuth();
+    const { t } = useLanguage();
 
     const isVerified = user?.status === 'active';
 
@@ -67,7 +69,7 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
                                 isVerified ? "bg-emerald-500" : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
                             )} />
                             <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                {isVerified ? 'Verified Account' : 'Reviewing Profile'}
+                                {isVerified ? t('sidebar.verified') : t('sidebar.reviewing')}
                             </span>
                         </div>
                     </div>
@@ -81,7 +83,7 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
                         {!isCollapsed && (
                             <div className="px-4 mb-3 mt-2">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                                    Business Center
+                                    {t('sidebar.business_center')}
                                 </span>
                             </div>
                         )}
@@ -90,10 +92,10 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
                                 const isActive = pathname === item.href;
                                 return (
                                     <Link
-                                        key={item.name}
+                                        key={item.href}
                                         href={item.href}
                                         onClick={onClose}
-                                        title={isCollapsed ? item.name : undefined}
+                                        title={isCollapsed ? t(item.transKey) : undefined}
                                         className={cn(
                                             "group flex items-center rounded-[14px] transition-all duration-200",
                                             isCollapsed ? "px-3 py-3 justify-center" : "px-4 py-3 text-[13px] font-bold",
@@ -107,7 +109,7 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
                                             !isCollapsed && "mr-3",
                                             isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"
                                         )} />
-                                        {!isCollapsed && item.name}
+                                        {!isCollapsed && t(item.transKey)}
                                     </Link>
                                 );
                             })}
@@ -148,14 +150,14 @@ export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: ()
             <div className={cn("p-4 border-t border-slate-800/50", isCollapsed && "flex justify-center")}>
                 <button
                     onClick={logout}
-                    title={isCollapsed ? "Secure Logout" : undefined}
+                    title={isCollapsed ? t('sidebar.logout') : undefined}
                     className={cn(
                         "flex items-center text-sm font-bold text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-[14px] transition-all",
                         isCollapsed ? "p-3 justify-center" : "w-full px-4 py-3"
                     )}
                 >
                     <LogOut className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
-                    {!isCollapsed && "Secure Logout"}
+                    {!isCollapsed && t('sidebar.logout')}
                 </button>
             </div>
         </div>

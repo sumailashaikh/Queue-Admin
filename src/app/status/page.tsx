@@ -24,6 +24,7 @@ import {
     X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { i18n } from "@/lib/i18n";
 
 interface QueueContextItem {
     ticket: string;
@@ -38,6 +39,7 @@ interface QueueStatus {
     business_name: string;
     business_slug?: string;
     business_phone?: string;
+    business_language: string;
     display_token: string;
     current_serving: string;
     current_specialist?: string;
@@ -110,7 +112,9 @@ function StatusContent() {
         if (!status?.business_phone) return;
         let phone = status.business_phone.replace(/\D/g, '');
         if (phone.length === 10) phone = `91${phone}`;
-        const message = `Hello, I'm checking my status for ticket ${status.display_token} at ${status.business_name}.`;
+        const lang = status.business_language || 'en';
+        const msgPrefix = i18n.t(lang, 'status.wa_checking_status');
+        const message = `${msgPrefix} ${status.display_token} @ ${status.business_name}.`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
     };
 
@@ -128,6 +132,8 @@ function StatusContent() {
     }
 
     if (error || !status) {
+        // Fallback lang if status not loaded
+        const lang = status?.business_language || 'en';
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0f172a] p-8">
                 <div className="max-w-md w-full text-center space-y-8 bg-white p-12 rounded-[40px] shadow-2xl">
@@ -135,21 +141,23 @@ function StatusContent() {
                         <AlertCircle className="h-8 w-8 text-rose-500" />
                     </div>
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Access Denied</h1>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">{i18n.t(lang, 'status.access_denied')}</h1>
                         <p className="text-slate-600 text-xs font-bold uppercase tracking-widest leading-loose">
-                            {error || "Invalid status token"}
+                            {error || i18n.t(lang, 'status.invalid_token')}
                         </p>
                     </div>
                     <button
                         onClick={() => window.location.reload()}
                         className="w-full py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all"
                     >
-                        Try Again
+                        {i18n.t(lang, 'status.try_again')}
                     </button>
                 </div>
             </div>
         );
     }
+
+    const lang = status.business_language || 'en';
 
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col items-center p-0 md:p-6 lg:p-12 font-sans">
@@ -166,13 +174,13 @@ function StatusContent() {
 
                         <div className="px-4 py-1.5 bg-[#1e293b] rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-2 border border-slate-700">
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            LIVE STATUS PASS
+                            {i18n.t(lang, 'status.live_status_pass')}
                         </div>
                     </div>
 
                     <div className="text-center space-y-1 relative z-10">
                         <h2 className="text-3xl font-black tracking-tight uppercase">{status.business_name}</h2>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] opacity-80">Digital Entry Protocol</p>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] opacity-80">{i18n.t(lang, 'status.digital_entry_protocol')}</p>
                     </div>
                 </div>
 
@@ -182,18 +190,18 @@ function StatusContent() {
                         <QrCode className="absolute top-8 right-8 h-8 w-8 text-slate-100" />
 
                         <div className="text-center space-y-1">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">Pass ID</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">{i18n.t(lang, 'status.pass_id')}</p>
                             <p className="text-8xl font-black text-[#0B1B3F] tracking-tighter">{status.display_token}</p>
                         </div>
 
                         {/* Stats Row */}
                         <div className="grid grid-cols-2 gap-4 w-full">
                             <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-100/50">
-                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Position</p>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{i18n.t(lang, 'status.position')}</p>
                                 <p className="text-3xl font-black text-[#0B1B3F] tracking-tighter">#{status.position}</p>
                             </div>
                             <div className="bg-slate-50 rounded-[32px] p-6 text-center space-y-1 border border-slate-100/50">
-                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Wait Time</p>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{i18n.t(lang, 'status.wait_time')}</p>
                                 <p className="text-3xl font-black text-[#0B1B3F] tracking-tighter">{status.estimated_wait_time}M</p>
                             </div>
                         </div>
@@ -205,13 +213,13 @@ function StatusContent() {
                             <Users className="h-16 w-16" />
                         </div>
                         <div className="relative z-10 flex flex-col items-center space-y-4">
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Currently Serving</p>
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">{i18n.t(lang, 'status.currently_serving')}</p>
                             <div className="h-20 w-40 bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center text-center px-4">
                                 <p className="text-sm font-bold tracking-tight text-white/60 leading-tight">
-                                    {status.current_serving && status.current_serving !== '---' ? status.current_serving : "Now serving will appear here"}
+                                    {status.current_serving && status.current_serving !== '---' ? status.current_serving : i18n.t(lang, 'status.now_serving_appear')}
                                 </p>
                             </div>
-                            <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{i18n.t(lang, 'status.sync')} {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                     </div>
 
@@ -227,16 +235,16 @@ function StatusContent() {
                                 <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center mb-1 shadow-lg shadow-blue-200">
                                     <Bell className="h-5 w-5 text-white animate-bounce" />
                                 </div>
-                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">You’re next in line — please be ready.</h4>
+                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{i18n.t(lang, 'status.you_are_next')}</h4>
                                 <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-[240px]">
-                                    Please stay nearby. We’ll call you shortly.
+                                    {i18n.t(lang, 'status.stay_nearby')}
                                 </p>
                             </>
                         ) : (
                             <>
-                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Waiting for Turn</h4>
+                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{i18n.t(lang, 'status.waiting_turn')}</h4>
                                 <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-w-[240px]">
-                                    Please wait — we’ll notify you as your turn approaches.
+                                    {i18n.t(lang, 'status.notify_approaches')}
                                 </p>
                             </>
                         )}
@@ -249,7 +257,7 @@ function StatusContent() {
                             className="w-full h-16 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-[24px] flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-xl shadow-slate-900/10"
                         >
                             <MessageCircle className="h-5 w-5 fill-white/20" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Message Official</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{i18n.t(lang, 'status.message_official')}</span>
                         </button>
                     </div>
 
@@ -257,14 +265,14 @@ function StatusContent() {
                     <div className="pt-4 flex flex-col items-center gap-4">
                         <div className="flex items-center gap-3">
                             <div className="h-px w-8 bg-slate-200" />
-                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">QueueUp Concierge Protocol</p>
+                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">{i18n.t(lang, 'status.concierge_protocol')}</p>
                             <div className="h-px w-8 bg-slate-200" />
                         </div>
                         <button
                             onClick={fetchStatus}
                             className="text-[9px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-[0.2em] transition-colors"
                         >
-                            Tap to force refresh
+                            {i18n.t(lang, 'status.force_refresh')}
                         </button>
                     </div>
                 </div>

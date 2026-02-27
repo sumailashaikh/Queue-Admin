@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { businessService } from "@/services/businessService";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import {
     Building2,
     MapPin,
@@ -11,7 +12,8 @@ import {
     FileText,
     Loader2,
     CheckCircle2,
-    ArrowRight
+    ArrowRight,
+    Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -19,8 +21,10 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 export default function SetupPage() {
     const router = useRouter();
     const { refreshBusiness, logout } = useAuth();
+    const { language, setLanguage, t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [countryCode, setCountryCode] = useState("IN");
     const [formData, setFormData] = useState({
         name: "",
         slug: "",
@@ -28,6 +32,14 @@ export default function SetupPage() {
         phone: "",
         description: "",
     });
+    const [regionSettings, setRegionSettings] = useState<any>(null);
+
+    useEffect(() => {
+        const settings = localStorage.getItem('app_region_settings');
+        if (settings) {
+            setRegionSettings(JSON.parse(settings));
+        }
+    }, []);
 
     const generateSlug = (name: string) => {
         return name
@@ -51,7 +63,17 @@ export default function SetupPage() {
         setError("");
 
         try {
-            await businessService.createBusiness(formData);
+            const payload = {
+                ...formData,
+                country_code: countryCode,
+                ...(regionSettings && {
+                    currency: regionSettings.currency,
+                    timezone: regionSettings.timezone,
+                    language: regionSettings.language
+                })
+            };
+
+            await businessService.createBusiness(payload);
             await refreshBusiness();
             router.push("/dashboard");
         } catch (err: any) {
@@ -69,7 +91,7 @@ export default function SetupPage() {
                         <div className="h-16 w-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30">
                             <Building2 className="h-8 w-8 text-white" />
                         </div>
-                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Setup your business</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">{t('setup.title')}</h1>
                         <p className="text-slate-500 mt-2 font-medium">Create your professional profile to start managing queues.</p>
                         <div className="mt-4 flex flex-col items-center gap-2">
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest text-center">
@@ -93,15 +115,49 @@ export default function SetupPage() {
                         )}
 
                         <div className="space-y-6">
-                            {/* Business Name Section */}
+                            {/* Preferences Section */}
                             <div className="space-y-4">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center">
+                                    <Globe className="h-3.5 w-3.5 mr-2" />
+                                    Regional Preferences
+                                </label>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-bold text-slate-700">{t('setup.country')}</p>
+                                        <select
+                                            value={countryCode}
+                                            onChange={(e) => setCountryCode(e.target.value)}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium appearance-none"
+                                        >
+                                            <option value="IN">India (IN)</option>
+                                            <option value="AE">United Arab Emirates (AE)</option>
+                                            <option value="US">United States (US)</option>
+                                            <option value="GB">United Kingdom (GB)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-bold text-slate-700">{t('setup.dashboard_language')}</p>
+                                        <select
+                                            value={language}
+                                            onChange={(e) => setLanguage(e.target.value)}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium appearance-none"
+                                        >
+                                            <option value="en">English (EN)</option>
+                                            <option value="hi">हिंदी (HI)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Business Name Section */}
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center">
                                     <Building2 className="h-3.5 w-3.5 mr-2" />
                                     Business Identity
                                 </label>
                                 <div className="grid gap-4">
                                     <div className="space-y-2">
-                                        <p className="text-sm font-bold text-slate-700">Business Name</p>
+                                        <p className="text-sm font-bold text-slate-700">{t('setup.business_name')}</p>
                                         <input
                                             required
                                             type="text"
@@ -112,7 +168,7 @@ export default function SetupPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-sm font-bold text-slate-700">Public Link</p>
+                                        <p className="text-sm font-bold text-slate-700">{t('setup.slug_url')}</p>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">queueup.in/</span>
                                             <input
@@ -129,20 +185,20 @@ export default function SetupPage() {
                             </div>
 
                             {/* Contact Details */}
-                            <div className="space-y-4 pt-4">
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center">
                                     <MapPin className="h-3.5 w-3.5 mr-2" />
                                     Contact & Location
                                 </label>
                                 <div className="grid gap-4">
                                     <div className="space-y-2">
-                                        <p className="text-sm font-bold text-slate-700">Business Phone</p>
+                                        <p className="text-sm font-bold text-slate-700">{t('setup.phone')}</p>
                                         <div className="relative">
                                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                             <input
                                                 required
                                                 type="tel"
-                                                placeholder="+91 00000 00000"
+                                                placeholder={regionSettings?.dial_code ? `${regionSettings.dial_code} 00000 00000` : "+91 00000 00000"}
                                                 value={formData.phone}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                                                 className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium"
@@ -150,7 +206,7 @@ export default function SetupPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-sm font-bold text-slate-700">Address</p>
+                                        <p className="text-sm font-bold text-slate-700">{t('setup.address')}</p>
                                         <div className="relative">
                                             <MapPin className="absolute left-4 top-3 h-4 w-4 text-slate-400" />
                                             <textarea
@@ -175,7 +231,7 @@ export default function SetupPage() {
                                 <Loader2 className="h-6 w-6 animate-spin" />
                             ) : (
                                 <>
-                                    Create Business Profile
+                                    {t('setup.create_business')}
                                     <ArrowRight className="ml-2 h-5 w-5" />
                                 </>
                             )}

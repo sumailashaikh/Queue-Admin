@@ -21,9 +21,12 @@ import { QRCodeSVG } from "qrcode.react";
 import { businessService, Business } from "@/services/businessService";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { formatGlobalPhone } from "@/lib/phoneUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SettingsPage() {
     const { business, setBusiness } = useAuth();
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -38,7 +41,10 @@ export default function SettingsPage() {
         slug: business?.slug || "",
         open_time: business?.open_time || "09:00:00",
         close_time: business?.close_time || "21:00:00",
-        is_closed: business?.is_closed || false
+        is_closed: business?.is_closed || false,
+        currency: business?.currency || "USD",
+        timezone: business?.timezone || "UTC",
+        language: business?.language || "en"
     });
 
     useEffect(() => {
@@ -52,7 +58,10 @@ export default function SettingsPage() {
                 slug: business.slug,
                 open_time: business.open_time || "09:00:00",
                 close_time: business.close_time || "21:00:00",
-                is_closed: business.is_closed || false
+                is_closed: business.is_closed || false,
+                currency: business.currency || "USD",
+                timezone: business.timezone || "UTC",
+                language: business.language || "en"
             });
         }
     }, [business]);
@@ -65,12 +74,21 @@ export default function SettingsPage() {
         setError(null);
         setSuccess(false);
         try {
-            const updated = await businessService.updateBusiness(business.id, formData);
+            // Format phones before saving
+            const payload = {
+                ...formData,
+                phone: formData.phone ? formatGlobalPhone(formData.phone) || formData.phone : "",
+                whatsapp_number: formData.whatsapp_number ? formatGlobalPhone(formData.whatsapp_number) || formData.whatsapp_number : ""
+            };
+
+            const updated = await businessService.updateBusiness(business.id, payload);
             setBusiness(updated);
+            // Update local form state with formatted numbers
+            setFormData(prev => ({ ...prev, phone: payload.phone, whatsapp_number: payload.whatsapp_number }));
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
         } catch (err: any) {
-            setError(err.message || "Failed to update business profile");
+            setError(err.message || t('settings.fail_msg'));
         } finally {
             setLoading(false);
         }
@@ -92,8 +110,8 @@ export default function SettingsPage() {
     return (
         <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Business Settings</h1>
-                <p className="text-sm font-semibold text-slate-600">Manage your public profile and business details.</p>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('settings.title')}</h1>
+                <p className="text-sm font-semibold text-slate-600">{t('settings.description')}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -102,7 +120,7 @@ export default function SettingsPage() {
                         {success && (
                             <div className="p-4 bg-green-50 border border-green-100 rounded-xl flex items-center gap-3 text-green-700 text-sm font-bold animate-in slide-in-from-top-2">
                                 <CheckCircle2 className="h-5 w-5" />
-                                Business profile updated successfully!
+                                {t('settings.success_msg')}
                             </div>
                         )}
 
@@ -115,7 +133,7 @@ export default function SettingsPage() {
 
                         <div className="grid grid-cols-1 gap-6">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Business Name</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.business_name')}</label>
                                 <div className="relative">
                                     <Store className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                     <input
@@ -129,7 +147,7 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Description</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.business_desc')}</label>
                                 <div className="relative">
                                     <FileText className="absolute left-4 top-4 h-4 w-4 text-slate-400" />
                                     <textarea
@@ -137,14 +155,14 @@ export default function SettingsPage() {
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
-                                        placeholder="Tell customers about your business..."
+                                        placeholder={t('settings.business_desc_placeholder')}
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Business Phone</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.business_phone')}</label>
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <input
@@ -157,7 +175,7 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">WhatsApp Number (E.164)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.whatsapp_number')}</label>
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
                                         <input
@@ -173,7 +191,7 @@ export default function SettingsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Public URL (Slug)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.public_url')}</label>
                                     <div className="relative">
                                         <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                         <input
@@ -189,10 +207,70 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">Operating Hours & Store Status</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 flex items-center gap-2">
+                                <Globe className="h-4 w-4" />
+                                {t('settings.regional_localization')}
+                            </label>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Open At</label>
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.currency')}</label>
+                                    <select
+                                        value={formData.currency}
+                                        onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="GBP">GBP (£)</option>
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="AED">AED (د.إ)</option>
+                                        <option value="AUD">AUD ($)</option>
+                                        <option value="CAD">CAD ($)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.timezone')}</label>
+                                    <select
+                                        value={formData.timezone}
+                                        onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="UTC">UTC (Universal)</option>
+                                        <option value="America/New_York">Eastern Time (ET)</option>
+                                        <option value="America/Chicago">Central Time (CT)</option>
+                                        <option value="America/Denver">Mountain Time (MT)</option>
+                                        <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                        <option value="Europe/London">London (GMT/BST)</option>
+                                        <option value="Europe/Berlin">Central European Time</option>
+                                        <option value="Asia/Dubai">Dubai (GST)</option>
+                                        <option value="Asia/Kolkata">India (IST)</option>
+                                        <option value="Asia/Singapore">Singapore (SGT)</option>
+                                        <option value="Australia/Sydney">Sydney (AEST)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.language')}</label>
+                                    <select
+                                        value={formData.language}
+                                        onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="en">English</option>
+                                        <option value="es">Español</option>
+                                        <option value="fr">Français</option>
+                                        <option value="de">Deutsch</option>
+                                        <option value="ar">العربية (Arabic)</option>
+                                        <option value="hi">हिन्दी (Hindi)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.operating_hours')}</label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.open_at')}</label>
                                     <input
                                         type="time"
                                         value={formData.open_time}
@@ -201,7 +279,7 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Close At</label>
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.close_at')}</label>
                                     <input
                                         type="time"
                                         value={formData.close_time}
@@ -210,7 +288,7 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">Current Status</label>
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.current_status')}</label>
                                     <button
                                         type="button"
                                         onClick={() => setFormData({ ...formData, is_closed: !formData.is_closed })}
@@ -222,7 +300,7 @@ export default function SettingsPage() {
                                         )}
                                     >
                                         <div className={cn("h-1.5 w-1.5 rounded-full", formData.is_closed ? "bg-red-600" : "bg-emerald-600")} />
-                                        {formData.is_closed ? "MANUALLY CLOSED" : "ACTIVE & OPEN"}
+                                        {formData.is_closed ? t('settings.status_closed') : t('settings.status_open')}
                                     </button>
                                 </div>
                             </div>
@@ -237,12 +315,12 @@ export default function SettingsPage() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="h-4 w-4 animate-spin" />
-                                        SAVING...
+                                        {t('settings.saving')}
                                     </>
                                 ) : (
                                     <>
                                         <Save className="h-4 w-4" />
-                                        SAVE CHANGES
+                                        {t('settings.save_changes')}
                                     </>
                                 )}
                             </button>
@@ -258,7 +336,7 @@ export default function SettingsPage() {
 
                         <h3 className="text-sm font-bold uppercase tracking-wider mb-6 flex items-center gap-2">
                             <QrCode className="h-4 w-4 text-primary" />
-                            Digital Entry QR
+                            {t('settings.digital_qr')}
                         </h3>
 
                         <div className="flex flex-col items-center gap-6 relative z-10">
@@ -272,7 +350,7 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="text-center space-y-2">
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Public Join URL</p>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('settings.public_join_url')}</p>
                                 <p className="text-xs font-bold text-white/80 lowercase break-all px-4">
                                     {window.location.origin}/p/{business?.slug}
                                 </p>
@@ -333,16 +411,16 @@ export default function SettingsPage() {
                     <div className="pro-card p-6 border-red-100 dark:border-red-900/30">
                         <h3 className="text-sm font-bold text-red-600 uppercase tracking-wider mb-2 flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4" />
-                            Danger Zone
+                            {t('settings.danger_zone')}
                         </h3>
                         <p className="text-xs font-bold text-slate-500 mb-6 leading-relaxed">
-                            Deleting your business will remove all queues, services, and appointment history. This cannot be undone.
+                            {t('settings.danger_desc')}
                         </p>
                         <button
                             onClick={handleDelete}
                             className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-red-200"
                         >
-                            Delete Business Account
+                            {t('settings.delete_business')}
                         </button>
                     </div>
                 </div>
