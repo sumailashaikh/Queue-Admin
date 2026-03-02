@@ -30,9 +30,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 setBusiness(res.business);
                 setEntries(res.entries);
 
-                // Auto-set language to business language if defined
+                // Auto-set language to business language if defined (do not persist locally to user)
                 if (res.business?.language && res.business.language !== language) {
-                    setLanguage(res.business.language);
+                    setLanguage(res.business.language, false);
                 }
             } catch (err: any) {
                 setError(err.message);
@@ -49,7 +49,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     const res = await businessService.getBusinessDisplayData(slug);
                     setEntries(res.entries);
                     if (res.business?.language && res.business.language !== language) {
-                        setLanguage(res.business.language);
+                        setLanguage(res.business.language, false);
                     }
                 } catch (err) {
                     console.error("Poll failed", err);
@@ -219,7 +219,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             )}
                         </div>
                         <div className="space-y-3 relative z-10">
-                            <h3 className="text-5xl font-black tracking-tighter leading-none italic uppercase">{t('display.scan_to_join')}</h3>
+                            <h3 className={cn("text-5xl font-black tracking-tighter uppercase", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
                             <p className="text-lg font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
                             <div className="flex items-center gap-2 mt-6 px-5 py-2.5 bg-white/10 rounded-full w-fit border border-white/10">
                                 <Wifi className="h-4 w-4 text-emerald-400" />

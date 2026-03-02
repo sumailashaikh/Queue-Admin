@@ -12,8 +12,8 @@ const translations: Record<string, any> = { en, hi, es, ar };
 
 interface LanguageContextType {
     language: string;
-    setLanguage: (lang: string) => Promise<void>;
-    t: (key: string, params?: Record<string, any>) => string;
+    setLanguage: (lang: string, persist?: boolean) => Promise<void>;
+    t: (key: string, params?: Record<string, any>, overrideLang?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -21,8 +21,11 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
     const [language, setLangState] = useState('en');
+    const [isTemporary, setIsTemporary] = useState(false);
 
     useEffect(() => {
+        if (isTemporary) return; // Do not clobber temporary display languages
+
         if (user && user.ui_language) {
             setLangState(user.ui_language);
             localStorage.setItem('ui_language', user.ui_language);
@@ -30,10 +33,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             const saved = localStorage.getItem('ui_language');
             if (saved) setLangState(saved);
         }
-    }, [user]);
+    }, [user, isTemporary]);
 
-    const setLanguage = async (newLang: string) => {
+    const setLanguage = async (newLang: string, persist: boolean = true) => {
         setLangState(newLang);
+
+        if (!persist) {
+            setIsTemporary(true);
+            return;
+        }
+
+        setIsTemporary(false);
         localStorage.setItem('ui_language', newLang);
 
         if (user) {
@@ -51,9 +61,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const t = (key: string, params?: Record<string, any>): string => {
+    const t = (key: string, params?: Record<string, any>, overrideLang?: string): string => {
         const keys = key.split('.');
-        let value = translations[language];
+        const activeLang = overrideLang || language;
+        let value = translations[activeLang] || translations['en'];
 
         for (const k of keys) {
             if (value && typeof value === 'object' && k in value) {
@@ -64,7 +75,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
-        if (value === undefined && language !== 'en') {
+        if (value === undefined && activeLang !== 'en') {
             value = translations['en'];
             for (const k of keys) {
                 if (value && typeof value === 'object' && k in value) {

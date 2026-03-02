@@ -267,7 +267,7 @@ export default function ServicesPage() {
                                     </h3>
                                     {service.translations && service.translations[language] && (
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                                            Original: {service.name}
+                                            {t('services.original')}{service.name}
                                         </p>
                                     )}
                                     <p className="mt-1 text-sm text-slate-500 leading-relaxed line-clamp-2">
@@ -303,158 +303,199 @@ export default function ServicesPage() {
 
             {/* Add Service Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-500">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100 overflow-y-auto max-h-[90vh]">
-                        <div className="px-8 py-8 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white z-10">
-                            <div className="space-y-1">
-                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">{t('services.new_service')}</h2>
-                                <p className="text-sm font-semibold text-slate-500">{t('services.add_subtitle')}</p>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
+                    <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
+                        {/* Premium Header */}
+                        <div className="px-8 py-8 md:py-10 border-b border-slate-100/50 bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-start justify-between shrink-0">
+                            <div className="space-y-1.5">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner mb-2 border border-blue-100/50">
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    Portfolio Setup
+                                </div>
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">{t('services.new_service')}</h2>
+                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">{t('services.add_subtitle')}</p>
                             </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors shrink-0">
-                                <X className="h-5 w-5 text-slate-400" />
+                            <button
+                                onClick={() => setIsAddModalOpen(false)}
+                                className="p-3 bg-white hover:bg-rose-50 rounded-2xl shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-all active:scale-90 hover:rotate-90 group"
+                            >
+                                <X className="h-5 w-5 group-hover:drop-shadow-sm" />
                             </button>
                         </div>
-                        <form onSubmit={handleAddService} className="p-8 space-y-6">
-                            {error && (
-                                <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-xs font-semibold animate-in slide-in-from-top-4">
-                                    <AlertCircle className="h-5 w-5 shrink-0" />
-                                    {error}
-                                </div>
-                            )}
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-700 ml-1">{t('services.name_label')} (English)</label>
-                                <input
-                                    required
-                                    type="text"
-                                    value={newService.name}
-                                    onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                    placeholder={t('services.name_placeholder')}
-                                />
-                            </div>
+                        {/* Form Body - Scrollable */}
+                        <div className="overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-200">
+                            <form onSubmit={handleAddService} className="p-8 space-y-8">
+                                {error && (
+                                    <div className="p-5 bg-rose-50 border border-rose-100/50 rounded-2xl flex items-center gap-4 text-rose-600 shadow-sm animate-in slide-in-from-top-2">
+                                        <div className="p-2 bg-white rounded-xl shadow-sm">
+                                            <AlertCircle className="h-5 w-5 text-rose-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-black uppercase tracking-widest mb-0.5">Integration Error</p>
+                                            <p className="text-sm font-semibold">{error}</p>
+                                        </div>
+                                    </div>
+                                )}
 
-                            {/* Multi-language inputs */}
-                            <div className="p-6 bg-slate-50 rounded-[24px] space-y-4 border border-slate-100">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <ShieldCheck className="h-4 w-4 text-primary" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Global Translations</span>
-                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Primary Info Column */}
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Primary Name (EN)</label>
+                                            <div className="relative group">
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    value={newService.name}
+                                                    onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                                                    className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                                    placeholder={t('services.name_placeholder')}
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">{t('services.service_language', { lang: 'Hindi' })}</label>
-                                    <input
-                                        type="text"
-                                        value={newService.translations.hi}
-                                        onChange={(e) => setNewService({
-                                            ...newService,
-                                            translations: { ...newService.translations, hi: e.target.value }
-                                        })}
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                        placeholder="हिन्दी में नाम..."
-                                    />
-                                </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
+                                                <div className="relative group">
+                                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                                    <input
+                                                        required
+                                                        type="number"
+                                                        value={newService.duration_minutes || ""}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setNewService({ ...newService, duration_minutes: val === "" ? 0 : parseInt(val) });
+                                                        }}
+                                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                                        placeholder="30"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')}</label>
+                                                <div className="relative group">
+                                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-emerald-500 transition-colors">₹</span>
+                                                    <input
+                                                        required
+                                                        type="number"
+                                                        value={newService.price || ""}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setNewService({ ...newService, price: val === "" ? 0 : parseInt(val) });
+                                                        }}
+                                                        className="w-full pl-10 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">{t('services.service_language', { lang: 'Spanish' })}</label>
-                                    <input
-                                        type="text"
-                                        value={newService.translations.es}
-                                        onChange={(e) => setNewService({
-                                            ...newService,
-                                            translations: { ...newService.translations, es: e.target.value }
-                                        })}
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                        placeholder="Nombre en español..."
-                                    />
-                                </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
+                                            <textarea
+                                                required
+                                                rows={4}
+                                                value={newService.description}
+                                                onChange={(e) => setNewService({ ...newService, description: e.target.value })}
+                                                className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm resize-none"
+                                                placeholder={t('services.desc_placeholder')}
+                                            />
+                                        </div>
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">{t('services.service_language', { lang: 'Arabic' })}</label>
-                                    <input
-                                        type="text"
-                                        dir="rtl"
-                                        value={newService.translations.ar}
-                                        onChange={(e) => setNewService({
-                                            ...newService,
-                                            translations: { ...newService.translations, ar: e.target.value }
-                                        })}
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                        placeholder="الاسم بالعربية..."
-                                    />
-                                </div>
+                                    {/* Secondary Localization Column */}
+                                    <div className="relative self-start">
+                                        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-emerald-50/50 rounded-[32px] -z-10" />
+                                        <div className="p-6 border border-white/60 bg-white/40 backdrop-blur-md rounded-[32px] shadow-[inset_0_2px_20px_rgba(255,255,255,0.8)] space-y-5">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-1.5 bg-white rounded-lg shadow-sm">
+                                                        <ShieldCheck className="h-4 w-4 text-blue-600" />
+                                                    </div>
+                                                    <span className="text-xs font-black uppercase tracking-widest text-slate-800">Localization</span>
+                                                </div>
+                                            </div>
 
-                                <p className="text-[10px] text-slate-400 font-medium px-1">
-                                    {t('services.translations_hint')}
-                                </p>
-                            </div>
+                                            <div className="space-y-4">
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                                                        {t('services.service_language', { lang: 'Hindi' })}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newService.translations.hi}
+                                                        onChange={(e) => setNewService({ ...newService, translations: { ...newService.translations, hi: e.target.value } })}
+                                                        className="w-full px-4 py-3 bg-white/80 focus:bg-white border border-slate-200/50 focus:border-orange-400 rounded-[18px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
+                                                        placeholder="हिन्दी में अनुवाद..."
+                                                    />
+                                                </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-700 ml-1">{t('services.desc_label')}</label>
-                                <textarea
-                                    required
-                                    rows={2}
-                                    value={newService.description}
-                                    onChange={(e) => setNewService({ ...newService, description: e.target.value })}
-                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all resize-none"
-                                    placeholder={t('services.desc_placeholder')}
-                                />
-                            </div>
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                                        {t('services.service_language', { lang: 'Spanish' })}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={newService.translations.es}
+                                                        onChange={(e) => setNewService({ ...newService, translations: { ...newService.translations, es: e.target.value } })}
+                                                        className="w-full px-4 py-3 bg-white/80 focus:bg-white border border-slate-200/50 focus:border-red-400 rounded-[18px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
+                                                        placeholder="Traducción al español..."
+                                                    />
+                                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-700 ml-1">{t('services.duration_label')}</label>
-                                    <div className="relative">
-                                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                        <input
-                                            required
-                                            type="number"
-                                            value={newService.duration_minutes || ""}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setNewService({ ...newService, duration_minutes: val === "" ? 0 : parseInt(val) });
-                                            }}
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                            placeholder="30"
-                                        />
+                                                <div className="space-y-1.5">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                        {t('services.service_language', { lang: 'Arabic' })}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        dir="rtl"
+                                                        value={newService.translations.ar}
+                                                        onChange={(e) => setNewService({ ...newService, translations: { ...newService.translations, ar: e.target.value } })}
+                                                        className="w-full px-4 py-3 bg-white/80 focus:bg-white border border-slate-200/50 focus:border-emerald-400 rounded-[18px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
+                                                        placeholder="الترجمة العربية..."
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider text-center pt-2 border-t border-slate-200/50">
+                                                {t('services.translations_hint')}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-700 ml-1">{t('services.price_label')} (₹)</label>
-                                    <div className="relative">
-                                        <Tag className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                        <input
-                                            required
-                                            type="number"
-                                            value={newService.price || ""}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setNewService({ ...newService, price: val === "" ? 0 : parseInt(val) });
-                                            }}
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div className="pt-4 pb-2">
-                                <button
-                                    disabled={isSubmitting}
-                                    type="submit"
-                                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
-                                >
-                                    {isSubmitting ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Sparkles className="h-4 w-4" />
-                                            {t('services.activate')}
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                                {/* Actions Footer */}
+                                <div className="pt-6 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white/95 backdrop-blur-md pb-4 z-10">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddModalOpen(false)}
+                                        className="px-6 py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        disabled={isSubmitting}
+                                        type="submit"
+                                        className="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-[20px] text-xs font-black uppercase tracking-widest transition-all shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] flex items-center gap-2 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                                    >
+                                        {isSubmitting ? (
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                            <>
+                                                <Sparkles className="h-4 w-4 text-blue-400" />
+                                                {t('services.activate')}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

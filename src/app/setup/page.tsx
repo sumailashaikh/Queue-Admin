@@ -69,8 +69,8 @@ export default function SetupPage() {
                 ...(regionSettings && {
                     currency: regionSettings.currency,
                     timezone: regionSettings.timezone,
-                    language: regionSettings.language
-                })
+                }),
+                language: language
             };
 
             await businessService.createBusiness(payload);
@@ -144,6 +144,8 @@ export default function SetupPage() {
                                         >
                                             <option value="en">English (EN)</option>
                                             <option value="hi">हिंदी (HI)</option>
+                                            <option value="es">Español (ES)</option>
+                                            <option value="ar">العربية (AR)</option>
                                         </select>
                                     </div>
                                 </div>

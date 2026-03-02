@@ -33,6 +33,7 @@ export interface Appointment {
         full_name: string;
         phone: string;
         id: string;
+        ui_language?: string;
     };
     appointment_services?: {
         id: string;

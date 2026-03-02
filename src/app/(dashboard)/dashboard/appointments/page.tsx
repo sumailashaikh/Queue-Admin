@@ -37,6 +37,8 @@ export default function AppointmentsPage() {
     const [dismissedDelays, setDismissedDelays] = useState<string[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+    const [cancelModal, setCancelModal] = useState({ isOpen: false, aptId: null as string | null });
+    const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, aptId: null as string | null, dateTime: '' });
 
     const isRTL = language === 'ar';
 
@@ -83,7 +85,8 @@ export default function AppointmentsPage() {
         try {
             await appointmentService.updateStatus(id, status);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-            showSuccess(t('appointments.status_updated', { status: status.toUpperCase() }));
+            const translatedStatus = (t(`status.${status}`) as string) || status.toUpperCase();
+            showSuccess(t('appointments.status_updated', { status: translatedStatus.toUpperCase() }));
             await fetchAppointments();
         } catch (err: any) {
             if (process.env.NODE_ENV === 'development') {
@@ -109,9 +112,15 @@ export default function AppointmentsPage() {
         }
     };
 
-    const handleReschedule = async (id: string) => {
-        const newTime = prompt(t('appointments.prompt_reschedule'));
-        if (!newTime) return;
+    const handleReschedule = (id: string) => {
+        setRescheduleModal({ isOpen: true, aptId: id, dateTime: '' });
+    };
+
+    const confirmReschedule = async () => {
+        if (!rescheduleModal.aptId || !rescheduleModal.dateTime) return;
+        const id = rescheduleModal.aptId;
+        const newTime = rescheduleModal.dateTime;
+        setRescheduleModal({ isOpen: false, aptId: null, dateTime: '' });
 
         setActionLoading(id);
         setMessage(null);
@@ -127,8 +136,14 @@ export default function AppointmentsPage() {
         }
     };
 
-    const handleCancel = async (id: string) => {
-        if (!confirm(t('appointments.confirm_cancel'))) return;
+    const handleCancel = (id: string) => {
+        setCancelModal({ isOpen: true, aptId: id });
+    };
+
+    const confirmCancel = async () => {
+        if (!cancelModal.aptId) return;
+        const id = cancelModal.aptId;
+        setCancelModal({ isOpen: false, aptId: null });
 
         setActionLoading(id);
         setMessage(null);
@@ -159,13 +174,15 @@ export default function AppointmentsPage() {
 
         const customerName = apt.profiles?.full_name || apt.guest_name || 'Guest';
         const serviceNames = getTranslatedServiceNames(apt);
-        const time = new Date(apt.start_time).toLocaleTimeString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        // Fallback to customer language or current language
+        const customerLang = (apt as any).profiles?.ui_language || language;
+        const time = new Date(apt.start_time).toLocaleTimeString(customerLang === 'hi' ? 'hi-IN' : customerLang === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
         let message = "";
         if (type === 'alert') {
-            message = t('queue.wa_next_msg', { name: customerName, business: business.name });
+            message = t('queue.wa_next_msg', { name: customerName, business: business.name }, customerLang);
         } else {
-            message = t('queue.wa_ready_msg', { name: customerName, business: business.name });
+            message = t('queue.wa_ready_msg', { name: customerName, business: business.name }, customerLang);
         }
 
         let phoneStr = phone.replace(/\D/g, '');
@@ -340,7 +357,8 @@ export default function AppointmentsPage() {
                                                         const profile = apt.profiles;
                                                         if (!profile || !business) return;
 
-                                                        const locale = language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-GB';
+                                                        const customerPref = profile.ui_language;
+                                                        const locale = (customerPref || language) === 'hi' ? 'hi-IN' : (customerPref || language) === 'ar' ? 'ar-SA' : 'en-GB';
                                                         const formatDate = (date: string | Date) => new Date(date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
                                                         const formatTime12 = (dateString: string) => {
                                                             const d = new Date(dateString);
@@ -352,7 +370,7 @@ export default function AppointmentsPage() {
                                                             business: business.name,
                                                             date: formatDate(apt.start_time),
                                                             time: formatTime12(apt.start_time)
-                                                        });
+                                                        }, customerPref);
 
                                                         let phoneStr = profile.phone.replace(/\D/g, '');
                                                         if (phoneStr.length === 10) phoneStr = `91${phoneStr}`;
@@ -505,6 +523,57 @@ export default function AppointmentsPage() {
                 </div>
             )
             }
+
+            {/* Modals */}
+            {cancelModal.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" dir={isRTL ? "rtl" : "ltr"}>
+                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="h-16 w-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                            <XCircle className="h-8 w-8" />
+                        </div>
+                        <h3 className="text-xl font-bold text-center text-slate-900 mb-2">{t('appointments.confirm_cancel') || 'Cancel Appointment?'}</h3>
+                        <p className="text-sm text-center font-medium text-slate-500 mb-8">{t('appointments.cancel_desc') || 'This action cannot be undone.'}</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setCancelModal({ isOpen: false, aptId: null })} className="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors">{t('common.cancel') || 'Abort'}</button>
+                            <button onClick={confirmCancel} className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-colors">
+                                {t('common.confirm') || 'Yes, Cancel'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {rescheduleModal.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" dir={isRTL ? "rtl" : "ltr"}>
+                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                            <CalendarDays className="h-8 w-8" />
+                        </div>
+                        <h3 className="text-xl font-bold text-center text-slate-900 mb-2">{t('appointments.prompt_reschedule') || 'Reschedule Appointment'}</h3>
+                        <p className="text-sm text-center font-medium text-slate-500 mb-8">{t('appointments.reschedule_desc') || 'Select a new date and time.'}</p>
+
+                        <div className="space-y-4 mb-8">
+                            <input
+                                type="datetime-local"
+                                value={rescheduleModal.dateTime}
+                                onChange={(e) => setRescheduleModal({ ...rescheduleModal, dateTime: e.target.value })}
+                                className="w-full px-4 py-4 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setRescheduleModal({ isOpen: false, aptId: null, dateTime: '' })} className="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors">{t('common.cancel') || 'Back'}</button>
+                            <button
+                                onClick={confirmReschedule}
+                                disabled={!rescheduleModal.dateTime}
+                                className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-colors disabled:opacity-50"
+                            >
+                                {t('common.confirm') || 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

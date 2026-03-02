@@ -9,7 +9,7 @@ interface AuthContextType {
     user: any;
     business: Business | null;
     loading: boolean;
-    login: (userData: any, token: string) => Promise<void>;
+    login: (userData: any, token: string, isNewUser?: boolean) => Promise<void>;
     logout: () => void;
     refreshBusiness: () => Promise<Business | null>;
     setBusiness: (business: Business | null) => void;
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         initAuth();
     }, [refreshBusiness]);
 
-    const login = async (userData: any, token: string) => {
+    const login = async (userData: any, token: string, isNewUser?: boolean) => {
         setUser(userData);
         localStorage.setItem('auth_token', token);
         localStorage.setItem('auth_user', JSON.stringify(userData));
@@ -80,7 +80,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const biz = await refreshBusiness();
-        if (biz) {
+
+        if (isNewUser) {
+            router.push('/setup');
+        } else if (biz) {
             router.push('/dashboard');
         } else {
             router.push('/setup');

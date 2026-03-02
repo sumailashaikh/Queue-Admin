@@ -15,10 +15,10 @@ export default function LanguageSwitcher() {
                 onChange={(e) => setLanguage(e.target.value)}
                 className="bg-transparent border-none text-xs font-bold text-slate-700 outline-none cursor-pointer appearance-none uppercase tracking-wider pr-2"
             >
-                <option value="en">EN</option>
-                <option value="hi">HI</option>
-                <option value="es">ES</option>
-                <option value="ar">AR</option>
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="es">Español</option>
+                <option value="ar">العربية</option>
             </select>
         </div>
     );

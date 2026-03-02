@@ -184,7 +184,8 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                 if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
                                 const cleanPhone = item.phone.replace(/\D/g, '');
                                 const name = item.customer_name || t('queue.guest');
-                                const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }));
+                                const customerLang = (item as any).profiles?.ui_language;
+                                const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }, customerLang));
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                 sessionStorage.setItem(delayKey, 'true');
                                 setHasNotifiedDelay(true);
@@ -202,7 +203,8 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                 if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
                                 const cleanPhone = item.phone.replace(/\D/g, '');
                                 const name = item.customer_name || t('queue.guest');
-                                const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }));
+                                const customerLang = (item as any).profiles?.ui_language;
+                                const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }, customerLang));
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                             }}
                             className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90"
@@ -215,7 +217,8 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                 if (!item.phone || !business) return;
                                 const cleanPhone = item.phone.replace(/\D/g, '');
                                 const name = item.customer_name || t('queue.guest');
-                                const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }));
+                                const customerLang = (item as any).profiles?.ui_language;
+                                const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }, customerLang));
                                 window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                             }}
                             className="h-10 w-10 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20"

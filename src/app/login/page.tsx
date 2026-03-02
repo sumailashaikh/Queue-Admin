@@ -6,9 +6,20 @@ import { Phone, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/hooks/useAuth";
 import { i18n } from "@/lib/i18n";
+import { useLanguage } from "@/context/LanguageContext";
+
+const REGIONS = [
+    { code: "US", name: "United States", currency: "USD", timezone: "America/New_York", lang: "en", dial_code: "+1" },
+    { code: "GB", name: "United Kingdom", currency: "GBP", timezone: "Europe/London", lang: "en", dial_code: "+44" },
+    { code: "IN", name: "India", currency: "INR", timezone: "Asia/Kolkata", lang: "en", dial_code: "+91" },
+    { code: "AE", name: "United Arab Emirates", currency: "AED", timezone: "Asia/Dubai", lang: "ar", dial_code: "+971" },
+    { code: "ES", name: "Spain", currency: "EUR", timezone: "Europe/Madrid", lang: "es", dial_code: "+34" },
+    { code: "AU", name: "Australia", currency: "AUD", timezone: "Australia/Sydney", lang: "en", dial_code: "+61" },
+];
 
 export default function LoginPage() {
     const { login, isAuthenticated, loading: authLoading } = useAuth();
+    const { setLanguage } = useLanguage();
     const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState("");
     const [step, setStep] = useState(1); // 1: Phone, 2: OTP
@@ -18,53 +29,80 @@ export default function LoginPage() {
     const router = useRouter();
 
     useEffect(() => {
-        const settings = localStorage.getItem('app_region_settings');
-        if (!settings) {
-            router.push('/welcome');
-        } else {
-            setRegionSettings(JSON.parse(settings));
-        }
-    }, [router]);
+        let currentRegion = REGIONS.find(r => r.code === "IN");
+        try {
+            const settings = localStorage.getItem('app_region_settings');
+            if (settings) {
+                const parsed = JSON.parse(settings);
+                const matched = REGIONS.find(r => r.code === parsed.code);
+                if (matched) currentRegion = matched;
+            }
+        } catch (e) { }
 
-    useEffect(() => {
-        if (!authLoading && isAuthenticated) {
-            router.push("/dashboard");
+        setRegionSettings(currentRegion);
+        // Sync the fresh structure back to storage just in case
+        if (currentRegion) {
+            localStorage.setItem('app_region_settings', JSON.stringify(currentRegion));
         }
-    }, [isAuthenticated, authLoading, router]);
+    }, []);
 
-    const handleSendOTP = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSendOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+        if (e && e.preventDefault) e.preventDefault();
+
+        if (loading) return; // Prevent double clicks
+
         setLoading(true);
         setError("");
 
         try {
             const dialCode = regionSettings?.dial_code || '+91';
             const formattedPhone = phone.startsWith('+') ? phone : `${dialCode}${phone}`;
+            console.log(`[OTP] Sending OTP to ${formattedPhone}...`);
             await authService.sendOTP(formattedPhone);
             setStep(2);
         } catch (err: any) {
+            console.error("[OTP] Send Failed: ", err);
             setError(err.message || "Failed to send OTP. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleVerifyOTP = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleVerifyOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+
+        if (loading) return; // Prevent double clicks
+
         setLoading(true);
         setError("");
 
         try {
             const dialCode = regionSettings?.dial_code || '+91';
             const formattedPhone = phone.startsWith('+') ? phone : `${dialCode}${phone}`;
+            console.log(`[OTP] Attempting to verify OTP for ${formattedPhone}...`);
             const response = await authService.verifyOTP(formattedPhone, otp);
 
             if (response.data?.user && response.data?.session?.access_token) {
-                await login(response.data.user, response.data.session.access_token);
+                console.log(`[OTP] Verification successful. Proceeding to login...`);
+                const userObj = response.data.user;
+                const isNewUser = response.data.is_new_user;
+
+                if (regionSettings?.language) {
+                    userObj.ui_language = regionSettings.language;
+                }
+                await login(userObj, response.data.session.access_token, isNewUser);
+                if (regionSettings?.language) {
+                    await setLanguage(regionSettings.language, true);
+                }
+                // Redirection is handled internally by the login context/hook.
             } else {
+                console.error("[OTP] Verification succeeded but session data was missing/invalid in response.", response);
                 throw new Error("Invalid session data received");
             }
         } catch (err: any) {
+            console.error("[OTP] Verification Failed: ", err);
             setError(err.message || "Invalid OTP. Please check and try again.");
         } finally {
             setLoading(false);
@@ -74,12 +112,6 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 pb-24">
             <div className="w-full max-w-md space-y-8">
-                {regionSettings && (
-                    <button onClick={() => router.push('/welcome')} className="absolute top-8 right-8 text-xs font-bold text-secondary hover:text-primary transition-colors flex items-center gap-2">
-                        {regionSettings.country} ({regionSettings.currency}) <ArrowRight className="h-3 w-3" />
-                    </button>
-                )}
-
                 <div className="flex flex-col items-center text-center space-y-2">
                     <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/20 mb-2">
                         <span className="text-white font-bold text-xl">Q</span>
@@ -99,12 +131,34 @@ export default function LoginPage() {
 
                 <div className="glass-panel p-6 md:p-8 rounded-3xl md:rounded-[2rem] border border-accent/10 shadow-sm bg-white">
                     {step === 1 ? (
-                        <form onSubmit={handleSendOTP} className="space-y-6">
+                        <div
+                            className="space-y-6"
+                            onKeyDown={(e) => { if (e.key === 'Enter' && phone.length >= 10) handleSendOTP(e); }}
+                        >
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-foreground">{regionSettings ? i18n.t(regionSettings.language, 'login.phone_lbl') : 'Phone Number'}</label>
-                                <div className="relative">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 border-r border-accent/20 pr-3">
-                                        <span className="text-sm font-bold">{regionSettings?.dial_code || "+91"}</span>
+                                <div className="flex bg-slate-50 rounded-2xl items-center focus-within:ring-2 focus-within:ring-primary/20 transition-all border border-transparent">
+                                    <div className="relative border-r border-slate-200">
+                                        <select
+                                            value={regionSettings?.dial_code || "+91"}
+                                            onChange={(e) => {
+                                                const region = REGIONS.find(r => r.dial_code === e.target.value);
+                                                if (region) {
+                                                    setRegionSettings(region);
+                                                    localStorage.setItem('app_region_settings', JSON.stringify(region));
+                                                }
+                                            }}
+                                            className="appearance-none bg-transparent pl-4 pr-8 py-4 text-lg font-bold text-slate-700 outline-none cursor-pointer"
+                                        >
+                                            {REGIONS.map(r => (
+                                                <option key={r.code} value={r.dial_code}>
+                                                    {r.code} ({r.dial_code})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
                                     </div>
                                     <input
                                         type="tel"
@@ -112,12 +166,13 @@ export default function LoginPage() {
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="99887 76655"
-                                        className="w-full pl-16 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-lg font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                        className="w-full px-4 py-4 bg-transparent border-none text-lg font-medium outline-none"
                                     />
                                 </div>
                             </div>
                             <button
-                                type="submit"
+                                type="button"
+                                onClick={handleSendOTP}
                                 disabled={loading || phone.length < 10}
                                 className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all disabled:opacity-50 active:scale-[0.98]"
                             >
@@ -125,9 +180,12 @@ export default function LoginPage() {
                                     <>{regionSettings ? i18n.t(regionSettings.language, 'login.send_otp') : 'Send OTP'} <ArrowRight className="ml-2 h-5 w-5" /></>
                                 )}
                             </button>
-                        </form>
+                        </div>
                     ) : (
-                        <form onSubmit={handleVerifyOTP} className="space-y-6">
+                        <div
+                            className="space-y-6"
+                            onKeyDown={(e) => { if (e.key === 'Enter' && otp.length === 6) handleVerifyOTP(e); }}
+                        >
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-foreground">{regionSettings ? i18n.t(regionSettings.language, 'login.verify_lbl') : 'Verification Code'}</label>
                                 <input
@@ -145,13 +203,14 @@ export default function LoginPage() {
                                 </p>
                             </div>
                             <button
-                                type="submit"
+                                type="button"
+                                onClick={handleVerifyOTP}
                                 disabled={loading || otp.length < 6}
                                 className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all disabled:opacity-50 active:scale-[0.98]"
                             >
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (regionSettings ? i18n.t(regionSettings.language, 'login.verify_btn') : "Verify & Login")}
                             </button>
-                        </form>
+                        </div>
                     )}
                 </div>
 

@@ -26,7 +26,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 export default function SettingsPage() {
     const { business, setBusiness } = useAuth();
-    const { t } = useLanguage();
+    const { t, setLanguage } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -82,6 +82,7 @@ export default function SettingsPage() {
             };
 
             const updated = await businessService.updateBusiness(business.id, payload);
+
             setBusiness(updated);
             // Update local form state with formatted numbers
             setFormData(prev => ({ ...prev, phone: payload.phone, whatsapp_number: payload.whatsapp_number }));
@@ -211,7 +212,7 @@ export default function SettingsPage() {
                                 <Globe className="h-4 w-4" />
                                 {t('settings.regional_localization')}
                             </label>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.currency')}</label>
                                     <select
@@ -246,21 +247,6 @@ export default function SettingsPage() {
                                         <option value="Asia/Kolkata">India (IST)</option>
                                         <option value="Asia/Singapore">Singapore (SGT)</option>
                                         <option value="Australia/Sydney">Sydney (AEST)</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.language')}</label>
-                                    <select
-                                        value={formData.language}
-                                        onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all appearance-none"
-                                    >
-                                        <option value="en">English</option>
-                                        <option value="es">Español</option>
-                                        <option value="fr">Français</option>
-                                        <option value="de">Deutsch</option>
-                                        <option value="ar">العربية (Arabic)</option>
-                                        <option value="hi">हिन्दी (Hindi)</option>
                                     </select>
                                 </div>
                             </div>
