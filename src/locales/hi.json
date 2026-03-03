@@ -177,6 +177,7 @@
         "deactivate": "निष्क्रिय करें"
     },
     "dashboard": {
+        "link_copied_toast": "लिंक कॉपी हो गया",
         "business_portal": "व्यापार पोर्टल",
         "view_public_page": "सार्वजनिक पृष्ठ देखें",
         "overview": "अवलोकन",

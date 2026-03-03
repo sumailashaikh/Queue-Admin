@@ -187,8 +187,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             <Users className="h-10 w-10 text-slate-900" />
                             <h2 className="text-3xl font-black uppercase tracking-widest text-slate-900">{t('sidebar.live_queue')}</h2>
                         </div>
-                        <div className="px-8 py-3 bg-slate-900 text-white rounded-full text-2xl font-black shadow-lg">
-                            {waitingEntries.length} {t('queue.active_guests').toUpperCase()}
+                        <div className="px-8 py-3 bg-slate-900 text-white rounded-full text-2xl font-black shadow-lg flex items-center gap-2">
+                            <span>{waitingEntries.length}</span>
+                            <span>{t('queue.active_guests').toUpperCase()}</span>
                         </div>
                     </div>
 
@@ -223,7 +224,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             <p className="text-lg font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
                             <div className="flex items-center gap-2 mt-6 px-5 py-2.5 bg-white/10 rounded-full w-fit border border-white/10">
                                 <Wifi className="h-4 w-4 text-emerald-400" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Automated Intake Active</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('queue.active_queue')}</span>
                             </div>
                         </div>
                     </div>
@@ -234,7 +235,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             <div className="flex items-center gap-12 bg-slate-900 py-7 px-12 rounded-full shadow-2xl border border-slate-800">
                 <div className="flex items-center gap-4 text-white flex-shrink-0">
                     <div className="h-4 w-4 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                    <span className="font-black uppercase tracking-[0.3em] text-xl italic">Live Feed</span>
+                    <span className="font-black uppercase tracking-[0.3em] text-xl italic">{t('queue.title')}</span>
                 </div>
                 <div className="h-10 w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">

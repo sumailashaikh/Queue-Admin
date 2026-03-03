@@ -177,6 +177,7 @@
         "deactivate": "Deactivate"
     },
     "dashboard": {
+        "link_copied_toast": "Link copied to clipboard",
         "business_portal": "Business Portal",
         "view_public_page": "View Public Page",
         "overview": "Overview",

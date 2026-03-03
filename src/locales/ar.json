@@ -177,6 +177,7 @@
         "deactivate": "تعطيل"
     },
     "dashboard": {
+        "link_copied_toast": "تم نسخ الرابط",
         "business_portal": "بوابة الأعمال",
         "view_public_page": "رؤية الصفحة العامة",
         "overview": "نظرة عامة",
