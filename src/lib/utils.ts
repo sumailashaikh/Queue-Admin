@@ -7,11 +7,11 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number, currencyCode: string = 'USD', language: string = 'en') {
     try {
-        return new Intl.NumberFormat(language, {
-            style: 'currency',
-            currency: currencyCode,
+        const formattedAmount = new Intl.NumberFormat(language, {
+            style: 'decimal',
             maximumFractionDigits: 0
         }).format(amount);
+        return `${currencyCode} ${formattedAmount}`;
     } catch (e) {
         return `${currencyCode} ${amount}`;
     }
