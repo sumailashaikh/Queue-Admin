@@ -100,7 +100,18 @@
         "success_noshow": "Customer marked as no-show",
         "err_noshow": "Failed to mark as no-show",
         "success_restore": "Customer restored to queue",
-        "err_restore": "Failed to restore customer"
+        "err_restore": "Failed to restore customer",
+        "err_end_reached": "Customer is already at the end of the queue.",
+        "success_skip": "Customer skipped successfully",
+        "err_skip": "Failed to skip customer",
+        "success_create": "Queue created successfully",
+        "err_create": "Failed to create queue",
+        "success_update": "Queue updated successfully",
+        "err_update": "Failed to update queue",
+        "success_delete": "Queue deleted successfully",
+        "err_delete": "Failed to delete queue",
+        "success_reset": "Queue reset successfully",
+        "err_reset": "Failed to reset queue"
     },
     "provider_analytics": {
         "title": "Provider Analytics",

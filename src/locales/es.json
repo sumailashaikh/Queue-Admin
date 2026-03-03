@@ -100,7 +100,18 @@
         "success_noshow": "Cliente marcado como no presentado",
         "err_noshow": "No se pudo marcar como no presentado",
         "success_restore": "Cliente restaurado a la cola",
-        "err_restore": "No se pudo restaurar al cliente"
+        "err_restore": "No se pudo restaurar al cliente",
+        "err_end_reached": "El cliente ya está al final de la cola.",
+        "success_skip": "Cliente omitido exitosamente",
+        "err_skip": "No se pudo omitir al cliente",
+        "success_create": "Cola creada exitosamente",
+        "err_create": "No se pudo crear la cola",
+        "success_update": "Cola actualizada exitosamente",
+        "err_update": "No se pudo actualizar la cola",
+        "success_delete": "Cola eliminada exitosamente",
+        "err_delete": "No se pudo eliminar la cola",
+        "success_reset": "Cola restablecida exitosamente",
+        "err_reset": "No se pudo restablecer la cola"
     },
     "provider_analytics": {
         "title": "Análisis de Proveedores",

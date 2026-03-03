@@ -5,13 +5,24 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currencyCode: string = 'USD', language: string = 'en') {
+export function formatCurrency(amount: number, _currencyCodeParam: string = 'USD', language: string = 'en') {
+    // Map languages to specific currencies based on user preference
+    const LangCurrencyMap: Record<string, string> = {
+        'en': 'USD',
+        'es': 'EUR',
+        'hi': 'INR',
+        'ar': 'AED'
+    };
+
+    const currencyCode = LangCurrencyMap[language] || 'USD';
+
     try {
-        const formattedAmount = new Intl.NumberFormat(language, {
-            style: 'decimal',
+        // We use native style format so the correct symbol ($, €, ₹, د.إ) is beautifully printed
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: currencyCode,
             maximumFractionDigits: 0
         }).format(amount);
-        return `${currencyCode} ${formattedAmount}`;
     } catch (e) {
         return `${currencyCode} ${amount}`;
     }

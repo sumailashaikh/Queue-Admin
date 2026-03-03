@@ -356,6 +356,15 @@ export default function ProvidersPage() {
                                             >
                                                 <Settings className="h-4 w-4" />
                                             </button>
+                                            {provider.is_active && (
+                                                <button
+                                                    onClick={() => handleDelete(provider)}
+                                                    className="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all shrink-0"
+                                                    title={t('providers.deactivate_provider')}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            )}
                                         </div>
                                         {provider.role && (
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">

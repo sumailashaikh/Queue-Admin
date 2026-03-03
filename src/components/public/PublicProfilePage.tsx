@@ -26,6 +26,7 @@ import { queueService, QueueEntry } from "@/services/queueService";
 import { appointmentService } from "@/services/appointmentService";
 import { formatGlobalPhone } from "@/lib/phoneUtils";
 import { i18n } from "@/lib/i18n";
+import { formatCurrency as globalFormatCurrency } from "@/lib/utils";
 
 interface PublicProfilePageProps {
     slug: string;
@@ -68,7 +69,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const currency = business?.currency || 'USD';
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat(lang, { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(amount);
+        return globalFormatCurrency(amount, currency, lang);
     };
 
     const formatTime12 = (timeStr: string) => {

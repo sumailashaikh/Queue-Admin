@@ -339,7 +339,8 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_skip'));
         } catch (error: any) {
             console.error("Failed to skip:", error);
-            showToast(error.message || t('queue.err_skip'), "error");
+            const msg = error.message?.startsWith('queue.') ? t(error.message) : t('queue.err_skip');
+            showToast(msg, "error");
         }
     };
 
