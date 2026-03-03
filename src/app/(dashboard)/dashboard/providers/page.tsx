@@ -120,7 +120,7 @@ export default function ProvidersPage() {
             setFormData({ name: "", phone: "", role: "", department: "" });
             setSelectedProvider(null);
         } catch (error: any) {
-            showToast(error.message || "Failed to save provider", "error");
+            showToast(t('providers.err_save'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -150,7 +150,7 @@ export default function ProvidersPage() {
             await fetchProviders();
             setDeleteModal({ isOpen: false, provider: null });
         } catch (error: any) {
-            showToast(error.message || t('providers.err_deactivate'), "error");
+            showToast(t('providers.err_deactivate'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -201,7 +201,7 @@ export default function ProvidersPage() {
             showToast(t('providers.success_assign'));
             setIsAssignModalOpen(false);
         } catch (error: any) {
-            showToast(error.message || t('providers.err_assign'), "error");
+            showToast(t('providers.err_assign'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -215,7 +215,7 @@ export default function ProvidersPage() {
             showToast(t('providers.success_availability'));
             setIsAvailabilityModalOpen(false);
         } catch (error: any) {
-            showToast(error.message || t('providers.err_availability'), "error");
+            showToast(t('providers.err_availability'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -245,7 +245,7 @@ export default function ProvidersPage() {
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             await fetchProviders(); // Refresh main list to update badges
         } catch (error: any) {
-            showToast(error.message || t('providers.err_add_leave'), "error");
+            showToast(t('providers.err_add_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -261,7 +261,7 @@ export default function ProvidersPage() {
             setLeavesData(data);
             await fetchProviders();
         } catch (error: any) {
-            showToast(error.message || t('providers.err_delete_leave'), "error");
+            showToast(t('providers.err_delete_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }

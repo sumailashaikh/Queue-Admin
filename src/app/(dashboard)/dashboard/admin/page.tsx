@@ -22,12 +22,12 @@ import {
     TrendingUp
 } from "lucide-react";
 import { adminService, DashboardUser, DashboardBusiness } from "@/services/adminService";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminDashboard() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { business } = useAuth();
     const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('users');
     const [users, setUsers] = useState<DashboardUser[]>([]);
@@ -533,7 +533,7 @@ export default function AdminDashboard() {
                                 <div className="space-y-8">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {[
-                                            { label: t('admin.inspect_modal.rev'), value: `${business?.currency || 'USD'} ${businessDetails.totalRevenue}`, icon: IndianRupee, color: 'emerald', desc: 'Total expected earnings from services today' },
+                                            { label: t('admin.inspect_modal.rev'), value: formatCurrency(businessDetails.totalRevenue, business?.currency, language), icon: IndianRupee, color: 'emerald', desc: 'Total expected earnings from services today' },
                                             { label: t('admin.inspect_modal.visits'), value: businessDetails.totalCustomers, icon: Users, color: 'blue', desc: 'Total walk-ins and bookings today' },
                                             { label: t('admin.inspect_modal.completed'), value: businessDetails.completedVisits, icon: CheckCircle2, color: 'indigo', desc: 'Successfully served customers' },
                                             { label: t('admin.inspect_modal.wait'), value: `${businessDetails.avgWaitTimeMinutes}m`, icon: Clock, color: 'amber', desc: 'Average time spent in waiting state' },

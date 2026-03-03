@@ -10,7 +10,7 @@ import {
     CheckCircle2
 } from "lucide-react";
 import { ProviderAnalytics, ProviderServiceStats } from "@/services/analyticsService";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -27,7 +27,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
     provider,
     periodLabel
 }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { business } = useAuth();
 
     if (!isOpen || !provider) return null;
@@ -93,7 +93,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
 
                                     <div className="text-right">
                                         <div className="text-sm font-bold text-emerald-600">
-                                            {business?.currency || 'USD'} {s.revenue.toLocaleString()}
+                                            {formatCurrency(s.revenue, business?.currency, language)}
                                         </div>
                                         <div className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter mt-0.5">
                                             {t('provider_analytics.total_revenue_stats')}
@@ -110,7 +110,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                     <div className="flex gap-8">
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.combined_output')}</p>
-                            <p className="text-lg font-bold text-white tracking-tight">{business?.currency || 'USD'} {provider.total_revenue.toLocaleString()}</p>
+                            <p className="text-lg font-bold text-white tracking-tight">{formatCurrency(provider.total_revenue, business?.currency, language)}</p>
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.efficiency')}</p>

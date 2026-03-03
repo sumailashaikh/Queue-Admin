@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { serviceService, Service } from "@/services/serviceService";
 import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 // Custom Delete Dialog
@@ -282,7 +282,7 @@ export default function ServicesPage() {
                                     </div>
                                     <div className="flex flex-col items-end">
                                         <span className="text-xs font-semibold text-slate-400 mb-0.5">{t('services.price_label')}</span>
-                                        <span className="text-xl font-bold text-slate-900 tracking-tight">{business?.currency || 'USD'} {service.price}</span>
+                                        <span className="text-xl font-bold text-slate-900 tracking-tight">{formatCurrency(service.price, business?.currency, language)}</span>
                                     </div>
                                 </div>
                             </div>

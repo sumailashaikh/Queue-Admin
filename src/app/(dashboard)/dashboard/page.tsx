@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Users, Clock, CalendarCheck, TrendingUp, Wallet, Share2, QrCode, Monitor, X, Printer } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { analyticsService, DailySummary } from "@/services/analyticsService";
 import { queueService } from "@/services/queueService";
@@ -12,7 +12,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardPage() {
     const { user } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [stats, setStats] = useState([
         { name: t('dashboard.total_visitors'), value: '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
         { name: t('dashboard.completed_visits'), value: '0', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                 setStats([
                     { name: t('dashboard.total_visitors'), value: summary.totalCustomers.toString(), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                     { name: t('dashboard.completed_visits'), value: summary.completedVisits.toString(), icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-                    { name: t('dashboard.today_revenue'), value: `${myBusiness?.currency || 'USD'} ${summary.totalRevenue}`, icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { name: t('dashboard.today_revenue'), value: formatCurrency(summary.totalRevenue, myBusiness?.currency, language), icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                     { name: t('dashboard.avg_wait_time'), value: `${summary.avgWaitTimeMinutes}m`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
                 ]);
             } catch (error) {

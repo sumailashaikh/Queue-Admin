@@ -150,7 +150,7 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_assign'));
         } catch (error: any) {
             console.error("Failed to assign expert:", error);
-            showToast(error.message || t('queue.err_assign'), "error");
+            showToast(t('queue.err_assign'), "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
@@ -173,7 +173,7 @@ export default function LiveQueuePage() {
             if (process.env.NODE_ENV === 'development') {
                 console.error("Full Start Task Error:", error);
             }
-            showToast(error.message || t('queue.err_start'), "error");
+            showToast(t('queue.err_start'), "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
@@ -194,7 +194,7 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_complete'));
         } catch (error: any) {
             console.error("Failed to complete task:", error);
-            showToast(error.message || t('queue.err_complete'), "error");
+            showToast(t('queue.err_complete'), "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
@@ -205,7 +205,7 @@ export default function LiveQueuePage() {
             if (selectedQueue?.id) await fetchEntries(selectedQueue.id);
             showToast(t('queue.success_assign'));
         } catch (error: any) {
-            showToast(error.message || t('queue.err_assign'), "error");
+            showToast(t('queue.err_assign'), "error");
         }
     };
 
@@ -217,7 +217,7 @@ export default function LiveQueuePage() {
             await fetchEntries(selectedQueue.id);
             showToast(t('queue.success_next'));
         } catch (error: any) {
-            showToast(error.message || t('queue.err_next'), "error");
+            showToast(t('queue.err_next'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -289,7 +289,7 @@ export default function LiveQueuePage() {
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         } catch (error: any) {
             console.error("Failed to update status:", error);
-            showToast(error.message || t('queue.err_status'), "error");
+            showToast(t('queue.err_status'), "error");
         }
     };
 
@@ -303,7 +303,7 @@ export default function LiveQueuePage() {
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         } catch (error: any) {
             console.error("Failed to update payment:", error);
-            showToast(error.message || t('queue.err_payment'), "error");
+            showToast(t('queue.err_payment'), "error");
         }
     };
 
@@ -317,7 +317,7 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_noshow'));
         } catch (error: any) {
             console.error("Failed to mark no-show:", error);
-            showToast(error.message || t('queue.err_noshow'), "error");
+            showToast(t('queue.err_noshow'), "error");
         }
     };
 
@@ -328,7 +328,7 @@ export default function LiveQueuePage() {
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         } catch (error: any) {
             console.error("Failed to restore customer:", error);
-            showToast(error.message || t('queue.err_restore'), "error");
+            showToast(t('queue.err_restore'), "error");
         }
     };
 
