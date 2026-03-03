@@ -175,7 +175,7 @@ export default function ProviderAnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                     { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: t('provider_analytics.total_revenue'), value: `${business?.currency || '₹'}${(summary?.total_revenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { label: t('provider_analytics.total_revenue'), value: `${business?.currency || 'USD'} ${(summary?.total_revenue || 0).toLocaleString()}`, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                     { label: t('provider_analytics.avg_service_time'), value: `${summary?.avg_service_time || 0}m`, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -257,7 +257,7 @@ export default function ProviderAnalyticsPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className="font-bold text-slate-900 text-lg tracking-tight">{business?.currency || '₹'}{p.total_revenue.toLocaleString()}</span>
+                                            <span className="font-bold text-slate-900 text-lg tracking-tight">{business?.currency || 'USD'} {p.total_revenue.toLocaleString()}</span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex flex-col items-center">

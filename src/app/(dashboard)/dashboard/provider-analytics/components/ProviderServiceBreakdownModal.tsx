@@ -93,7 +93,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
 
                                     <div className="text-right">
                                         <div className="text-sm font-bold text-emerald-600">
-                                            {business?.currency || '₹'}{s.revenue.toLocaleString()}
+                                            {business?.currency || 'USD'} {s.revenue.toLocaleString()}
                                         </div>
                                         <div className="text-[9px] font-bold uppercase text-slate-400 tracking-tighter mt-0.5">
                                             {t('provider_analytics.total_revenue_stats')}
@@ -110,7 +110,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                     <div className="flex gap-8">
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.combined_output')}</p>
-                            <p className="text-lg font-bold text-white tracking-tight">{business?.currency || '₹'}{provider.total_revenue.toLocaleString()}</p>
+                            <p className="text-lg font-bold text-white tracking-tight">{business?.currency || 'USD'} {provider.total_revenue.toLocaleString()}</p>
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.efficiency')}</p>

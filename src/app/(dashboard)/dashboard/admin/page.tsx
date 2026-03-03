@@ -533,7 +533,7 @@ export default function AdminDashboard() {
                                 <div className="space-y-8">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {[
-                                            { label: t('admin.inspect_modal.rev'), value: `${business?.currency || '₹'}${businessDetails.totalRevenue}`, icon: IndianRupee, color: 'emerald', desc: 'Total expected earnings from services today' },
+                                            { label: t('admin.inspect_modal.rev'), value: `${business?.currency || 'USD'} ${businessDetails.totalRevenue}`, icon: IndianRupee, color: 'emerald', desc: 'Total expected earnings from services today' },
                                             { label: t('admin.inspect_modal.visits'), value: businessDetails.totalCustomers, icon: Users, color: 'blue', desc: 'Total walk-ins and bookings today' },
                                             { label: t('admin.inspect_modal.completed'), value: businessDetails.completedVisits, icon: CheckCircle2, color: 'indigo', desc: 'Successfully served customers' },
                                             { label: t('admin.inspect_modal.wait'), value: `${businessDetails.avgWaitTimeMinutes}m`, icon: Clock, color: 'amber', desc: 'Average time spent in waiting state' },

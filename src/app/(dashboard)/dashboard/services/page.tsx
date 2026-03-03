@@ -282,7 +282,7 @@ export default function ServicesPage() {
                                     </div>
                                     <div className="flex flex-col items-end">
                                         <span className="text-xs font-semibold text-slate-400 mb-0.5">{t('services.price_label')}</span>
-                                        <span className="text-xl font-bold text-slate-900 tracking-tight">₹{service.price}</span>
+                                        <span className="text-xl font-bold text-slate-900 tracking-tight">{business?.currency || 'USD'} {service.price}</span>
                                     </div>
                                 </div>
                             </div>
@@ -376,7 +376,7 @@ export default function ServicesPage() {
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')}</label>
                                                 <div className="relative group">
-                                                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-emerald-500 transition-colors">₹</span>
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-emerald-500 transition-colors text-xs">{business?.currency || '$'}</span>
                                                     <input
                                                         required
                                                         type="number"
@@ -385,7 +385,7 @@ export default function ServicesPage() {
                                                             const val = e.target.value;
                                                             setNewService({ ...newService, price: val === "" ? 0 : parseInt(val) });
                                                         }}
-                                                        className="w-full pl-10 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
                                                         placeholder="0"
                                                     />
                                                 </div>

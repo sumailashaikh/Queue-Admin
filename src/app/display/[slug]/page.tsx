@@ -200,7 +200,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                     <p className="text-4xl font-black text-slate-900 group-hover:text-black transition-colors capitalize">{item.customer_name}</p>
                                     <p className="text-lg font-black text-slate-400 uppercase tracking-[0.1em]">{getTranslatedServiceName(item)}</p>
                                 </div>
-                                <div className="h-20 w-32 bg-white rounded-[24px] border border-slate-100 flex items-center justify-center text-4xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
+                                <div className="h-20 min-w-[8rem] w-auto px-6 bg-white rounded-[24px] border border-slate-100 flex items-center justify-center text-3xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all max-w-[12rem] truncate overflow-hidden">
                                     {item.display_token}
                                 </div>
                             </div>
@@ -220,7 +220,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             )}
                         </div>
                         <div className="space-y-3 relative z-10">
-                            <h3 className={cn("text-5xl font-black tracking-tighter uppercase", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
+                            <h3 className={cn("text-3xl xl:text-4xl break-words px-2 max-w-[16rem] font-black tracking-tighter uppercase", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
                             <p className="text-lg font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
                             <div className="flex items-center gap-2 mt-6 px-5 py-2.5 bg-white/10 rounded-full w-fit border border-white/10">
                                 <Wifi className="h-4 w-4 text-emerald-400" />
