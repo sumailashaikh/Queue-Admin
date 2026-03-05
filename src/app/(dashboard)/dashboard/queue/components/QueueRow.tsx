@@ -38,6 +38,7 @@ interface QueueRowProps {
     onNoShow: (id: string) => void;
     onRestore: (id: string) => void;
     onSkip: (id: string) => void;
+    onInitializeTasks: () => void;
     onShowToast: (message: string, type?: 'success' | 'error') => void;
 }
 
@@ -55,6 +56,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
     onNoShow,
     onRestore,
     onSkip,
+    onInitializeTasks,
     onShowToast
 }) => {
     const { t } = useLanguage();
@@ -240,7 +242,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                 {t('queue.mark_paid')}
                             </button>
                             {isPaymentMenuOpen && (
-                                <div className="absolute top-full right-0 mt-2 w-40 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1">
+                                <div className="absolute bottom-full right-0 mb-2 w-40 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1">
                                     <button onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }} className="px-4 py-2 text-left text-xs font-bold hover:bg-slate-50 rounded-xl text-slate-700">{t('queue.cash')}</button>
                                     <button onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }} className="px-4 py-2 text-left text-xs font-bold hover:bg-slate-50 rounded-xl text-slate-700">{t('queue.qr_upi')}</button>
                                 </div>
@@ -255,24 +257,37 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             onAssignProvider={onAssignTaskProvider}
                             onStartTask={onStartTask}
                             onCompleteTask={onCompleteTask}
+                            onInitialize={onInitializeTasks}
                         />
                     )}
                 </div>
 
                 {/* More / Overflow */}
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2 pl-4 border-l border-slate-50">
                     {!isServingOrCompleted && (
-                        <button onClick={() => onSkip?.(item.id)} className="p-2 text-slate-200 hover:text-amber-500 transition-colors">
+                        <button
+                            onClick={() => onSkip?.(item.id)}
+                            className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
+                            title={t('queue.skip')}
+                        >
                             <ArrowRightToLine className="h-4 w-4" />
                         </button>
                     )}
                     {!isServingOrCompleted && (
-                        <button onClick={() => setShowNoShowModal(true)} className="p-2 text-slate-200 hover:text-rose-500 transition-colors">
+                        <button
+                            onClick={() => setShowNoShowModal(true)}
+                            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                            title={t('queue.no_show')}
+                        >
                             <UserMinus className="h-4 w-4" />
                         </button>
                     )}
                     {(item.status === 'skipped' || item.status === 'no_show') && (
-                        <button onClick={() => onRestore?.(item.id)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg" title={t('queue.restore_to_queue')}>
+                        <button
+                            onClick={() => onRestore?.(item.id)}
+                            className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                            title={t('queue.restore_to_queue')}
+                        >
                             <RefreshCcw className="h-4 w-4" />
                         </button>
                     )}

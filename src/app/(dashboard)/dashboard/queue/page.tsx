@@ -28,7 +28,7 @@ import {
     Calendar,
     Wallet
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { queueService, QueueEntry, Queue } from "@/services/queueService";
 import { businessService } from "@/services/businessService";
@@ -42,7 +42,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 export default function LiveQueuePage() {
     const { business } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [queues, setQueues] = useState<Queue[]>([]);
     const [selectedQueue, setSelectedQueue] = useState<Queue | null>(null);
     const [entries, setEntries] = useState<QueueEntry[]>([]);
@@ -206,6 +206,17 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_assign'));
         } catch (error: any) {
             showToast(t('queue.err_assign'), "error");
+        }
+    };
+
+    const handleInitializeTasks = async (entryId: string) => {
+        try {
+            await queueService.initializeEntryTasks(entryId);
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            showToast(t('queue.success_initialized'));
+        } catch (error: any) {
+            console.error("Failed to initialize tasks:", error);
+            showToast(t('queue.err_initialize'), "error");
         }
     };
 
@@ -656,12 +667,14 @@ export default function LiveQueuePage() {
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-0.5">{t('queue.payment_received')}</p>
                             <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">
-                                <span className="text-sm mr-1.5 uppercase text-slate-400 tracking-tighter">{business?.currency || 'USD'}</span>
-                                {entries
-                                    .reduce((acc, e) => {
+                                {formatCurrency(
+                                    entries.reduce((acc, e) => {
                                         const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.price || 0), 0) || (selectedQueue?.services?.price || 0);
                                         return acc + entryPrice;
-                                    }, 0).toLocaleString()}
+                                    }, 0),
+                                    business?.currency || 'USD',
+                                    language
+                                )}
                             </p>
                         </div>
                     </div>
@@ -715,7 +728,7 @@ export default function LiveQueuePage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="divide-y divide-slate-50 bg-white rounded-[32px] border-2 border-slate-50 overflow-hidden shadow-sm shadow-slate-100/50">
+                            <div className="divide-y divide-slate-50 bg-white rounded-[32px] border-2 border-slate-50 shadow-sm shadow-slate-100/50">
                                 {filteredEntries.map((item) => (
                                     <QueueRow
                                         key={item.id}
@@ -730,6 +743,7 @@ export default function LiveQueuePage() {
                                         onNoShow={handleNoShow}
                                         onRestore={handleRestore}
                                         onSkip={handleSkip}
+                                        onInitializeTasks={() => handleInitializeTasks(item.id)}
                                         onShowToast={showToast}
                                     />
                                 ))}

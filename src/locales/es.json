@@ -111,7 +111,10 @@
         "success_delete": "Cola eliminada exitosamente",
         "err_delete": "No se pudo eliminar la cola",
         "success_reset": "Cola restablecida exitosamente",
-        "err_reset": "No se pudo restablecer la cola"
+        "err_reset": "No se pudo restablecer la cola",
+        "assign_expert": "Asignar experto",
+        "success_initialized": "Área de ejecución preparada",
+        "err_initialize": "Error al preparar el área de ejecución"
     },
     "provider_analytics": {
         "title": "Análisis de Proveedores",
@@ -295,6 +298,9 @@
         "digital_qr": "QR Digital de Entrada",
         "public_join_url": "Tu Enlace de Ingreso Público",
         "open_public_page": "Abrir Página Pública",
+        "link_copied": "Enlace Copiado",
+        "delete_confirm": "¿Estás seguro de que deseas eliminar este negocio?",
+        "delete_error": "Error al eliminar el negocio.",
         "danger_zone": "Zona de Peligro",
         "danger_desc": "Borra permanentemente tu negocio y todos los datos.",
         "delete_business": "ELIMINAR NEGOCIO"

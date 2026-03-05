@@ -53,7 +53,16 @@ const dictionaries: Record<string, Dictionary> = {
             wa_thank_you: "Thank you.",
             wa_join_queue: "I have joined the live queue at",
             wa_ticket: "Ticket Number:",
-            wa_track: "Track my live status:"
+            wa_track: "Track my live status:",
+            check_in_successful: "Check-in Successful!",
+            welcome_to: "Welcome to",
+            service_pass_generated: "Your service pass has been generated.",
+            est_duration: "Est. Duration",
+            est_fee: "Est. Fee",
+            queue_position: "Queue Position",
+            whatsapp_help: "WhatsApp Help",
+            track_live_status: "Track Live Status",
+            done: "Done"
         },
         status: {
             access_denied: "Access Denied",
@@ -138,7 +147,16 @@ const dictionaries: Record<string, Dictionary> = {
             wa_thank_you: "Gracias.",
             wa_join_queue: "Me he unido a la fila en vivo en",
             wa_ticket: "Número de Boleto:",
-            wa_track: "Rastrea mi estado en vivo:"
+            wa_track: "Rastrea mi estado en vivo:",
+            check_in_successful: "¡Check-in Exitoso!",
+            welcome_to: "Bienvenido a",
+            service_pass_generated: "Tu pase de servicio ha sido generado.",
+            est_duration: "Duración Est.",
+            est_fee: "Tarifa Est.",
+            queue_position: "Posición en la Fila",
+            whatsapp_help: "Ayuda por WhatsApp",
+            track_live_status: "Rastrear Estado en Vivo",
+            done: "Hecho"
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -223,7 +241,16 @@ const dictionaries: Record<string, Dictionary> = {
             wa_thank_you: "धन्यवाद।",
             wa_join_queue: "मैं लाइव कतार में शामिल हो गया हूं। व्यवसाय: ",
             wa_ticket: "टिकट संख्या:",
-            wa_track: "मेरी लाइव स्थिति ट्रैक करें:"
+            wa_track: "मेरी लाइव स्थिति ट्रैक करें:",
+            check_in_successful: "चेक-इन सफल!",
+            welcome_to: "में आपका स्वागत है",
+            service_pass_generated: "आपका सेवा पास जनरेट हो गया है।",
+            est_duration: "अनुमानित अवधि",
+            est_fee: "अनुमानित शुल्क",
+            queue_position: "कतार में स्थिति",
+            whatsapp_help: "व्हाट्सएप सहायता",
+            track_live_status: "लाइव स्थिति ट्रैक करें",
+            done: "पूर्ण"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -308,7 +335,16 @@ const dictionaries: Record<string, Dictionary> = {
             wa_thank_you: "شكراً لك.",
             wa_join_queue: "لقد انضممت إلى الطابور المباشر في",
             wa_ticket: "رقم التذكرة:",
-            wa_track: "تتبع حالتي المباشرة:"
+            wa_track: "تتبع حالتي المباشرة:",
+            check_in_successful: "تم تسجيل الدخول بنجاح!",
+            welcome_to: "مرحباً بك في",
+            service_pass_generated: "تم إصدار بطاقة الخدمة الخاصة بك.",
+            est_duration: "المدة المقدرة",
+            est_fee: "الرسوم المقدرة",
+            queue_position: "موقعك في الطابور",
+            whatsapp_help: "مساعدة عبر الواتساب",
+            track_live_status: "تتبع الحالة مباشرة",
+            done: "تم"
         },
         status: {
             access_denied: "تم رفض الوصول",

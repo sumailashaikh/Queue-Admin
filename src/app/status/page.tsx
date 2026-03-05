@@ -63,6 +63,9 @@ function StatusContent() {
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
+    const urlLang = searchParams.get("lang");
+    const lang = urlLang || status?.business_language || 'en';
+
     const fetchStatus = async () => {
         if (!token) return;
         try {
@@ -112,7 +115,6 @@ function StatusContent() {
         if (!status?.business_phone) return;
         let phone = status.business_phone.replace(/\D/g, '');
         if (phone.length === 10) phone = `91${phone}`;
-        const lang = status.business_language || 'en';
         const msgPrefix = i18n.t(lang, 'status.wa_checking_status');
         const message = `${msgPrefix} ${status.display_token} @ ${status.business_name}.`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
@@ -156,8 +158,6 @@ function StatusContent() {
             </div>
         );
     }
-
-    const lang = status.business_language || 'en';
 
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col items-center p-0 md:p-6 lg:p-12 font-sans">
@@ -276,8 +276,8 @@ function StatusContent() {
                         </button>
                     </div>
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }
 

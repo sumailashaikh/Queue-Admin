@@ -18,7 +18,10 @@ import {
     User,
     Sparkles,
     ArrowRight,
-    Globe
+    Globe,
+    ShieldCheck,
+    MessageSquare,
+    QrCode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { businessService, Business } from "@/services/businessService";
@@ -180,7 +183,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     queue_id: openQueue.id,
                     customer_name: name,
                     phone: formattedPhone,
-                    service_ids: service_ids
+                    service_ids: service_ids,
+                    ui_language: lang // Persist selected language
                 });
                 setTicket(entry);
             } else {
@@ -192,7 +196,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     service_ids: service_ids,
                     start_time: startTime.toISOString(),
                     customer_name: name,
-                    phone: formattedPhone
+                    phone: formattedPhone,
+                    ui_language: lang // Persist selected language
                 });
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
                 setIsAppointmentMode(true);
@@ -286,7 +291,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         <button
                                             key={l}
                                             onClick={() => setCustomerLangOverride(l)}
-                                            className={cn("w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest hover:bg-slate-50 transition-colors", lang === l ? "text-primary bg-primary/5" : "text-slate-600")}
+                                            className={cn("w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest transition-colors", lang === l ? "text-primary bg-primary/5 border-l-4 border-primary" : "text-slate-600 hover:bg-slate-50")}
                                         >
                                             {l === 'en' ? 'English' : l === 'es' ? 'Español' : l === 'hi' ? 'हिंदी' : 'العربية'}
                                         </button>
@@ -336,8 +341,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <button
                                     onClick={() => { setActiveView('queue'); setStep(1); }}
                                     className={cn(
-                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all shadow-sm border border-transparent",
-                                        activeView === 'queue' ? "bg-white text-slate-900 border-slate-200 shadow-md" : "text-slate-500 hover:text-slate-700 hover:bg-white hover:border-slate-100 hover:shadow-sm active:scale-[0.98]"
+                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all border",
+                                        activeView === 'queue' ? "bg-primary text-white border-primary shadow-md" : "text-slate-500 border-transparent hover:text-slate-700 hover:bg-white hover:border-slate-200 hover:shadow-sm active:scale-[0.98]"
                                     )}
                                 >
                                     {i18n.t(lang, 'public.join_queue')}
@@ -345,8 +350,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <button
                                     onClick={() => { setActiveView('appointment'); setStep(1); }}
                                     className={cn(
-                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all shadow-sm border border-transparent",
-                                        activeView === 'appointment' ? "bg-white text-slate-900 border-slate-200 shadow-md" : "text-slate-500 hover:text-slate-700 hover:bg-white hover:border-slate-100 hover:shadow-sm active:scale-[0.98]"
+                                        "flex-1 py-3.5 text-xs font-bold tracking-wide rounded-xl transition-all border",
+                                        activeView === 'appointment' ? "bg-primary text-white border-primary shadow-md" : "text-slate-500 border-transparent hover:text-slate-700 hover:bg-white hover:border-slate-200 hover:shadow-sm active:scale-[0.98]"
                                     )}
                                 >
                                     {i18n.t(lang, 'public.book_appointment')}
@@ -377,7 +382,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.select_service')}</p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-2xl font-bold text-indigo-600 tracking-tighter">{formatCurrency(totalPrice)}</span>
+                                    <span className="text-2xl font-bold text-primary tracking-tighter">{formatCurrency(totalPrice)}</span>
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{totalDuration} {i18n.t(lang, 'public.min')} total</p>
                                 </div>
                             </div>
@@ -393,8 +398,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             className={cn(
                                                 "w-full p-6 rounded-[28px] border-2 text-left transition-all duration-300 flex items-center gap-5 group relative overflow-hidden",
                                                 isSelected
-                                                    ? "bg-slate-900 border-slate-900 text-white scale-[1.02] shadow-xl shadow-slate-200"
-                                                    : "border-slate-50 bg-white hover:border-slate-200 shadow-sm",
+                                                    ? "bg-primary border-primary ring-4 ring-primary/30 text-white scale-[1.02] shadow-xl shadow-primary/20"
+                                                    : "border-slate-50 bg-white hover:border-primary/20 hover:shadow-md shadow-sm",
                                                 !isOpen && activeView === 'queue' && "opacity-60 grayscale-[0.5] cursor-not-allowed"
                                             )}
                                         >
@@ -519,7 +524,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 type="text"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-600/10 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
+                                                className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
@@ -533,7 +538,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 type="tel"
                                                 value={phone}
                                                 onChange={(e) => setPhone(e.target.value)}
-                                                className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-indigo-600/10 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
+                                                className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
@@ -551,104 +556,69 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     )}
 
                     {step === 3 && ticket && (
-                        <div className="text-center space-y-8 animate-in zoom-in-95 duration-500 p-4">
-                            <div className={cn(
-                                "h-24 w-24 rounded-[40px] flex items-center justify-center mx-auto transform rotate-12 scale-110 mb-8",
-                                isAppointmentMode ? "bg-indigo-50 text-indigo-600" : "bg-green-50 text-green-600"
-                            )}>
-                                {isAppointmentMode ? <Clock className="h-12 w-12" /> : <CheckCircle2 className="h-12 w-12" />}
+                        <div className="text-center space-y-10 animate-in zoom-in-95 duration-500 py-4">
+                            <div className="h-32 w-32 bg-primary rounded-[40px] flex items-center justify-center mx-auto shadow-2xl shadow-primary/20 relative group overflow-hidden">
+                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                {isAppointmentMode ? <Clock className="h-16 w-16 text-white" /> : <ShieldCheck className="h-16 w-16 text-white" />}
                             </div>
 
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-                                    {isAppointmentMode ? i18n.t(lang, 'public.request_sent') : i18n.t(lang, 'public.you_are_in_line')}
+                                    {isAppointmentMode ? i18n.t(lang, 'public.request_sent') || "Request Sent!" : i18n.t(lang, 'public.check_in_successful') || "Check-in Successful!"}
                                 </h2>
-                                <p className="text-sm font-bold text-slate-400">
-                                    {isAppointmentMode
-                                        ? `${i18n.t(lang, 'public.appointment_request_for')} `
-                                        : `${i18n.t(lang, 'public.virtual_ticket_at')} `
-                                    }
-                                    <span className="text-slate-900 lowercase">{business.name}</span>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                                    {i18n.t(lang, 'public.welcome_to')} <span className="text-slate-900">{business.name}</span>.<br />
+                                    {isAppointmentMode ? i18n.t(lang, 'public.appointment_request_for') || "Your appointment request has been sent." : i18n.t(lang, 'public.service_pass_generated') || "Your service pass has been generated."}
                                 </p>
                             </div>
 
-                            <div className="bg-white border-2 border-slate-100 rounded-[32px] p-8 space-y-6 shadow-xl shadow-slate-200/50 relative overflow-hidden text-left">
-                                {isAppointmentMode ? (
-                                    <div className="space-y-6">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.selected_services')}</p>
-                                            <p className="text-xl font-bold text-[#0B1B3F] uppercase">{selectedServices.map(s => s.name).join(', ')}</p>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-                                            <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.time_slot')}</p>
-                                                <p className="text-sm font-bold text-slate-900">{formatTime12(bookingTime)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.total_fee')}</p>
-                                                <p className="text-sm font-bold text-slate-900">{formatCurrency(totalPrice)}</p>
-                                            </div>
-                                        </div>
+                            <div className="bg-slate-50 border border-slate-100 rounded-[32px] p-8 space-y-8 relative">
+                                <div className="space-y-2">
+                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">{i18n.t(lang, 'public.selected_services')}</p>
+                                    <p className="text-lg font-bold text-slate-900 uppercase tracking-tight">
+                                        {selectedServices.map(s => s.name).join(' + ')}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-dashed border-slate-200">
+                                    <div className="text-center space-y-1">
+                                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{isAppointmentMode ? i18n.t(lang, 'public.time_slot') || "Time Slot" : i18n.t(lang, 'public.est_duration') || "Est. Duration"}</p>
+                                        <p className="text-lg font-black text-slate-900">
+                                            {isAppointmentMode ? formatTime12(bookingTime) : `${totalDuration} ${i18n.t(lang, 'public.min')}`}
+                                        </p>
                                     </div>
-                                ) : (
-                                    <>
-                                        <div className="text-center">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.queue_ticket_no')}</p>
-                                            <p className="text-6xl font-black text-[#0B1B3F] tracking-tighter">{ticket.ticket_number}</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                                            <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.your_position')}</p>
-                                                <p className="text-xl font-bold text-slate-900">#{ticket.position}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.est_wait')}</p>
-                                                <p className="text-xl font-bold text-amber-500">~{totalDuration || 10}{i18n.t(lang, 'public.min')}</p>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="space-y-4 pt-4">
-                                <p className="text-[11px] font-bold text-slate-400 leading-relaxed max-w-xs mx-auto">
-                                    {isAppointmentMode
-                                        ? i18n.t(lang, 'public.owner_will_review')
-                                        : i18n.t(lang, 'public.we_will_notify')
-                                    }
-                                </p>
+                                    <div className="text-center space-y-1">
+                                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{i18n.t(lang, 'public.est_fee') || "Est. Fee"}</p>
+                                        <p className="text-lg font-black text-slate-900">{formatCurrency(totalPrice)}</p>
+                                    </div>
+                                </div>
 
                                 {!isAppointmentMode && (
-                                    <button
-                                        onClick={() => {
-                                            if (ticket?.token || ticket?.status_token) {
-                                                router.push(`/status?token=${ticket.token || ticket.status_token}`);
-                                            }
-                                        }}
-                                        className="w-full py-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
-                                    >
-                                        <ExternalLink className="h-4 w-4" /> {i18n.t(lang, 'public.view_pass')}
-                                    </button>
+                                    <div className="pt-6 border-t border-slate-100 mt-6 text-center">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{i18n.t(lang, 'public.queue_position') || "Queue Position"}</p>
+                                        <p className="text-6xl font-black text-primary tracking-tighter">Q-{ticket?.position || "..."}</p>
+                                    </div>
                                 )}
+                            </div>
 
+                            <div className="space-y-4 px-2">
                                 <button
                                     onClick={() => {
                                         const formatDate = (date: string | Date) => new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
                                         let text = "";
                                         const servicesList = selectedServices.map(s => s.name).join(', ');
 
-                                        const h = i18n.t(lang, 'public.wa_hello');
-                                        const req_appt = i18n.t(lang, 'public.wa_req_appt');
-                                        const srv = i18n.t(lang, 'public.wa_services');
-                                        const dt = i18n.t(lang, 'public.wa_date');
-                                        const tm = i18n.t(lang, 'public.wa_time');
-                                        const nm = i18n.t(lang, 'public.wa_name');
-                                        const ty = i18n.t(lang, 'public.wa_thank_you');
+                                        const h = i18n.t(lang, 'public.wa_hello') || "Hello";
+                                        const req_appt = i18n.t(lang, 'public.wa_req_appt') || "I would like to request an appointment at";
+                                        const srv = i18n.t(lang, 'public.wa_services') || "Services:";
+                                        const dt = i18n.t(lang, 'public.wa_date') || "Date:";
+                                        const tm = i18n.t(lang, 'public.wa_time') || "Time:";
+                                        const nm = i18n.t(lang, 'public.wa_name') || "Name:";
+                                        const ty = i18n.t(lang, 'public.wa_thank_you') || "Thank you.";
 
-                                        const jq = i18n.t(lang, 'public.wa_join_queue');
-                                        const tk = i18n.t(lang, 'public.wa_ticket');
-                                        const trk = i18n.t(lang, 'public.wa_track');
+                                        const jq = i18n.t(lang, 'public.wa_join_queue') || "I have joined the live queue at";
+                                        const tk = i18n.t(lang, 'public.wa_ticket') || "Ticket Number:";
+                                        const trk = i18n.t(lang, 'public.wa_track') || "Track my live status:";
 
                                         if (isAppointmentMode) {
                                             text = `${h}\n\n${req_appt} ${business.name}.\n\n${srv} ${servicesList}\n${dt} ${formatDate(bookingDate)}\n${tm} ${formatTime12(bookingTime)}\n${nm} ${name}\n\n${ty}`;
@@ -660,9 +630,27 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         if (phoneStr.length === 10) phoneStr = `91${phoneStr}`;
                                         window.open(`https://wa.me/${phoneStr}?text=${encodeURIComponent(text)}`, '_blank');
                                     }}
-                                    className="w-full py-5 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all group"
+                                    className="w-full h-16 bg-[#128c7e] hover:bg-[#075e54] text-white rounded-2xl flex items-center justify-center gap-3 transition-all shadow-xl shadow-green-500/10 active:scale-95"
                                 >
-                                    <MessageCircle className="h-4 w-4 fill-current opacity-20 group-hover:opacity-40 transition-opacity" /> {i18n.t(lang, 'public.msg_whatsapp')}
+                                    <MessageSquare className="h-5 w-5" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{i18n.t(lang, 'public.whatsapp_help') || "WhatsApp Help"}</span>
+                                </button>
+
+                                {!isAppointmentMode && (ticket?.token || ticket?.status_token) && (
+                                    <button
+                                        onClick={() => router.push(`/status?token=${ticket.token || ticket.status_token}&lang=${lang}`)}
+                                        className="w-full h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95"
+                                    >
+                                        <QrCode className="h-5 w-5" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{i18n.t(lang, 'public.track_live_status') || "Track Live Status"}</span>
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="w-full h-16 bg-primary/10 hover:bg-primary/20 text-primary rounded-2xl flex items-center justify-center transition-all active:scale-95 shadow-sm mt-4 cursor-pointer font-black"
+                                >
+                                    <span className="text-[10px] uppercase tracking-[0.2em]">{i18n.t(lang, 'public.done') || "Done"}</span>
                                 </button>
                             </div>
                         </div>

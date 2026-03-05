@@ -111,7 +111,10 @@
         "success_delete": "تم حذف الطابور بنجاح",
         "err_delete": "فشل حذف الطابور",
         "success_reset": "تمت إعادة تعيين الطابور بنجاح",
-        "err_reset": "فشل إعادة تعيين الطابور"
+        "err_reset": "فشل إعادة تعيين الطابور",
+        "assign_expert": "تعيين خبير",
+        "success_initialized": "منطقة تنفيذ المهام جاهزة",
+        "err_initialize": "فشل في إعداد منطقة التنفيذ"
     },
     "provider_analytics": {
         "title": "تحليلات المزود",
@@ -295,6 +298,9 @@
         "digital_qr": "رابط الدخول السريع الرقمي",
         "public_join_url": "رابط الدخول العام الخاص بك",
         "open_public_page": "فتح الصفحة العامة",
+        "link_copied": "تم نسخ الرابط",
+        "delete_confirm": "هل أنت متأكد أنك تريد حذف هذا العمل؟",
+        "delete_error": "فشل في حذف العمل.",
         "danger_zone": "منطقة الخطر",
         "danger_desc": "حذف نشاطك التجاري وجميع بياناتك نهائياً.",
         "delete_business": "حذف العمل"

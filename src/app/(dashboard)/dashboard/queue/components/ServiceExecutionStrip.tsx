@@ -23,6 +23,7 @@ interface ServiceExecutionStripProps {
     onAssignProvider: (taskId: string, providerId: string) => void;
     onStartTask: (taskId: string) => void;
     onCompleteTask: (taskId: string) => void;
+    onInitialize?: () => void;
 }
 
 export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
@@ -33,10 +34,21 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     now,
     onAssignProvider,
     onStartTask,
-    onCompleteTask
+    onCompleteTask,
+    onInitialize
 }) => {
     const { t } = useLanguage();
-    if (!services || services.length === 0) return null;
+    if (!services || services.length === 0) {
+        return (
+            <button
+                onClick={onInitialize}
+                className="w-full h-10 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center justify-center gap-2"
+            >
+                <Play className="h-3 w-3 fill-current" />
+                {t('queue.assign_expert')}
+            </button>
+        );
+    }
 
     // For simplicity, we'll focus on the first service if multiple exist, 
     // or we could map them. The mockup shows one main service area per row.

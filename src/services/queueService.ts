@@ -108,7 +108,8 @@ export const queueService = {
         phone?: string,
         service_name?: string,
         service_ids?: string[],
-        entry_source?: 'online' | 'qr_walkin' | 'manual'
+        entry_source?: 'online' | 'qr_walkin' | 'manual',
+        ui_language?: string
     }): Promise<QueueEntry> {
         const result = await api.post<QueueEntry>('/public/queue/join', data);
         return result.data;
@@ -149,6 +150,11 @@ export const queueService = {
 
     async updatePayment(entryId: string, paymentMethod: 'cash' | 'qr' | 'card' | 'unpaid'): Promise<QueueEntry> {
         const result = await api.patch<QueueEntry>(`/queues/entries/${entryId}/payment`, { payment_method: paymentMethod });
+        return result.data;
+    },
+
+    async initializeEntryTasks(entryId: string): Promise<{ status: string }> {
+        const result = await api.post<{ status: string }>(`/queues/entries/${entryId}/initialize-tasks`, {});
         return result.data;
     }
 }

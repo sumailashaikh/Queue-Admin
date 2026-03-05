@@ -111,7 +111,10 @@
         "success_delete": "Queue deleted successfully",
         "err_delete": "Failed to delete queue",
         "success_reset": "Queue reset successfully",
-        "err_reset": "Failed to reset queue"
+        "err_reset": "Failed to reset queue",
+        "assign_expert": "Assign Expert",
+        "success_initialized": "Task execution area ready",
+        "err_initialize": "Failed to prepare execution area"
     },
     "provider_analytics": {
         "title": "Provider Analytics",
@@ -295,6 +298,9 @@
         "digital_qr": "Digital Walk-in QR",
         "public_join_url": "Your Public Join URL",
         "open_public_page": "Open Public Page",
+        "link_copied": "Link Copied",
+        "delete_confirm": "Are you sure you want to delete this business?",
+        "delete_error": "Failed to delete business.",
         "danger_zone": "Danger Zone",
         "danger_desc": "Permanently delete your business and all data.",
         "delete_business": "DELETE BUSINESS"

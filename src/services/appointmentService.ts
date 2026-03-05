@@ -59,6 +59,7 @@ export const appointmentService = {
         start_time: string;
         customer_name: string;
         phone: string;
+        ui_language?: string;
     }): Promise<Appointment> {
         const result = await api.post<Appointment>('/public/appointment/book', data);
         return result.data;

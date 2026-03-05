@@ -119,7 +119,7 @@ export default function DashboardPage() {
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30s
         return () => clearInterval(interval);
-    }, []);
+    }, [language]);
 
     return (
         <div className="relative">
