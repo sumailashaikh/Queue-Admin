@@ -1,4 +1,7 @@
+"use client";
+
 import { useLanguage } from "@/context/LanguageContext";
+
 
 export default function ReportsPage() {
     const { t } = useLanguage();
