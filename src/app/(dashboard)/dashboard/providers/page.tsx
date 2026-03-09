@@ -20,7 +20,7 @@ import {
     BarChart3,
     AlertCircle
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { api } from "@/lib/api";
@@ -28,7 +28,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 export default function ProvidersPage() {
     const { business } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [providers, setProviders] = useState<ServiceProvider[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -573,7 +573,7 @@ export default function ProvidersPage() {
                                                 <p className={cn(
                                                     "text-[9px] font-medium uppercase tracking-wider",
                                                     assignedServiceIds.includes(service.id) ? "text-slate-400" : "text-slate-400"
-                                                )}>{service.duration_minutes} min • ₹{service.price}</p>
+                                                )}>{service.duration_minutes} min • {formatCurrency(service.price, business?.currency, language)}</p>
                                             </div>
                                             {assignedServiceIds.includes(service.id) && <CheckCircle2 className="h-4 w-4 text-white" />}
                                         </div>
