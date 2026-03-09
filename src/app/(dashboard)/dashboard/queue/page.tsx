@@ -525,8 +525,8 @@ export default function LiveQueuePage() {
                                 <button
                                     onClick={() => {
                                         if (business) {
-                                            const link = `${window.location.origin}/display/${business.slug}`;
-                                            window.open(link, '_blank');
+                                            const link = `/display/${business.slug}`;
+                                            window.location.href = link;
                                         }
                                     }}
                                     className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold tracking-wide transition-all hover:bg-slate-800 shadow-sm"

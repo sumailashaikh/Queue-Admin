@@ -298,8 +298,7 @@ export default function DashboardPage() {
                                 <button
                                     onClick={() => {
                                         if (business) {
-                                            const link = `${window.location.host}/display/${business.slug}`;
-                                            window.open(`http://${link}`, '_blank');
+                                            window.location.href = `/display/${business.slug}`;
                                         }
                                     }}
                                     disabled={!business}

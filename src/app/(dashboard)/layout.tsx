@@ -77,7 +77,7 @@ export default function DashboardLayout({
                             <div className="hidden sm:flex flex-col items-end">
                                 <p className="text-sm font-bold text-slate-900">{t('dashboard.business_portal')}</p>
                                 <button
-                                    onClick={() => window.open(`/p/${business?.slug}`, '_blank')}
+                                    onClick={() => { if (business?.slug) window.location.href = `/p/${business.slug}`; }}
                                     className="text-xs font-extrabold text-primary uppercase tracking-wider hover:text-blue-600 transition-colors"
                                 >
                                     {t('dashboard.view_public_page')}
