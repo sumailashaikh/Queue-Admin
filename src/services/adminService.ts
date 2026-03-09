@@ -13,12 +13,16 @@ export interface DashboardUser {
 export interface DashboardBusiness {
     id: string;
     name: string;
+    owner_id: string;
     slug: string;
     address: string;
     phone: string;
     owner: {
+        id: string;
         full_name: string;
         phone: string;
+        status: 'pending' | 'active' | 'blocked';
+        is_verified: boolean;
     };
     created_at: string;
 }
@@ -61,6 +65,16 @@ export const adminService = {
 
     async createUser(userData: { full_name: string, phone: string, role: string }) {
         const result = await api.post('/admin/users', userData);
+        return result.data;
+    },
+
+    async getGlobalStats() {
+        const result = await api.get<{
+            totalUsers: number;
+            activeBusinesses: number;
+            pendingVerifications: number;
+            platformHealth: string;
+        }>('/admin/stats');
         return result.data;
     }
 };

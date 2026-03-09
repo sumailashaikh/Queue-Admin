@@ -63,6 +63,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
     const [now, setNow] = useState(Date.now());
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = useState(false);
     const [showNoShowModal, setShowNoShowModal] = useState(false);
+    const [showSkipModal, setShowSkipModal] = useState(false);
 
     // Delay computations
     const apptStartTime = item.appointments?.start_time ? new Date(item.appointments.start_time).getTime() : null;
@@ -266,7 +267,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 <div className="flex flex-col gap-2 pl-4 border-l border-slate-50">
                     {!isServingOrCompleted && (
                         <button
-                            onClick={() => onSkip?.(item.id)}
+                            onClick={() => setShowSkipModal(true)}
                             className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all"
                             title={t('queue.skip')}
                         >
@@ -315,6 +316,35 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             <button
                                 onClick={() => { onNoShow(item.id); setShowNoShowModal(false); }}
                                 className="h-12 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-rose-200 transition-all active:scale-95"
+                            >
+                                {t('queue.confirm')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Skip Modal */}
+            {showSkipModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-[32px] shadow-2xl p-8 max-w-sm w-full animate-in zoom-in-95 duration-200">
+                        <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center mb-6 mx-auto">
+                            <ArrowRightToLine className="h-8 w-8 text-amber-600" />
+                        </div>
+                        <h3 className="text-lg font-black text-slate-900 mb-2 text-center uppercase tracking-tight">{t('queue.skip')}?</h3>
+                        <p className="text-xs text-slate-500 mb-8 text-center font-bold tracking-tight leading-relaxed px-4">
+                            {t('queue.marking')} <b className="capitalize">{item.customer_name || t('queue.guest')}</b> {t('queue.as_skipped') || "as skipped"}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setShowSkipModal(false)}
+                                className="h-12 bg-slate-50 hover:bg-slate-100 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            >
+                                {t('queue.cancel')}
+                            </button>
+                            <button
+                                onClick={() => { onSkip(item.id); setShowSkipModal(false); }}
+                                className="h-12 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-200 transition-all active:scale-95"
                             >
                                 {t('queue.confirm')}
                             </button>

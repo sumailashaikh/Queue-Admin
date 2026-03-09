@@ -37,6 +37,7 @@ export default function AdminDashboard() {
     const [pagination, setPagination] = useState({ page: 1, total: 0 });
     const [updatingRole, setUpdatingRole] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
+    const [globalStats, setGlobalStats] = useState<any>(null);
 
     // Invite Modal State
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -55,9 +56,19 @@ export default function AdminDashboard() {
     const [createUserData, setCreateUserData] = useState({ full_name: "", phone: "", role: "owner" });
     const [createLoading, setCreateLoading] = useState(false);
 
+    const formatPhoneForSubmit = (phone: string) => {
+        const cleaned = phone.replace(/[^\d+]/g, '');
+        if (cleaned.length > 0 && !cleaned.startsWith('+')) {
+            return `+91${cleaned.replace(/\D/g, '')}`;
+        }
+        return cleaned;
+    };
+
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
+            const stats = await adminService.getGlobalStats();
+            setGlobalStats(stats);
             if (activeTab === 'users') {
                 const res = await adminService.getAllUsers({
                     search,
@@ -77,7 +88,7 @@ export default function AdminDashboard() {
         } finally {
             setLoading(false);
         }
-    }, [activeTab, search, pagination.page]);
+    }, [activeTab, search, pagination.page, statusFilter]);
 
     useEffect(() => {
         fetchData();
@@ -88,8 +99,9 @@ export default function AdminDashboard() {
         try {
             await adminService.updateUserRole(userId, newRole);
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
+            alert(t('admin.role_update_success'));
         } catch (err) {
-            alert(t('admin.create_modal.err_fail'));
+            alert(t('admin.role_update_fail'));
         } finally {
             setUpdatingRole(null);
         }
@@ -104,8 +116,9 @@ export default function AdminDashboard() {
                 status: newStatus as any,
                 is_verified: isVerified ?? u.is_verified
             } : u));
+            alert(t('admin.status_update_success'));
         } catch (err) {
-            alert(t('admin.create_modal.err_fail'));
+            alert(t('admin.status_update_fail'));
         } finally {
             setLoading(false);
         }
@@ -117,8 +130,9 @@ export default function AdminDashboard() {
         setInviteError(null);
         setInviteSuccess(null);
         try {
-            await adminService.inviteAdmin(invitePhone);
-            setInviteSuccess(t('admin.invite_modal.success', { phone: invitePhone }));
+            const formattedPhone = formatPhoneForSubmit(invitePhone);
+            await adminService.inviteAdmin(formattedPhone);
+            setInviteSuccess(t('admin.invite_modal.success', { phone: formattedPhone }));
             setInvitePhone("");
             fetchData();
         } catch (err: any) {
@@ -136,6 +150,7 @@ export default function AdminDashboard() {
             setBusinessDetails(res);
         } catch (err) {
             console.error("Failed to fetch business details:", err);
+            alert(t('admin.inspect_modal.fetch_fail'));
         } finally {
             setDetailsLoading(false);
         }
@@ -145,7 +160,8 @@ export default function AdminDashboard() {
         e.preventDefault();
         setCreateLoading(true);
         try {
-            await adminService.createUser(createUserData);
+            const formattedPhone = formatPhoneForSubmit(createUserData.phone);
+            await adminService.createUser({ ...createUserData, phone: formattedPhone });
             setIsCreateModalOpen(false);
             setCreateUserData({ full_name: "", phone: "", role: "owner" });
             fetchData();
@@ -240,9 +256,9 @@ export default function AdminDashboard() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: t('admin.total_users'), value: '1,284', icon: Users, color: 'blue' },
-                    { label: t('admin.active_businesses'), value: '86', icon: Store, color: 'indigo' },
-                    { label: t('admin.platform_health'), value: '99.9%', icon: Shield, color: 'emerald' },
+                    { label: t('admin.total_users'), value: globalStats?.totalUsers?.toLocaleString() || '...', icon: Users, color: 'blue' },
+                    { label: t('admin.active_businesses'), value: globalStats?.activeBusinesses?.toLocaleString() || '...', icon: Store, color: 'indigo' },
+                    { label: t('admin.platform_health'), value: globalStats?.platformHealth || '99.9%', icon: Shield, color: 'emerald' },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-100 rounded-[32px] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
                         <div className="flex items-center justify-between">
@@ -399,12 +415,31 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-8 py-6 text-xs font-bold text-slate-600">{new Date(business.created_at).toLocaleDateString()}</td>
                                             <td className="px-8 py-6 text-right">
-                                                <button
-                                                    onClick={() => handleInspect(business)}
-                                                    className="h-10 px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 transition-all"
-                                                >
-                                                    {t('admin.inspect')}
-                                                </button>
+                                                <div className="flex items-center justify-end gap-2 text-right">
+                                                    {business.owner?.status !== 'active' && business.owner?.id && (
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await adminService.updateUserStatus(business.owner.id, 'active', true);
+                                                                    alert("Owner verified successfully");
+                                                                    fetchData(); // Re-fetch data to update business list
+                                                                } catch (error) {
+                                                                    alert("Failed to verify owner.");
+                                                                }
+                                                            }}
+                                                            className="h-8 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all flex items-center gap-1"
+                                                        >
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            {t('admin.verify_owner')}
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleInspect(business)}
+                                                        className="h-10 px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 transition-all"
+                                                    >
+                                                        {t('admin.inspect')}
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -560,7 +595,7 @@ export default function AdminDashboard() {
                                                         <div key={act.id} className="p-4 border-b border-slate-100 last:border-0 flex items-center justify-between hover:bg-white transition-colors">
                                                             <div className="flex items-center gap-4">
                                                                 <div className={cn(
-                                                                    "h-10 w-10 rounded-xl flex items-center justify-center text-xs font-bold",
+                                                                    "h-10 px-3 min-w-[40px] w-auto rounded-xl flex items-center justify-center text-[10px] font-black uppercase tracking-widest",
                                                                     act.type === 'appointment' ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600"
                                                                 )}>
                                                                     {act.token}
@@ -585,18 +620,12 @@ export default function AdminDashboard() {
                                 <p className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-wider">{t('admin.inspect_modal.no_data')}</p>
                             )}
 
-                            <div className="flex gap-4">
+                            <div className="flex w-full">
                                 <button
                                     onClick={() => window.open(`/${inspectedBusiness.slug}`, '_blank')}
-                                    className="flex-1 py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
+                                    className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
                                 >
                                     {t('admin.inspect_modal.view_public')}
-                                </button>
-                                <button
-                                    onClick={() => alert("Comprehensive historical reports and CSV exports are being prepared for the next release.")}
-                                    className="flex-1 py-5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
-                                >
-                                    {t('admin.inspect_modal.export')}
                                 </button>
                             </div>
                         </div>

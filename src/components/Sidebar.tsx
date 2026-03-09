@@ -29,10 +29,11 @@ const navigation = [
     { transKey: 'sidebar.settings', href: '/dashboard/settings', icon: Settings },
 ];
 
-export default function Sidebar({ onClose, isCollapsed = false }: { onClose?: () => void, isCollapsed?: boolean }) {
+export default function Sidebar({ onClose, isCollapsed = false, forceLanguage }: { onClose?: () => void, isCollapsed?: boolean, forceLanguage?: string }) {
     const pathname = usePathname();
     const { user, business, logout } = useAuth();
-    const { t } = useLanguage();
+    const { t: baseT } = useLanguage();
+    const t = (key: string, params?: any) => baseT(key, params, forceLanguage);
 
     const isVerified = user?.status === 'active';
 

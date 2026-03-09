@@ -14,8 +14,8 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
         'ar': 'AED'
     };
 
-    // Force the currency code to strictly follow the language selection
-    const currencyCode = LangCurrencyMap[language] || 'USD';
+    // Prioritize the currency mapped to the currently selected language
+    const currencyCode = LangCurrencyMap[language] || currencyCodeParam || 'USD';
 
     try {
         // Map language to locale for Intl.NumberFormat

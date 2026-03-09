@@ -1,8 +1,10 @@
 {
-  "name": "QueuePro - Smart Salon Manager",
-  "short_name": "QueuePro",
+  "name": "QueueUp - Smart Salon Manager",
+  "short_name": "QueueUp",
   "description": "Professional Appointment and Live Queue Management System",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
@@ -10,12 +12,14 @@
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

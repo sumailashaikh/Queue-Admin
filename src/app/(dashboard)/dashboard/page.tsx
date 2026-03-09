@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Clock, CalendarCheck, TrendingUp, Wallet, Share2, QrCode, Monitor, X, Printer } from "lucide-react";
+import { Users, Clock, CalendarCheck, TrendingUp, Wallet, Share2, QrCode, Monitor, X, Printer, CheckCircle2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +24,9 @@ export default function DashboardPage() {
     const [isQRModalOpen, setIsQRModalOpen] = useState(false); // State for QR modal visibility
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showInstallBtn, setShowInstallBtn] = useState(false);
+    const [showInstallModal, setShowInstallModal] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     // Live Analytics States
     const [popularServices, setPopularServices] = useState<{ name: string, count: number, color: string }[]>([]);
@@ -40,8 +42,13 @@ export default function DashboardPage() {
         return () => window.removeEventListener('beforeinstallprompt', handler);
     }, []);
 
-    const handleInstallClick = async () => {
+    const handleInstallClick = () => {
+        setShowInstallModal(true);
+    };
+
+    const confirmInstall = async () => {
         if (!deferredPrompt) return;
+        setShowInstallModal(false);
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
@@ -312,7 +319,8 @@ export default function DashboardPage() {
                                     <button
                                         onClick={() => {
                                             if (!business?.slug) {
-                                                alert(t('dashboard.loading_business_details'));
+                                                setToastMessage(t('dashboard.loading_business_details'));
+                                                setTimeout(() => setToastMessage(null), 3000);
                                                 return;
                                             }
                                             const url = `${window.location.origin}/p/${business.slug}`;
@@ -328,22 +336,40 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {showInstallBtn && (
+                            {showInstallBtn ? (
                                 <button
                                     onClick={handleInstallClick}
-                                    className="w-full p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-center justify-between gap-3 text-emerald-700 hover:bg-emerald-100 transition-all group"
+                                    className="w-full p-6 bg-emerald-600 border-2 border-emerald-500 rounded-2xl flex items-center justify-between gap-4 text-white hover:bg-emerald-700 transition-all group shadow-lg shadow-emerald-200 hover:-translate-y-1 active:scale-95"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-emerald-500 rounded-lg text-white">
-                                            <Monitor className="h-5 w-5" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
+                                            <Monitor className="h-6 w-6 text-white" />
                                         </div>
                                         <div className="text-left">
-                                            <p className="text-xs font-bold uppercase tracking-wider">{t('dashboard.install_app')}</p>
-                                            <p className="text-xs font-medium opacity-70">{t('dashboard.save_to_home_screen')}</p>
+                                            <p className="text-sm font-black uppercase tracking-widest">{t('dashboard.install_app')}</p>
+                                            <p className="text-[10px] font-bold opacity-80 uppercase tracking-tighter">{t('dashboard.save_to_home_screen')}</p>
                                         </div>
                                     </div>
-                                    <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                                    <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-lg backdrop-blur-sm group-hover:bg-white/30 transition-colors">
                                         +
+                                    </div>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => setShowInstallModal(true)}
+                                    className="w-full p-6 bg-slate-50 border-2 border-slate-200 rounded-2xl flex items-center justify-between gap-4 text-slate-600 hover:bg-slate-100 hover:border-indigo-200 transition-all group"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2.5 bg-white rounded-xl shadow-sm text-indigo-600 group-hover:scale-110 transition-transform">
+                                            <Monitor className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('dashboard.pwa_setup') || 'Get Web App'}</p>
+                                            <p className="text-[10px] font-bold opacity-80 uppercase tracking-tighter text-slate-500">Installation Guide</p>
+                                        </div>
+                                    </div>
+                                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                        →
                                     </div>
                                 </button>
                             )}
@@ -399,11 +425,76 @@ export default function DashboardPage() {
                     </div>
                 )}
                 {/* Dashboard Toast Notifications */}
-                {isCopied && (
+                {(isCopied || toastMessage) && (
                     <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
-                            <Users className="h-5 w-5 text-white/50" />
-                            <p className="text-sm font-bold uppercase tracking-wider">{t('dashboard.link_copied_toast')}</p>
+                            <CheckCircle2 className="h-5 w-5 text-white/50" />
+                            <p className="text-sm font-bold uppercase tracking-wider">{toastMessage || t('dashboard.link_copied_toast')}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* PWA Install Modal */}
+                {showInstallModal && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                            <div className="p-10 flex flex-col items-center text-center space-y-6">
+                                <div className="flex w-full justify-between items-center mb-2">
+                                    <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('dashboard.install_app')}</h3>
+                                    <button onClick={() => setShowInstallModal(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                        <X className="h-6 w-6 text-slate-400" />
+                                    </button>
+                                </div>
+                                <div className="h-20 w-20 bg-emerald-50 rounded-[32px] flex items-center justify-center mx-auto text-emerald-600">
+                                    <Monitor className="h-10 w-10" />
+                                </div>
+
+                                {deferredPrompt ? (
+                                    <>
+                                        <div className="space-y-4">
+                                            <p className="text-sm font-medium text-slate-500 leading-relaxed">
+                                                {t('dashboard.save_to_home_screen')} {t('dashboard.real_time_insights').toLowerCase()}
+                                            </p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                                            <button onClick={() => setShowInstallModal(false)} className="py-4 bg-slate-50 text-slate-600 rounded-[20px] text-xs font-bold uppercase tracking-wider hover:bg-slate-100 transition-all">
+                                                {t('common.cancel') || 'Maybe Later'}
+                                            </button>
+                                            <button onClick={confirmInstall} className="py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all">
+                                                {t('dashboard.install') || 'Install'}
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full space-y-6 text-left">
+                                        <p className="text-sm font-medium text-slate-500 leading-relaxed text-center">
+                                            {t('dashboard.install_app_guide_desc') || "Your browser doesn't support automatic installation. Follow these quick steps to install QueueUp to your device manually."}
+                                        </p>
+
+                                        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
+                                            <div className="flex gap-4 items-start">
+                                                <div className="h-8 w-8 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-900 shrink-0">1</div>
+                                                <div className="space-y-1 mt-0.5">
+                                                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">{t('dashboard.ios_safari')}</p>
+                                                    <p className="text-xs text-slate-500 font-medium">{t('dashboard.step_1_desc')}</p>
+                                                </div>
+                                            </div>
+                                            <hr className="border-slate-200" />
+                                            <div className="flex gap-4 items-start">
+                                                <div className="h-8 w-8 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-slate-900 shrink-0">2</div>
+                                                <div className="space-y-1 mt-0.5">
+                                                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wider">{t('dashboard.desktop_chrome')}</p>
+                                                    <p className="text-xs text-slate-500 font-medium">{t('dashboard.step_2_desc')}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button onClick={() => setShowInstallModal(false)} className="w-full py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all">
+                                            {t('common.got_it') || 'Got It!'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

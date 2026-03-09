@@ -15,7 +15,8 @@ import {
     QrCode,
     Download,
     Share2,
-    ExternalLink
+    ExternalLink,
+    X
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { businessService, Business } from "@/services/businessService";
@@ -31,6 +32,15 @@ export default function SettingsPage() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [toastType, setToastType] = useState<'success' | 'error'>('success');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToastMessage(message);
+        setToastType(type);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
 
     const [formData, setFormData] = useState({
         name: business?.name || "",
@@ -97,14 +107,15 @@ export default function SettingsPage() {
 
     const handleDelete = async () => {
         if (!business?.id) return;
-        const confirmed = confirm(t('settings.delete_confirm'));
-        if (!confirmed) return;
-
+        setIsDeleting(true);
         try {
             await businessService.deleteBusiness(business.id);
             window.location.href = '/setup';
-        } catch (err) {
-            alert(t('settings.delete_error'));
+        } catch (err: any) {
+            showToast(err.message || t('settings.delete_error'), 'error');
+            setShowDeleteModal(false);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -403,7 +414,7 @@ export default function SettingsPage() {
                             {t('settings.danger_desc')}
                         </p>
                         <button
-                            onClick={handleDelete}
+                            onClick={() => setShowDeleteModal(true)}
                             className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-red-200"
                         >
                             {t('settings.delete_business')}
@@ -415,9 +426,48 @@ export default function SettingsPage() {
             {/* Toast Notification */}
             {toastMessage && (
                 <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all bg-emerald-500 text-white border-emerald-400/50">
-                        <CheckCircle2 className="h-5 w-5" />
+                    <div className={cn(
+                        "px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all text-white",
+                        toastType === 'error' ? "bg-red-500 border-red-400/50" : "bg-emerald-500 border-emerald-400/50"
+                    )}>
+                        {toastType === 'error' ? <AlertTriangle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
                         <p className="text-sm font-bold uppercase tracking-wider">{toastMessage}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-10 flex flex-col items-center text-center space-y-8">
+                            <div className="h-20 w-20 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto text-red-500 transition-transform hover:scale-110 duration-500">
+                                <Trash2 className="h-10 w-10" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('settings.danger_zone')}</h3>
+                                <p className="text-sm font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
+                                    {t('settings.delete_confirm')}
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 w-full">
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="py-4 bg-slate-50 text-slate-600 rounded-[20px] text-xs font-bold uppercase tracking-wider hover:bg-slate-100 transition-all"
+                                >
+                                    {t('common.cancel') || 'Keep It'}
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={isDeleting}
+                                    className="py-4 bg-red-500 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-200 hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('settings.confirm_delete') || 'Delete'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

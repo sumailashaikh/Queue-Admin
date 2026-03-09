@@ -30,6 +30,11 @@ export const api = {
             defaultHeaders['Authorization'] = `Bearer ${token}`;
         }
 
+        console.log(`[API REQUEST] ${options.method || 'GET'} ${url}`, {
+            hasToken: !!token,
+            headers: { ...defaultHeaders, ...headers }
+        });
+
         const response = await fetch(url, {
             ...rest,
             headers: {

@@ -41,6 +41,7 @@ export default function DashboardLayout({
                     <Sidebar
                         onClose={() => setIsSidebarOpen(false)}
                         isCollapsed={isSidebarCollapsed}
+                        forceLanguage={pathname.startsWith('/dashboard/admin') ? 'en' : undefined}
                     />
                 </div>
 
@@ -72,7 +73,7 @@ export default function DashboardLayout({
                         </div>
 
                         <div className="flex items-center gap-6">
-                            <LanguageSwitcher />
+                            {!pathname.startsWith('/dashboard/admin') && <LanguageSwitcher />}
                             <div className="hidden sm:flex flex-col items-end">
                                 <p className="text-sm font-bold text-slate-900">{t('dashboard.business_portal')}</p>
                                 <button
