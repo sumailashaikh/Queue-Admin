@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
     Users,
@@ -67,6 +67,18 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const totalPrice = selectedServices.reduce((acc, s) => acc + (s.price || 0), 0);
 
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
+    const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+    const langDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+                setLangDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const lang = customerLangOverride || business?.language || 'en';
     const currency = business?.currency || 'USD';
@@ -282,21 +294,26 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             {business.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="relative group">
-                                <button className="h-8 w-8 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition-colors">
+                            <div className="relative" ref={langDropdownRef}>
+                                <button
+                                    onClick={() => setLangDropdownOpen(open => !open)}
+                                    className="h-8 w-8 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                                >
                                     <Globe className="h-4 w-4" />
                                 </button>
-                                <div className="absolute right-0 top-10 w-32 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100] overflow-hidden">
-                                    {['en', 'es', 'hi', 'ar'].map(l => (
-                                        <button
-                                            key={l}
-                                            onClick={() => setCustomerLangOverride(l)}
-                                            className={cn("w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest transition-colors", lang === l ? "text-primary bg-primary/5 border-l-4 border-primary" : "text-slate-600 hover:bg-slate-50")}
-                                        >
-                                            {l === 'en' ? 'English' : l === 'es' ? 'Español' : l === 'hi' ? 'हिंदी' : 'العربية'}
-                                        </button>
-                                    ))}
-                                </div>
+                                {langDropdownOpen && (
+                                    <div className="absolute right-0 top-10 w-32 bg-white rounded-xl shadow-xl border border-slate-100 z-[100] overflow-hidden">
+                                        {['en', 'es', 'hi', 'ar'].map(l => (
+                                            <button
+                                                key={l}
+                                                onClick={() => { setCustomerLangOverride(l); setLangDropdownOpen(false); }}
+                                                className={cn("w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest transition-colors", lang === l ? "text-primary bg-primary/5 border-l-4 border-primary" : "text-slate-600 hover:bg-slate-50")}
+                                            >
+                                                {l === 'en' ? 'English' : l === 'es' ? 'Español' : l === 'hi' ? 'हिंदी' : 'العربية'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className={cn(
                                 "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border",

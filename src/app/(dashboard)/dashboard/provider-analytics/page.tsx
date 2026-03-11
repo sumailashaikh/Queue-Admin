@@ -135,39 +135,41 @@ export default function ProviderAnalyticsPage() {
             </div>
 
             {/* Date Selector */}
-            <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handlePrev}
-                        className="p-2 hover:bg-slate-50 rounded-lg transition-colors border border-slate-100"
-                    >
-                        <ChevronLeft className="h-5 w-5 text-slate-600" />
-                    </button>
-                    <div className="flex flex-col items-center min-w-[180px]">
-                        <span className="text-lg font-bold text-slate-900 tracking-tight">
-                            {periodLabel()}
-                        </span>
-                        <span className="text-xs font-bold uppercase text-slate-400 tracking-[0.2em]">
-                            {t('provider_analytics.selected_period')}
-                        </span>
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-4 justify-center">
+                        <button
+                            onClick={handlePrev}
+                            className="p-2 hover:bg-slate-50 rounded-lg transition-colors border border-slate-100"
+                        >
+                            <ChevronLeft className="h-5 w-5 text-slate-600" />
+                        </button>
+                        <div className="flex flex-col items-center min-w-[160px]">
+                            <span className="text-lg font-bold text-slate-900 tracking-tight">
+                                {periodLabel()}
+                            </span>
+                            <span className="text-xs font-bold uppercase text-slate-400 tracking-[0.2em]">
+                                {t('provider_analytics.selected_period')}
+                            </span>
+                        </div>
+                        <button
+                            onClick={handleNext}
+                            className="p-2 hover:bg-slate-50 rounded-lg transition-colors border border-slate-100"
+                        >
+                            <ChevronRight className="h-5 w-5 text-slate-600" />
+                        </button>
                     </div>
-                    <button
-                        onClick={handleNext}
-                        className="p-2 hover:bg-slate-50 rounded-lg transition-colors border border-slate-100"
-                    >
-                        <ChevronRight className="h-5 w-5 text-slate-600" />
-                    </button>
-                </div>
 
-                <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder={t('provider_analytics.search_expert')}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium"
-                    />
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder={t('provider_analytics.search_expert')}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium"
+                        />
+                    </div>
                 </div>
             </div>
 

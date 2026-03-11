@@ -690,10 +690,10 @@ export default function ProvidersPage() {
             {
                 isLeaveModalOpen && selectedProvider && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
-                            <div className="grid grid-cols-1 md:grid-cols-5 h-[650px]">
-                                {/* Sidebar: History List (2/5) */}
-                                <div className="md:col-span-2 border-r border-slate-100 bg-slate-50/50 flex flex-col">
+                        <div className="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 max-h-[90vh] flex flex-col">
+                            <div className="grid grid-cols-1 md:grid-cols-5 flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+                                {/* Sidebar: History List (2/5) - hidden on mobile */}
+                                <div className="hidden md:col-span-2 md:flex border-r border-slate-100 bg-slate-50/50 flex-col">
                                     <div className="p-6 border-b border-slate-100 bg-white/50 backdrop-blur-sm">
                                         <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{t('providers.active_leaves')}</h3>
                                         <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mt-1">{t('providers.management_console')}</p>
@@ -744,8 +744,8 @@ export default function ProvidersPage() {
                                     </div>
                                 </div>
 
-                                {/* Main Body: Form (3/5) */}
-                                <div className="md:col-span-3 flex flex-col">
+                                {/* Main Body: Form (3/5 or full on mobile) */}
+                                <div className="col-span-1 md:col-span-3 flex flex-col overflow-hidden">
                                     <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100">
@@ -761,7 +761,7 @@ export default function ProvidersPage() {
                                         </button>
                                     </div>
 
-                                    <div className="p-10 flex-1 overflow-y-auto custom-scrollbar">
+                                    <div className="p-5 md:p-10 flex-1 overflow-y-auto custom-scrollbar">
                                         <form onSubmit={handleAddLeave} className="space-y-8">
                                             <div className="grid grid-cols-2 gap-6">
                                                 <div className="space-y-2">
