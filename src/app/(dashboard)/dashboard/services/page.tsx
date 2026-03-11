@@ -338,137 +338,72 @@ export default function ServicesPage() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Primary Info Column */}
-                                    <div className="space-y-6">
+                                <div className="space-y-6">
+                                    {/* Service Name */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.name_placeholder')}</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            value={newService.name}
+                                            onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                                            className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                            placeholder={t('services.name_placeholder')}
+                                        />
+                                    </div>
+
+                                    {/* Duration + Price */}
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Primary Name (EN)</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
                                             <div className="relative group">
+                                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                                                 <input
                                                     required
-                                                    type="text"
-                                                    value={newService.name}
-                                                    onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                                                    className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
-                                                    placeholder={t('services.name_placeholder')}
+                                                    type="number"
+                                                    value={newService.duration_minutes || ""}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setNewService({ ...newService, duration_minutes: val === "" ? 0 : parseInt(val) });
+                                                    }}
+                                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                                    placeholder="30"
                                                 />
                                             </div>
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
-                                                <div className="relative group">
-                                                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                                    <input
-                                                        required
-                                                        type="number"
-                                                        value={newService.duration_minutes || ""}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setNewService({ ...newService, duration_minutes: val === "" ? 0 : parseInt(val) });
-                                                        }}
-                                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
-                                                        placeholder="30"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')}</label>
-                                                <div className="relative group">
-                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-emerald-500 transition-colors text-xs">{business?.currency || '$'}</span>
-                                                    <input
-                                                        required
-                                                        type="number"
-                                                        value={newService.price || ""}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            setNewService({ ...newService, price: val === "" ? 0 : parseInt(val) });
-                                                        }}
-                                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
-                                                        placeholder="0"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
-                                            <textarea
-                                                required
-                                                rows={4}
-                                                value={newService.description}
-                                                onChange={(e) => setNewService({ ...newService, description: e.target.value })}
-                                                className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm resize-none"
-                                                placeholder={t('services.desc_placeholder')}
-                                            />
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')}</label>
+                                            <div className="relative group">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-emerald-500 transition-colors text-xs">{business?.currency || '₹'}</span>
+                                                <input
+                                                    required
+                                                    type="number"
+                                                    value={newService.price || ""}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setNewService({ ...newService, price: val === "" ? 0 : parseInt(val) });
+                                                    }}
+                                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm"
+                                                    placeholder="0"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Secondary Localization Column */}
-                                    <div className="relative self-start">
-                                        <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-emerald-50/50 rounded-[32px] -z-10" />
-                                        <div className="p-6 border border-white/60 bg-white/40 backdrop-blur-md rounded-[32px] shadow-[inset_0_2px_20px_rgba(255,255,255,0.8)] space-y-5">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="p-1.5 bg-white rounded-lg shadow-sm">
-                                                        <ShieldCheck className="h-4 w-4 text-blue-600" />
-                                                    </div>
-                                                    <span className="text-xs font-black uppercase tracking-widest text-slate-800">Localization</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                                                        {t('services.service_language', { lang: 'Hindi' })}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={newService.translations.hi}
-                                                        onChange={(e) => setNewService({ ...newService, translations: { ...newService.translations, hi: e.target.value } })}
-                                                        className="w-full px-4 py-3 bg-white/80 focus:bg-white border border-slate-200/50 focus:border-orange-400 rounded-[18px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
-                                                        placeholder="हिन्दी में अनुवाद..."
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                                                        {t('services.service_language', { lang: 'Spanish' })}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={newService.translations.es}
-                                                        onChange={(e) => setNewService({ ...newService, translations: { ...newService.translations, es: e.target.value } })}
-                                                        className="w-full px-4 py-3 bg-white/80 focus:bg-white border border-slate-200/50 focus:border-red-400 rounded-[18px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
-                                                        placeholder="Traducción al español..."
-                                                    />
-                                                </div>
-
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                        {t('services.service_language', { lang: 'Arabic' })}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        dir="rtl"
-                                                        value={newService.translations.ar}
-                                                        onChange={(e) => setNewService({ ...newService, translations: { ...newService.translations, ar: e.target.value } })}
-                                                        className="w-full px-4 py-3 bg-white/80 focus:bg-white border border-slate-200/50 focus:border-emerald-400 rounded-[18px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
-                                                        placeholder="الترجمة العربية..."
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider text-center pt-2 border-t border-slate-200/50">
-                                                {t('services.translations_hint')}
-                                            </p>
-                                        </div>
+                                    {/* Description */}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
+                                        <textarea
+                                            required
+                                            rows={4}
+                                            value={newService.description}
+                                            onChange={(e) => setNewService({ ...newService, description: e.target.value })}
+                                            className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:bg-white outline-none transition-all shadow-sm resize-none"
+                                            placeholder={t('services.desc_placeholder')}
+                                        />
                                     </div>
                                 </div>
+
 
                                 {/* Actions Footer */}
                                 <div className="pt-6 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white/95 backdrop-blur-md pb-4 z-10">

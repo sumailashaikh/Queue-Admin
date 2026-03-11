@@ -234,17 +234,32 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             <div className="relative">
                                 <button
                                     onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
-                                    className="w-full h-9 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200"
+                                    className="w-full h-9 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 flex items-center justify-center gap-1"
                                 >
+                                    <Wallet className="h-3 w-3" />
                                     {t('queue.mark_paid')}
                                 </button>
                                 {isPaymentMenuOpen && (
-                                    <div className="absolute bottom-full right-0 mb-2 w-36 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1">
-                                        <button onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }} className="px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 rounded-xl text-slate-700">{t('queue.cash')}</button>
-                                        <button onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }} className="px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 rounded-xl text-slate-700">{t('queue.qr_upi')}</button>
+                                    <div className="absolute bottom-full right-0 mb-2 w-40 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 pt-1">{t('queue.select_method') || 'Select Method'}</p>
+                                        <button
+                                            onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}
+                                            className="px-3 py-2.5 text-left text-xs font-black hover:bg-emerald-50 hover:text-emerald-700 active:bg-emerald-100 rounded-xl text-slate-700 transition-all flex items-center gap-2 border border-transparent hover:border-emerald-200"
+                                        >
+                                            <span className="h-5 w-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px]">💵</span>
+                                            {t('queue.cash')}
+                                        </button>
+                                        <button
+                                            onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }}
+                                            className="px-3 py-2.5 text-left text-xs font-black hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 rounded-xl text-slate-700 transition-all flex items-center gap-2 border border-transparent hover:border-blue-200"
+                                        >
+                                            <span className="h-5 w-5 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">📱</span>
+                                            {t('queue.qr_upi')}
+                                        </button>
                                     </div>
                                 )}
                             </div>
+
                         ) : (
                             <ServiceExecutionStrip
                                 services={item.queue_entry_services || []}
