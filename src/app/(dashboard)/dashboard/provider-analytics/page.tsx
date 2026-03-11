@@ -7,7 +7,6 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock,
-    IndianRupee,
     Layout,
     Loader2,
     Search,
@@ -99,6 +98,13 @@ export default function ProviderAnalyticsPage() {
         setIsModalOpen(true);
     };
 
+    const getCurrencySymbol = (currency?: string) => {
+        const map: Record<string, string> = {
+            INR: '₹', USD: '$', EUR: '€', GBP: '£', AED: 'د.إ', SAR: '﷼', JPY: '¥', CNY: '¥'
+        };
+        return map[currency || ''] || '$';
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
             {/* Header section */}
@@ -176,14 +182,18 @@ export default function ProviderAnalyticsPage() {
             {/* Summary Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: t('provider_analytics.avg_service_time'), value: `${summary?.avg_service_time || 0}m`, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
+                    { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, iconText: null, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(business?.currency), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { label: t('provider_analytics.avg_service_time'), value: `${summary?.avg_service_time || 0}m`, iconText: null, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between">
                             <div className={cn("p-3 rounded-xl", stat.bg)}>
-                                <stat.icon className={cn("h-6 w-6", stat.color)} />
+                                {stat.iconText ? (
+                                    <span className={cn("text-lg font-black", stat.color)}>{stat.iconText}</span>
+                                ) : stat.icon ? (
+                                    <stat.icon className={cn("h-6 w-6", stat.color)} />
+                                ) : null}
                             </div>
                             <span className="text-3xl font-bold text-slate-900 tracking-tight">
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-200" /> : stat.value}

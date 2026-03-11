@@ -339,59 +339,64 @@ export default function ProvidersPage() {
                             !provider.is_active && "opacity-60 grayscale"
                         )}>
                             {/* Header Section */}
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-center gap-4 min-w-0">
+                            <div className="flex items-start justify-between gap-3">
+                                {/* Avatar + Name + Role */}
+                                <div className="flex items-center gap-3 min-w-0">
                                     <div className="h-14 w-14 shrink-0 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 group-hover:scale-105 transition-transform">
                                         <div className="text-lg font-black text-slate-400 uppercase">
                                             {provider.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                                         </div>
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight break-words">{provider.name}</h3>
-                                            <button
-                                                onClick={() => handleEdit(provider)}
-                                                className="p-1 text-slate-300 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all shrink-0"
-                                                title={t('providers.edit_details')}
-                                            >
-                                                <Settings className="h-4 w-4" />
-                                            </button>
-                                            {provider.is_active && (
-                                                <button
-                                                    onClick={() => handleDelete(provider)}
-                                                    className="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all shrink-0"
-                                                    title={t('providers.deactivate_provider')}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            )}
-                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight break-words">{provider.name}</h3>
                                         {provider.role && (
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                                 {provider.role}
                                             </p>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className={cn(
-                                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0 whitespace-nowrap",
-                                    provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                        provider.leave_status === 'upcoming' ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                            "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                )}>
-                                    {provider.leave_status === 'on_leave' ? (
-                                        <span>{t('providers.on_leave')}</span>
-                                    ) : provider.leave_status === 'upcoming' ? (
-                                        <span>{t('providers.upcoming_leave')}</span>
-                                    ) : (
-                                        <span className="flex items-center gap-1.5">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            {t('providers.available')}
-                                        </span>
-                                    )}
+                                {/* Status + Action Buttons */}
+                                <div className="flex flex-col items-end gap-2 shrink-0">
+                                    <div className={cn(
+                                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap",
+                                        provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                            provider.leave_status === 'upcoming' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                    )}>
+                                        {provider.leave_status === 'on_leave' ? (
+                                            <span>{t('providers.on_leave')}</span>
+                                        ) : provider.leave_status === 'upcoming' ? (
+                                            <span>{t('providers.upcoming_leave')}</span>
+                                        ) : (
+                                            <span className="flex items-center gap-1.5">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                {t('providers.available')}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => handleEdit(provider)}
+                                            className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+                                            title={t('providers.edit_details')}
+                                        >
+                                            <Settings className="h-4 w-4" />
+                                        </button>
+                                        {provider.is_active && (
+                                            <button
+                                                onClick={() => handleDelete(provider)}
+                                                className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                                title={t('providers.deactivate_provider')}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+
 
                             {/* Contact Info (Compact) */}
                             <div className="flex items-center gap-2 text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50">
