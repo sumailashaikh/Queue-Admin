@@ -625,11 +625,6 @@ export default function LiveQueuePage() {
                     </button>
                 </div>
 
-                <div className="flex md:hidden items-center justify-center gap-2 mb-2 animate-pulse">
-                    <div className="px-3 py-1 bg-slate-100 rounded-full flex items-center gap-1.5">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">↔ {t('queue.scroll_hint')}</span>
-                    </div>
-                </div>
             </div>
 
             {/* Queue Summary Bar */}
@@ -703,14 +698,7 @@ export default function LiveQueuePage() {
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                        {/* List Header (Hidden on Mobile) */}
-                        <div className="flex flex-row items-center gap-0 px-6 py-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 min-w-[850px] mb-2">
-                            <div className="w-[336px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('queue.guest_details')}</div>
-                            <div className="flex-1 px-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">{t('queue.execution_experts')}</div>
-                            <div className="w-[250px] shrink-0 px-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">{t('queue.status_billing')}</div>
-                        </div>
-
+                    <div className="flex flex-col gap-3">
                         {filteredEntries.length === 0 ? (
                             <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
                                 <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
@@ -751,6 +739,7 @@ export default function LiveQueuePage() {
                         )}
                     </div>
                 )}
+
             </div>
 
             {/* Dashboard Toast Notifications */}

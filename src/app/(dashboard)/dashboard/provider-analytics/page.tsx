@@ -196,8 +196,8 @@ export default function ProviderAnalyticsPage() {
                 ))}
             </div>
 
-            {/* Metrics Table */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden min-h-[400px]">
+            {/* Metrics Table / Cards */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
                         <Users className="h-4 w-4 text-slate-400" />
@@ -209,85 +209,67 @@ export default function ProviderAnalyticsPage() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="bg-white border-b border-slate-100">
-                                <th className="px-6 py-4 text-left text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.expert')}</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.services')}</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.revenue')}</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.avg_time')}</th>
-                                <th className="px-6 py-4 text-center text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.active_mins')}</th>
-                                <th className="px-6 py-4 text-right text-sm font-bold uppercase tracking-[0.15em] text-slate-400">{t('provider_analytics.actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center">
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary/20 mx-auto" />
-                                        <p className="text-sm font-bold text-slate-400 mt-4 uppercase tracking-wider">{t('provider_analytics.crunching_numbers')}</p>
-                                    </td>
-                                </tr>
-                            ) : filteredData.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 italic font-medium">
-                                        {t('provider_analytics.no_metrics')}
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredData.map((p) => (
-                                    <tr
-                                        key={p.provider_id}
-                                        className="group hover:bg-slate-50 transition-all cursor-pointer"
-                                        onClick={() => openBreakdown(p)}
+                {loading ? (
+                    <div className="py-12 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary/20 mx-auto" />
+                        <p className="text-sm font-bold text-slate-400 mt-4 uppercase tracking-wider">{t('provider_analytics.crunching_numbers')}</p>
+                    </div>
+                ) : filteredData.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 italic font-medium">
+                        {t('provider_analytics.no_metrics')}
+                    </div>
+                ) : (
+                    <div className="divide-y divide-slate-50">
+                        {filteredData.map((p) => (
+                            <div
+                                key={p.provider_id}
+                                className="group hover:bg-slate-50 transition-all cursor-pointer p-4 md:px-6"
+                                onClick={() => openBreakdown(p)}
+                            >
+                                {/* Provider Name Row */}
+                                <div className="flex items-center justify-between gap-3 mb-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="h-10 w-10 shrink-0 rounded-2xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold uppercase tracking-tighter shadow-lg shadow-slate-900/10">
+                                            {p.provider_name.split(' ').map((n: string) => n[0]).join('')}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <span className="font-bold text-slate-900 uppercase text-sm tracking-tight block break-words">{p.provider_name}</span>
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider opacity-60">{t('provider_analytics.id')}: {p.provider_id.slice(0, 8)}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); openBreakdown(p); }}
+                                        className="shrink-0 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm"
                                     >
-                                        <td className="px-6 py-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white text-sm font-bold uppercase tracking-tighter shadow-xl shadow-slate-900/10">
-                                                    {p.provider_name.split(' ').map(n => n[0]).join('')}
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-slate-900 uppercase text-sm tracking-tight">{p.provider_name}</span>
-                                                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider opacity-60">{t('provider_analytics.id')}: {p.provider_id.slice(0, 8)}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-slate-100 text-slate-900 font-bold text-xs border border-slate-200">
-                                                {p.services_completed}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="font-bold text-slate-900 text-lg tracking-tight">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex flex-col items-center">
-                                                <span className="font-bold text-slate-700 text-sm tracking-tight">{p.avg_service_time_minutes}m</span>
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider opacity-60">{t('provider_analytics.avg_time')}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center text-sm font-bold text-slate-500 uppercase tracking-wider">
-                                            {p.total_active_minutes.toFixed(0)}m
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openBreakdown(p);
-                                                }}
-                                                className="px-4 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm group-hover:scale-105"
-                                            >
-                                                {t('provider_analytics.details')}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                        {t('provider_analytics.details')}
+                                    </button>
+                                </div>
+
+                                {/* Stats Grid - 2x2 on mobile, 4 in a row on desktop */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pl-13">
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.services')}</p>
+                                        <span className="font-bold text-slate-900 text-sm">{p.services_completed}</span>
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.revenue')}</p>
+                                        <span className="font-bold text-slate-900 text-sm">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.avg_time')}</p>
+                                        <span className="font-bold text-slate-900 text-sm">{p.avg_service_time_minutes}m</span>
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.active_mins')}</p>
+                                        <span className="font-bold text-slate-900 text-sm">{p.total_active_minutes.toFixed(0)}m</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
+
 
             {/* Service Breakdown Modal */}
             <ProviderServiceBreakdownModal

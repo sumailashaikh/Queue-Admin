@@ -36,19 +36,19 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
+                <div className="px-5 py-5 border-b border-slate-100 flex items-start justify-between gap-3 bg-slate-50/50">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="h-10 w-10 shrink-0 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
                                 {provider.provider_name.split(' ').map(n => n[0]).join('')}
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                            <h2 className="text-lg font-bold text-slate-900 tracking-tight break-words">
                                 {provider.provider_name}
                             </h2>
                         </div>
-                        <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mt-1.5 flex items-center gap-2">
-                            <TrendingUp className="h-3 w-3" />
-                            {t('provider_analytics.service_breakdown')} • {periodLabel}
+                        <p className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2 flex-wrap">
+                            <TrendingUp className="h-3 w-3 shrink-0" />
+                            <span>{t('provider_analytics.service_breakdown')} • {periodLabel}</span>
                         </p>
                     </div>
                     <button
@@ -106,8 +106,8 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                 </div>
 
                 {/* Footer Stats */}
-                <div className="px-8 py-6 bg-slate-900 flex items-center justify-between">
-                    <div className="flex gap-8">
+                <div className="px-5 py-5 bg-slate-900 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex gap-6">
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.combined_output')}</p>
                             <p className="text-lg font-bold text-white tracking-tight">{formatCurrency(provider.total_revenue, business?.currency, language)}</p>
