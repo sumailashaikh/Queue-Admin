@@ -413,7 +413,7 @@
     "subtitle": "Manage Schedule & Bookings",
     "desc": "View and manage all your customer appointments.",
     "status_updated": "Appointment status updated to {status}",
-    "payment_marked": "Payment marked as {method}",
+    "payment_marked": "Payment marked as {{method}}",
     "prompt_reschedule": "Enter new date and time (e.g., YYYY-MM-DD HH:MM AM/PM):",
     "success_reschedule": "Appointment successfully rescheduled.",
     "error_reschedule": "Failed to reschedule appointment.",

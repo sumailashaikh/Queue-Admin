@@ -355,7 +355,7 @@
     "subtitle": "Administrar Horario y Reservas",
     "desc": "Mira y administra todas las citas de tus clientes.",
     "status_updated": "Estado de la cita actualizado a {status}",
-    "payment_marked": "Pago marcado como {method}",
+    "payment_marked": "Pago marcado como {{method}}",
     "prompt_reschedule": "Ingrese la nueva fecha y hora (ej., YYYY-MM-DD HH:MM AM/PM):",
     "success_reschedule": "Cita reprogramada exitosamente.",
     "error_reschedule": "Fallo al reprogramar la cita.",

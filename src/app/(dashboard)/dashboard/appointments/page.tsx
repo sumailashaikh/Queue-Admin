@@ -99,7 +99,7 @@ export default function AppointmentsPage() {
     };
 
     const handleUpdatePayment = async (id: string, method: 'cash' | 'qr' | 'card' | 'unpaid') => {
-        setActionLoading(`payment-${id}`);
+        setActionLoading(`payment-${id}-${method}`);
         try {
             await appointmentService.updatePayment(id, method);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, payment_method: method } : a));
@@ -411,11 +411,19 @@ export default function AppointmentsPage() {
                                             (apt.status !== 'checked_in' && apt.status !== 'in_service') ? (
                                                 <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
                                                     <span className="px-2 text-[10px] font-bold text-slate-400 uppercase">{t('appointments.pay')}:</span>
-                                                    <button onClick={() => handleUpdatePayment(apt.id, 'cash')} className="px-3 py-1.5 bg-white text-emerald-600 hover:bg-emerald-50 rounded-lg text-xs font-bold border shadow-sm transition-all flex items-center gap-1.5">
-                                                        Cash
+                                                    <button
+                                                        disabled={actionLoading === `payment-${apt.id}-cash`}
+                                                        onClick={() => handleUpdatePayment(apt.id, 'cash')}
+                                                        className="px-4 py-2 bg-white text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 active:scale-95 rounded-xl text-xs font-black border border-emerald-200 hover:border-emerald-300 shadow-sm transition-all flex items-center justify-center gap-2 min-w-[80px] disabled:opacity-70"
+                                                    >
+                                                        {actionLoading === `payment-${apt.id}-cash` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '💵 Cash'}
                                                     </button>
-                                                    <button onClick={() => handleUpdatePayment(apt.id, 'qr')} className="px-3 py-1.5 bg-white text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-bold border shadow-sm transition-all flex items-center gap-1.5">
-                                                        QR
+                                                    <button
+                                                        disabled={actionLoading === `payment-${apt.id}-qr`}
+                                                        onClick={() => handleUpdatePayment(apt.id, 'qr')}
+                                                        className="px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 active:bg-blue-100 active:scale-95 rounded-xl text-xs font-black border border-blue-200 hover:border-blue-300 shadow-sm transition-all flex items-center justify-center gap-2 min-w-[80px] disabled:opacity-70"
+                                                    >
+                                                        {actionLoading === `payment-${apt.id}-qr` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '📱 QR'}
                                                     </button>
                                                 </div>
                                             ) : (

@@ -6,24 +6,16 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currencyCodeParam: string = 'USD', language: string = 'en') {
-    // Map languages to specific currencies based on user preference
-    const LangCurrencyMap: Record<string, string> = {
-        'en': 'USD',
-        'es': 'EUR',
-        'hi': 'INR',
-        'ar': 'AED'
-    };
-
-    // Prioritize the currency mapped to the currently selected language
-    const currencyCode = LangCurrencyMap[language] || currencyCodeParam || 'USD';
+    // Always use the business's selected currency
+    const currencyCode = currencyCodeParam || 'USD';
 
     try {
-        // Map language to locale for Intl.NumberFormat
+        // Map language to locale for formatting rules (commas, decimals, position)
         const localeMap: Record<string, string> = {
             'en': 'en-US',
             'es': 'es-ES',
-            'hi': 'en-IN', // Forcing en-IN ensures INR is printed as ₹ X instead of using Hindi formatting which usually differs
-            'ar': 'en-AE' // For AED, ensure the English layout (e.g., AED 1,000) or Arabic (د.إ)
+            'hi': 'en-IN',
+            'ar': 'ar-AE'
         };
         const locale = localeMap[language] || 'en-US';
 
@@ -33,14 +25,7 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
             maximumFractionDigits: 0
         });
 
-        // Clean formatting bugs that happen with some locales (i.e space before/after EUR symbol)
-        let formatted = formatter.format(amount);
-
-        // If the language is es (Spanish) and currency EUR, it usually outputs "10 €". 
-        // We will just let Intl.NumberFormat do its native job depending on Locale. 
-        // For Hindi we use en-IN to get "₹10" instead of local native suffix.
-
-        return formatted;
+        return formatter.format(amount);
     } catch (e) {
         return `${currencyCode} ${amount}`;
     }

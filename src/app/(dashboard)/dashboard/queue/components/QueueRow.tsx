@@ -155,81 +155,83 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 </div>
 
                 {/* ACTIONS ROW */}
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-50">
-                    {/* WhatsApp quick actions */}
-                    {item.status !== 'completed' && item.status !== 'no_show' && (
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                onClick={() => {
-                                    if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
-                                    const cleanPhone = item.phone.replace(/\D/g, '');
-                                    const name = item.customer_name || t('queue.guest');
-                                    const customerLang = (item as any).profiles?.ui_language;
-                                    const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }, customerLang));
-                                    window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
-                                    sessionStorage.setItem(delayKey, 'true');
-                                    setHasNotifiedDelay(true);
-                                }}
-                                className={cn(
-                                    "h-8 w-8 flex items-center justify-center rounded-full transition-all active:scale-90",
-                                    isDelayed && !hasNotifiedDelay ? "bg-amber-100 text-amber-600 animate-pulse" : "bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10"
-                                )}
-                                title={t('queue.whatsapp_delay_alert')}
-                            >
-                                <Timer className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
-                                    const cleanPhone = item.phone.replace(/\D/g, '');
-                                    const name = item.customer_name || t('queue.guest');
-                                    const customerLang = (item as any).profiles?.ui_language;
-                                    const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }, customerLang));
-                                    window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
-                                }}
-                                className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90"
-                                title={t('queue.whatsapp_youre_next')}
-                            >
-                                <Megaphone className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (!item.phone || !business) return;
-                                    const cleanPhone = item.phone.replace(/\D/g, '');
-                                    const name = item.customer_name || t('queue.guest');
-                                    const customerLang = (item as any).profiles?.ui_language;
-                                    const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }, customerLang));
-                                    window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
-                                }}
-                                className="h-8 w-8 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20"
-                                title={t('queue.whatsapp_turn_ready')}
-                            >
-                                <MessageCircle className="h-4 w-4 fill-current opacity-20" />
-                            </button>
-                        </div>
-                    )}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-50">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {/* WhatsApp quick actions */}
+                        {item.status !== 'completed' && item.status !== 'no_show' && (
+                            <div className="flex items-center gap-1.5 border-r border-slate-100 pr-2">
+                                <button
+                                    onClick={() => {
+                                        if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
+                                        const cleanPhone = item.phone.replace(/\D/g, '');
+                                        const name = item.customer_name || t('queue.guest');
+                                        const customerLang = (item as any).profiles?.ui_language;
+                                        const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }, customerLang));
+                                        window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
+                                        sessionStorage.setItem(delayKey, 'true');
+                                        setHasNotifiedDelay(true);
+                                    }}
+                                    className={cn(
+                                        "h-8 w-8 flex items-center justify-center rounded-full transition-all active:scale-90 shrink-0",
+                                        isDelayed && !hasNotifiedDelay ? "bg-amber-100 text-amber-600 animate-pulse" : "bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10"
+                                    )}
+                                    title={t('queue.whatsapp_delay_alert')}
+                                >
+                                    <Timer className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
+                                        const cleanPhone = item.phone.replace(/\D/g, '');
+                                        const name = item.customer_name || t('queue.guest');
+                                        const customerLang = (item as any).profiles?.ui_language;
+                                        const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }, customerLang));
+                                        window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
+                                    }}
+                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90 shrink-0"
+                                    title={t('queue.whatsapp_youre_next')}
+                                >
+                                    <Megaphone className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (!item.phone || !business) return;
+                                        const cleanPhone = item.phone.replace(/\D/g, '');
+                                        const name = item.customer_name || t('queue.guest');
+                                        const customerLang = (item as any).profiles?.ui_language;
+                                        const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }, customerLang));
+                                        window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
+                                    }}
+                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20 shrink-0"
+                                    title={t('queue.whatsapp_turn_ready')}
+                                >
+                                    <MessageCircle className="h-4 w-4 fill-current opacity-20" />
+                                </button>
+                            </div>
+                        )}
 
-                    {/* Skip / No-show / Restore */}
-                    <div className="flex items-center gap-1">
-                        {!isServingOrCompleted && (
-                            <button onClick={() => setShowSkipModal(true)} className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title={t('queue.skip')}>
-                                <ArrowRightToLine className="h-3.5 w-3.5" />
-                            </button>
-                        )}
-                        {!isServingOrCompleted && (
-                            <button onClick={() => setShowNoShowModal(true)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title={t('queue.no_show')}>
-                                <UserMinus className="h-3.5 w-3.5" />
-                            </button>
-                        )}
-                        {(item.status === 'skipped' || item.status === 'no_show') && (
-                            <button onClick={() => onRestore?.(item.id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all" title={t('queue.restore_to_queue')}>
-                                <RefreshCcw className="h-3.5 w-3.5" />
-                            </button>
-                        )}
+                        {/* Skip / No-show / Restore */}
+                        <div className="flex items-center gap-1">
+                            {!isServingOrCompleted && (
+                                <button onClick={() => setShowSkipModal(true)} className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title={t('queue.skip')}>
+                                    <ArrowRightToLine className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                            {!isServingOrCompleted && (
+                                <button onClick={() => setShowNoShowModal(true)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title={t('queue.no_show')}>
+                                    <UserMinus className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                            {(item.status === 'skipped' || item.status === 'no_show') && (
+                                <button onClick={() => onRestore?.(item.id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all" title={t('queue.restore_to_queue')}>
+                                    <RefreshCcw className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Primary Action */}
-                    <div className="flex-1 max-w-[200px] ml-auto">
+                    <div className="flex-1 min-w-[140px] w-full mt-2 sm:mt-0 ml-auto justify-end">
                         {isPendingPayment ? (
                             <div className="relative">
                                 <button
@@ -240,7 +242,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                     {t('queue.mark_paid')}
                                 </button>
                                 {isPaymentMenuOpen && (
-                                    <div className="absolute bottom-full right-0 mb-2 w-40 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5">
+                                    <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 pt-1">{t('queue.select_method') || 'Select Method'}</p>
                                         <button
                                             onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}

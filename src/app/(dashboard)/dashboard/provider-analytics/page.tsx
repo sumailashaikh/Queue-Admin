@@ -119,7 +119,7 @@ export default function ProviderAnalyticsPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm overflow-hidden">
+                <div className="inline-flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm w-full sm:w-auto overflow-x-auto custom-scrollbar">
                     {(['daily', 'weekly', 'monthly'] as Range[]).map((r) => (
                         <button
                             key={r}
@@ -128,7 +128,7 @@ export default function ProviderAnalyticsPage() {
                                 setDate(new Date()); // Reset to current period on range change
                             }}
                             className={cn(
-                                "flex-1 px-3 py-2 rounded-lg text-xs font-bold capitalize transition-all text-center whitespace-nowrap",
+                                "px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all text-center whitespace-nowrap",
                                 range === r
                                     ? "bg-slate-900 text-white shadow-md shadow-slate-200"
                                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
@@ -257,21 +257,21 @@ export default function ProviderAnalyticsPage() {
 
                                 {/* Stats Grid - 2x2 on mobile, 4 in a row on desktop */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pl-13">
-                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.services')}</p>
-                                        <span className="font-bold text-slate-900 text-sm">{p.services_completed}</span>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.services')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{p.services_completed}</span>
                                     </div>
-                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.revenue')}</p>
-                                        <span className="font-bold text-slate-900 text-sm">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.revenue')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
                                     </div>
-                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.avg_time')}</p>
-                                        <span className="font-bold text-slate-900 text-sm">{p.avg_service_time_minutes}m</span>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.avg_time')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{p.avg_service_time_minutes}m</span>
                                     </div>
-                                    <div className="bg-slate-50 rounded-xl px-3 py-2">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">{t('provider_analytics.active_mins')}</p>
-                                        <span className="font-bold text-slate-900 text-sm">{p.total_active_minutes.toFixed(0)}m</span>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.active_mins')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{p.total_active_minutes.toFixed(0)}m</span>
                                     </div>
                                 </div>
                             </div>
