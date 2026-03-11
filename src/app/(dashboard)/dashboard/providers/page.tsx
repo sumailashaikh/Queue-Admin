@@ -348,7 +348,7 @@ export default function ProvidersPage() {
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <h3 className="text-lg font-bold text-slate-900 truncate leading-tight uppercase tracking-tight">{provider.name}</h3>
+                                            <h3 className="text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight break-words">{provider.name}</h3>
                                             <button
                                                 onClick={() => handleEdit(provider)}
                                                 className="p-1 text-slate-300 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all shrink-0"
