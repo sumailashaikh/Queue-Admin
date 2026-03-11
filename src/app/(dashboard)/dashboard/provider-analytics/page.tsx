@@ -113,7 +113,7 @@ export default function ProviderAnalyticsPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm overflow-hidden">
                     {(['daily', 'weekly', 'monthly'] as Range[]).map((r) => (
                         <button
                             key={r}
@@ -122,7 +122,7 @@ export default function ProviderAnalyticsPage() {
                                 setDate(new Date()); // Reset to current period on range change
                             }}
                             className={cn(
-                                "px-6 py-2 rounded-lg text-sm font-bold capitalize transition-all",
+                                "flex-1 px-3 py-2 rounded-lg text-xs font-bold capitalize transition-all text-center whitespace-nowrap",
                                 range === r
                                     ? "bg-slate-900 text-white shadow-md shadow-slate-200"
                                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
