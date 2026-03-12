@@ -698,9 +698,9 @@ export default function LiveQueuePage() {
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                         {filteredEntries.length === 0 ? (
-                            <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
+                            <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100 col-span-full">
                                 <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
                                     <div className="h-24 w-24 bg-slate-50 rounded-[40px] flex items-center justify-center text-slate-300">
                                         <Users className="h-12 w-12" />
@@ -716,7 +716,7 @@ export default function LiveQueuePage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="divide-y divide-slate-50 bg-white rounded-[32px] border-2 border-slate-50 shadow-sm shadow-slate-100/50">
+                            <>
                                 {filteredEntries.map((item) => (
                                     <QueueRow
                                         key={item.id}
@@ -735,7 +735,7 @@ export default function LiveQueuePage() {
                                         onShowToast={showToast}
                                     />
                                 ))}
-                            </div>
+                            </>
                         )}
                     </div>
                 )}
