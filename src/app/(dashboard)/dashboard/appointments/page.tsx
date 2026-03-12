@@ -471,13 +471,23 @@ export default function AppointmentsPage() {
                                                 {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                 {t('common.confirm')}
                                             </button>
-                                            <button
-                                                onClick={() => handleWhatsAppAction(apt, 'approve')}
-                                                className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-95"
-                                                title={t('appointments.whatsapp_approve')}
-                                            >
-                                                <MessageCircle className="h-4.5 w-4.5" />
-                                            </button>
+                                            {apt.status === 'rescheduled' ? (
+                                                <button
+                                                    onClick={() => handleWhatsAppAction(apt, 'reschedule')}
+                                                    className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-95"
+                                                    title={t('appointments.whatsapp_reschedule_msg')}
+                                                >
+                                                    <MessageCircle className="h-4.5 w-4.5" />
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleWhatsAppAction(apt, 'approve')}
+                                                    className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-95"
+                                                    title={t('appointments.whatsapp_approve')}
+                                                >
+                                                    <MessageCircle className="h-4.5 w-4.5" />
+                                                </button>
+                                            )}
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleReschedule(apt.id)}
@@ -532,17 +542,7 @@ export default function AppointmentsPage() {
                                         </div>
                                     )}
 
-                                    {apt.status === 'rescheduled' && (
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleWhatsAppAction(apt, 'reschedule')}
-                                                className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-95"
-                                                title={t('appointments.whatsapp_reschedule_msg')}
-                                            >
-                                                <MessageCircle className="h-4.5 w-4.5" />
-                                            </button>
-                                        </div>
-                                    )}
+
 
                                     {(apt.status === 'completed' || apt.status === 'cancelled') && (
                                         <div className="px-5 py-2.5 bg-slate-50 rounded-xl text-xs font-bold text-slate-400 uppercase tracking-wider border border-slate-100">
