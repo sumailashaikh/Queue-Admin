@@ -414,7 +414,8 @@
     "desc": "View and manage all your customer appointments.",
     "status_updated": "Appointment status has been updated to {{status}}.",
     "payment_marked": "Payment has been marked as {{method}}.",
-    "prompt_reschedule": "Enter new date and time (e.g., YYYY-MM-DD HH:MM AM/PM):",
+    "reschedule_desc": "Select a new date and time for this appointment. The customer will be notified.",
+    "prompt_reschedule": "New Date & Time",
     "success_reschedule": "Appointment successfully rescheduled.",
     "error_reschedule": "Failed to reschedule appointment.",
     "confirm_cancel": "Are you sure you want to cancel this appointment?",
@@ -488,6 +489,7 @@
     "no_show": "No Show",
     "skipped": "Skipped",
     "confirmed": "Confirmed",
+    "checked_in": "Checked In",
     "unpaid": "Unpaid"
   }
 }

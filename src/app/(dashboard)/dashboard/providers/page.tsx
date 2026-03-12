@@ -359,14 +359,14 @@ export default function ProvidersPage() {
                             {/* Header Section */}
                             <div className="flex items-start justify-between gap-3">
                                 {/* Avatar + Name + Role */}
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className="h-14 w-14 lg:h-16 lg:w-16 shrink-0 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 group-hover:scale-105 transition-transform">
                                         <div className="text-lg lg:text-xl font-black text-slate-400 uppercase">
                                             {provider.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                                         </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight break-normal line-clamp-2">{provider.name}</h3>
+                                    <div className="min-w-0 flex-1 overflow-hidden">
+                                        <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight break-words line-clamp-2">{provider.name}</h3>
                                         {provider.role && (
                                             <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
                                                 {provider.role}
@@ -378,7 +378,7 @@ export default function ProvidersPage() {
                                 {/* Status + Action Buttons */}
                                 <div className="flex flex-col items-end gap-2 shrink-0">
                                     <div className={cn(
-                                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap",
+                                        "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border sm:whitespace-nowrap",
                                         provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" :
                                             provider.leave_status === 'upcoming' ? "bg-amber-50 text-amber-600 border-amber-100" :
                                                 "bg-emerald-50 text-emerald-600 border-emerald-100"

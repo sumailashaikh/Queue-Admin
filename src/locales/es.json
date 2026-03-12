@@ -356,7 +356,8 @@
     "desc": "Mira y administra todas las citas de tus clientes.",
     "status_updated": "El estado de la cita se ha actualizado correctamente a {{status}}.",
     "payment_marked": "El pago se ha marcado correctamente como {{method}}.",
-    "prompt_reschedule": "Ingrese la nueva fecha y hora (ej., YYYY-MM-DD HH:MM AM/PM):",
+    "reschedule_desc": "Seleccione una nueva fecha y hora para esta cita. El cliente será notificado.",
+    "prompt_reschedule": "Nueva Fecha y Hora",
     "success_reschedule": "Cita reprogramada exitosamente.",
     "error_reschedule": "Fallo al reprogramar la cita.",
     "confirm_cancel": "¿Estás seguro de que deseas cancelar esta cita?",
@@ -431,6 +432,7 @@
     "no_show": "No se presentó",
     "skipped": "Omitido",
     "confirmed": "Confirmado",
+    "checked_in": "Registrado",
     "unpaid": "No Pagado"
   }
 }

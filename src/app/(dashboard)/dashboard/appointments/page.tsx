@@ -85,8 +85,8 @@ export default function AppointmentsPage() {
         try {
             await appointmentService.updateStatus(id, status);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
-            const translatedStatus = (t(`status.${status}`) as string) || status.toUpperCase();
-            showSuccess(t('appointments.status_updated', { status: translatedStatus.toUpperCase() }));
+            const translatedStatus = t(`status.${status}`);
+            showSuccess(t('appointments.status_updated', { status: translatedStatus }));
             await fetchAppointments();
         } catch (err: any) {
             if (process.env.NODE_ENV === 'development') {
@@ -103,7 +103,8 @@ export default function AppointmentsPage() {
         try {
             await appointmentService.updatePayment(id, method);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, payment_method: method } : a));
-            showSuccess(t('appointments.payment_marked', { method: method.toUpperCase() }));
+            const translatedMethod = method === 'qr' ? t('queue.qr_upi') : (t(`queue.${method}`) || method);
+            showSuccess(t('appointments.payment_marked', { method: translatedMethod }));
             await fetchAppointments();
         } catch (err: any) {
             showError(err.message || t('common.error_updating'));
@@ -552,31 +553,40 @@ export default function AppointmentsPage() {
             )}
 
             {rescheduleModal.isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" dir={isRTL ? "rtl" : "ltr"}>
-                    <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                            <CalendarDays className="h-8 w-8" />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" dir={isRTL ? "rtl" : "ltr"}>
+                    <div className="bg-white rounded-[40px] p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
+                        <div className="h-20 w-20 bg-indigo-50 text-indigo-600 rounded-[32px] flex items-center justify-center mb-8 mx-auto shadow-inner">
+                            <CalendarDays className="h-10 w-10" />
                         </div>
-                        <h3 className="text-xl font-bold text-center text-slate-900 mb-2">{t('appointments.prompt_reschedule') || 'Reschedule Appointment'}</h3>
-                        <p className="text-sm text-center font-medium text-slate-500 mb-8">{t('appointments.reschedule_desc') || 'Select a new date and time.'}</p>
+                        <h3 className="text-2xl font-bold text-center text-slate-900 mb-2 tracking-tight">{t('appointments.reschedule_appointment')}</h3>
+                        <p className="text-sm text-center font-medium text-slate-500 mb-10 leading-relaxed px-4">{t('appointments.reschedule_desc')}</p>
 
-                        <div className="space-y-4 mb-8">
-                            <input
-                                type="datetime-local"
-                                value={rescheduleModal.dateTime}
-                                onChange={(e) => setRescheduleModal({ ...rescheduleModal, dateTime: e.target.value })}
-                                className="w-full px-4 py-4 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                            />
+                        <div className="space-y-6 mb-10">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('appointments.prompt_reschedule')}</label>
+                                <input
+                                    type="datetime-local"
+                                    value={rescheduleModal.dateTime}
+                                    onChange={(e) => setRescheduleModal({ ...rescheduleModal, dateTime: e.target.value })}
+                                    className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-500/20 focus:bg-white rounded-2xl text-sm font-bold text-slate-900 outline-none transition-all shadow-sm"
+                                />
+                            </div>
                         </div>
 
-                        <div className="flex gap-3">
-                            <button onClick={() => setRescheduleModal({ isOpen: false, aptId: null, dateTime: '' })} className="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors">{t('common.cancel') || 'Back'}</button>
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setRescheduleModal({ isOpen: false, aptId: null, dateTime: '' })} 
+                                className="flex-1 py-5 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all active:scale-95"
+                            >
+                                {t('common.cancel')}
+                            </button>
                             <button
                                 onClick={confirmReschedule}
-                                disabled={!rescheduleModal.dateTime}
-                                className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-colors disabled:opacity-50"
+                                disabled={!rescheduleModal.dateTime || actionLoading === rescheduleModal.aptId}
+                                className="flex-1 py-5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-xl shadow-slate-900/10 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                {t('common.confirm') || 'Confirm'}
+                                {actionLoading === rescheduleModal.aptId ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
+                                {t('common.confirm')}
                             </button>
                         </div>
                     </div>
