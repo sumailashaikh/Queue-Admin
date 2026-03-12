@@ -135,15 +135,15 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     </div>
 
                     <div className={cn(
-                        "grid gap-8 flex-1",
+                        "grid gap-3 md:gap-8 flex-1",
                         servingEntries.length > 2 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
                     )}>
                         {servingEntries.length > 0 ? (
                             servingEntries.map((item, idx) => (
                                 <div key={item.id} className={cn(
-                                    "flex flex-col md:flex-row items-center justify-between p-4 md:p-10 rounded-[24px] md:rounded-[40px] border-2 md:border-4 transition-all duration-700 gap-4 md:gap-6",
+                                    "flex flex-col md:flex-row items-center justify-between p-3 md:p-10 rounded-[20px] md:rounded-[40px] border-2 md:border-4 transition-all duration-700 gap-3 md:gap-6",
                                     idx === 0
-                                        ? "bg-white border-slate-900 text-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.08)] md:shadow-[0_30px_80px_rgba(0,0,0,0.08)] scale-[1.01]"
+                                        ? "bg-white border-slate-900 text-slate-900 shadow-[0_15px_40px_rgba(0,0,0,0.06)] md:shadow-[0_30px_80px_rgba(0,0,0,0.08)] scale-[1.01]"
                                         : "bg-white border-slate-100 text-slate-900 shadow-xl opacity-60"
                                 )}>
                                     <div className="space-y-4 md:space-y-6 text-center md:text-left">
@@ -157,16 +157,16 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-3xl md:text-6xl font-black tracking-tighter capitalize leading-none break-words max-w-[240px] md:max-w-none">{item.customer_name}</p>
+                                        <p className="text-2xl md:text-6xl font-black tracking-tighter capitalize leading-none break-words max-w-[200px] md:max-w-none">{item.customer_name}</p>
                                     </div>
                                     <div className={cn(
-                                        "h-24 md:h-44 w-full md:w-60 max-w-[200px] md:max-w-none rounded-[20px] md:rounded-[32px] flex flex-col items-center justify-center font-black shadow-2xl px-4 text-center border-2 md:border-4",
+                                        "h-20 md:h-44 w-32 md:w-60 rounded-[16px] md:rounded-[32px] flex flex-col items-center justify-center font-black shadow-2xl px-2 md:px-4 text-center border-2 md:border-4",
                                         idx === 0 ? "bg-slate-900 text-white border-slate-800" : "bg-white text-slate-900 border-slate-100"
                                     )}>
-                                        <span className="text-[7px] md:text-[9px] uppercase tracking-[0.4em] opacity-40 mb-1">{t('display.token')}</span>
+                                        <span className="text-[6px] md:text-[9px] uppercase tracking-[0.4em] opacity-40 mb-0.5 md:mb-1">{t('display.token')}</span>
                                         <span className={cn(
                                             "leading-none",
-                                            item.display_token?.length > 3 ? "text-2xl md:text-5xl" : "text-4xl md:text-8xl"
+                                            item.display_token?.length > 3 ? "text-xl md:text-5xl" : "text-3xl md:text-8xl"
                                         )}>
                                             {item.display_token}
                                         </span>
@@ -195,14 +195,14 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                         </div>
                     </div>
 
-                    <div className="flex-1 space-y-3 md:space-y-4 overflow-y-auto pr-1 md:pr-4 scrollbar-hide">
+                    <div className="flex-1 space-y-2 md:space-y-4 overflow-y-auto pr-1 md:pr-4 scrollbar-hide">
                         {waitingEntries.slice(0, 8).map((item) => (
-                            <div key={item.id} className="flex items-center justify-between px-4 py-3 md:px-8 md:py-6 bg-slate-50/50 rounded-[16px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group">
+                            <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group">
                                 <div className="space-y-0.5">
-                                    <p className="text-base md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize">{item.customer_name}</p>
-                                    <p className="text-[10px] md:text-sm font-black text-slate-400 uppercase tracking-[0.1em]">{getTranslatedServiceName(item)}</p>
+                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize">{item.customer_name}</p>
+                                    <p className="text-[9px] md:text-sm font-black text-slate-400 uppercase tracking-[0.1em]">{getTranslatedServiceName(item)}</p>
                                 </div>
-                                <div className="h-8 md:h-14 min-w-[3rem] md:min-w-[6rem] w-auto px-2 md:px-4 bg-white rounded-[8px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-sm md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
+                                <div className="h-7 md:h-14 min-w-[2.5rem] md:min-w-[6rem] w-auto px-2 md:px-4 bg-white rounded-[6px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-xs md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
                                     {item.display_token}
                                 </div>
                             </div>
@@ -210,9 +210,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     </div>
 
                     {/* Elite QR Engagement Block */}
-                    <div className="mt-4 md:mt-8 p-4 md:p-6 bg-slate-900 rounded-[20px] md:rounded-[32px] flex flex-col sm:flex-row items-center gap-4 md:gap-6 text-white shadow-2xl relative overflow-hidden group">
+                    <div className="mt-2 md:mt-8 p-3 md:p-6 bg-slate-900 rounded-[16px] md:rounded-[32px] flex flex-col sm:flex-row items-center gap-3 md:gap-6 text-white shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-white/10 transition-all" />
-                        <div className="h-24 w-24 md:h-32 md:w-32 bg-white p-3 md:p-4 rounded-[16px] md:rounded-[24px] shadow-2xl relative z-10 flex-shrink-0">
+                        <div className="h-20 w-20 md:h-32 md:w-32 bg-white p-2 md:p-4 rounded-[12px] md:rounded-[24px] shadow-2xl relative z-10 flex-shrink-0">
                             {typeof window !== 'undefined' && (
                                 <QRCodeSVG
                                     value={`${window.location.origin}/${slug}`}
@@ -222,12 +222,12 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                 />
                             )}
                         </div>
-                        <div className="space-y-1 md:space-y-2 relative z-10 text-center sm:text-left">
-                            <h3 className={cn("text-lg md:text-xl font-black tracking-tighter uppercase", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
-                            <p className="text-[10px] md:text-xs font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
-                            <div className="flex items-center gap-2 mt-2 md:mt-4 px-3 py-1 md:py-1.5 bg-white/10 rounded-full w-fit border border-white/10 mx-auto sm:mx-0">
-                                <Wifi className="h-2.5 w-2.5 md:h-3.5 md:w-3.5 text-emerald-400" />
-                                <span className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.2em]">{t('queue.active_queue')}</span>
+                        <div className="space-y-0.5 md:space-y-2 relative z-10 text-center sm:text-left">
+                            <h3 className={cn("text-base md:text-xl font-black tracking-tighter uppercase", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
+                            <p className="text-[8px] md:text-xs font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
+                            <div className="flex items-center gap-2 mt-1 md:mt-4 px-2 py-0.5 md:py-1.5 bg-white/10 rounded-full w-fit border border-white/10 mx-auto sm:mx-0">
+                                <Wifi className="h-2 w-2 md:h-3.5 md:w-3.5 text-emerald-400" />
+                                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em]">{t('queue.active_queue')}</span>
                             </div>
                         </div>
                     </div>
@@ -243,7 +243,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 <div className="h-4 md:h-10 w-[1px] md:w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">
                     <div className="inline-block animate-marquee text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
-                        {t('display.welcome')} {business.name} • {t('display.please_wait')} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {(waitingEntries.length * 10)} {t('display.min')} •
+                        {t('display.welcome')} {business.name} • {t('display.please_wait').toUpperCase().includes('PLEASE') ? t('display.please_wait') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {(waitingEntries.length * 10)} {t('display.min')} •
                     </div>
                 </div>
             </div>
