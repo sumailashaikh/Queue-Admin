@@ -169,7 +169,7 @@ export default function AppointmentsPage() {
         setTimeout(() => setMessage(null), 5000);
     };
 
-    const handleWhatsAppAction = (apt: Appointment, type: 'alert' | 'call') => {
+    const handleWhatsAppAction = (apt: Appointment, type: 'alert' | 'call' | 'approve' | 'reschedule') => {
         const phone = apt.profiles?.phone || apt.guest_phone;
         if (!phone || !business) return;
 
@@ -178,12 +178,17 @@ export default function AppointmentsPage() {
         // Fallback to customer language or current language
         const customerLang = (apt as any).profiles?.ui_language || language;
         const time = new Date(apt.start_time).toLocaleTimeString(customerLang === 'hi' ? 'hi-IN' : customerLang === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const date = new Date(apt.start_time).toLocaleDateString(customerLang === 'hi' ? 'hi-IN' : customerLang === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
         let message = "";
         if (type === 'alert') {
             message = t('queue.wa_next_msg', { name: customerName, business: business.name }, customerLang);
-        } else {
+        } else if (type === 'call') {
             message = t('queue.wa_ready_msg', { name: customerName, business: business.name }, customerLang);
+        } else if (type === 'approve') {
+            message = t('queue.wa_approve_msg', { name: customerName, business: business.name, date, time }, customerLang);
+        } else if (type === 'reschedule') {
+            message = t('queue.wa_reschedule_msg', { name: customerName, business: business.name, date, time }, customerLang);
         }
 
         let phoneStr = phone.replace(/\D/g, '');
@@ -467,6 +472,13 @@ export default function AppointmentsPage() {
                                                 {t('common.confirm')}
                                             </button>
                                             <button
+                                                onClick={() => handleWhatsAppAction(apt, 'approve')}
+                                                className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-95"
+                                                title={t('appointments.whatsapp_approve')}
+                                            >
+                                                <MessageCircle className="h-4.5 w-4.5" />
+                                            </button>
+                                            <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleReschedule(apt.id)}
                                                 className="h-10 w-10 border-2 border-slate-100 text-indigo-500 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
@@ -504,7 +516,7 @@ export default function AppointmentsPage() {
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'checked_in')}
-                                                className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+                                                className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm ml-2"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
                                                 {t('appointments.check_in')}
@@ -517,6 +529,18 @@ export default function AppointmentsPage() {
                                             <div className="px-6 py-2 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
                                                 {t('appointments.active_in_queue')}
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {apt.status === 'rescheduled' && (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleWhatsAppAction(apt, 'reschedule')}
+                                                className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-95"
+                                                title={t('appointments.whatsapp_reschedule_msg')}
+                                            >
+                                                <MessageCircle className="h-4.5 w-4.5" />
+                                            </button>
                                         </div>
                                     )}
 
