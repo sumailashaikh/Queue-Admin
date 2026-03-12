@@ -698,7 +698,7 @@ export default function LiveQueuePage() {
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-3">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                         {filteredEntries.length === 0 ? (
                             <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
                                 <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
