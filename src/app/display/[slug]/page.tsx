@@ -128,11 +128,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             <div className="grid grid-cols-12 gap-12 flex-1 min-h-0">
                 {/* Left: Now Serving (High-End Clarity) */}
                 <div className="col-span-12 lg:col-span-7 flex flex-col gap-8">
-                    <div className="flex items-center gap-4 px-6">
-                        <div className="h-14 w-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-200">
-                            <Play className={cn("h-8 w-8 fill-current", isRTL && "rotate-180")} />
+                    <div className="flex items-center gap-3 md:gap-4 px-2 md:px-6">
+                        <div className="h-10 w-10 md:h-14 md:w-14 bg-slate-900 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg md:shadow-xl shadow-slate-200">
+                            <Play className={cn("h-5 w-5 md:h-8 md:w-8 fill-current", isRTL && "rotate-180")} />
                         </div>
-                        <h2 className="text-4xl font-black uppercase tracking-widest text-slate-900">{t('display.now_serving')}</h2>
+                        <h2 className="text-xl md:text-4xl font-black uppercase tracking-widest text-slate-900">{t('display.now_serving')}</h2>
                     </div>
 
                     <div className="grid grid-cols-1 gap-8 flex-1">
@@ -145,20 +145,20 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                         : "bg-white border-slate-100 text-slate-900 shadow-xl opacity-60"
                                 )}>
                                     <div className="space-y-4 md:space-y-6 text-center md:text-left">
-                                        <div className="flex items-center justify-center md:justify-start gap-3">
-                                            <span className="px-3 py-1 md:px-5 md:py-2 bg-slate-100 rounded-full text-xs md:text-base font-black text-slate-500 uppercase tracking-widest">
+                                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
+                                            <span className="px-3 py-1 md:px-5 md:py-2 bg-slate-100 rounded-full text-[10px] md:text-base font-black text-slate-500 uppercase tracking-widest">
                                                 {getTranslatedServiceName(item) || t('services.default_desc')}
                                             </span>
                                             {idx === 0 && (
-                                                <span className="px-3 py-1 md:px-5 md:py-2 bg-emerald-500 rounded-full text-xs md:text-base font-black text-white uppercase tracking-widest animate-pulse">
+                                                <span className="px-3 py-1 md:px-5 md:py-2 bg-emerald-500 rounded-full text-[10px] md:text-base font-black text-white uppercase tracking-widest animate-pulse">
                                                     {t('admin.active')}
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-4xl md:text-8xl font-black tracking-tighter capitalize leading-none">{item.customer_name}</p>
+                                        <p className="text-4xl md:text-8xl font-black tracking-tighter capitalize leading-none break-words max-w-[280px] md:max-w-none">{item.customer_name}</p>
                                     </div>
                                     <div className={cn(
-                                        "h-32 md:h-52 w-48 md:w-72 rounded-[24px] md:rounded-[40px] flex flex-col items-center justify-center font-black shadow-2xl px-4 text-center border-2 md:border-4",
+                                        "h-28 md:h-52 w-full md:w-72 max-w-[240px] md:max-w-none rounded-[24px] md:rounded-[40px] flex flex-col items-center justify-center font-black shadow-2xl px-4 text-center border-2 md:border-4",
                                         idx === 0 ? "bg-slate-900 text-white border-slate-800" : "bg-white text-slate-900 border-slate-100"
                                     )}>
                                         <span className="text-[8px] md:text-[10px] uppercase tracking-[0.4em] opacity-40 mb-1 md:mb-2">{t('display.token')}</span>
