@@ -12,12 +12,12 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
     try {
         // Map language to locale for formatting rules (commas, decimals, position)
         const localeMap: Record<string, string> = {
-            'en': 'en-US',
+            'en': 'en-GB',
             'es': 'es-ES',
-            'hi': 'en-IN',
-            'ar': 'ar-AE'
+            'hi': 'hi-IN',
+            'ar': 'ar-SA'
         };
-        const locale = localeMap[language] || 'en-US';
+        const locale = localeMap[language] || 'en-GB';
 
         const formatter = new Intl.NumberFormat(locale, {
             style: 'currency',

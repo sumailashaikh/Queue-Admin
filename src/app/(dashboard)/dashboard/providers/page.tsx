@@ -236,6 +236,24 @@ export default function ProvidersPage() {
     const handleAddLeave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedProvider) return;
+
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+
+        const start = new Date(leaveFormData.start_date);
+        const end = new Date(leaveFormData.end_date);
+
+        if (start < tomorrow) {
+            showToast(t('providers.err_past_date') || "Start date must be tomorrow or later", "error");
+            return;
+        }
+
+        if (end < start) {
+            showToast(t('providers.err_invalid_range') || "End date cannot be before start date", "error");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             await providerService.addLeave(selectedProvider.id, leaveFormData);
@@ -774,6 +792,11 @@ export default function ProvidersPage() {
                                                     <input
                                                         required
                                                         type="date"
+                                                        min={(() => {
+                                                            const d = new Date();
+                                                            d.setDate(d.getDate() + 1);
+                                                            return d.toISOString().split('T')[0];
+                                                        })()}
                                                         value={leaveFormData.start_date}
                                                         onChange={(e) => setLeaveFormData({ ...leaveFormData, start_date: e.target.value })}
                                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-sm font-bold text-slate-900 focus:bg-white focus:border-slate-900 outline-none transition-all"
@@ -784,6 +807,11 @@ export default function ProvidersPage() {
                                                     <input
                                                         required
                                                         type="date"
+                                                        min={leaveFormData.start_date || (() => {
+                                                            const d = new Date();
+                                                            d.setDate(d.getDate() + 1);
+                                                            return d.toISOString().split('T')[0];
+                                                        })()}
                                                         value={leaveFormData.end_date}
                                                         onChange={(e) => setLeaveFormData({ ...leaveFormData, end_date: e.target.value })}
                                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-sm font-bold text-slate-900 focus:bg-white focus:border-slate-900 outline-none transition-all"
