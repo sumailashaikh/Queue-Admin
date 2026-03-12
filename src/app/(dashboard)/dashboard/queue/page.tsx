@@ -498,7 +498,7 @@ export default function LiveQueuePage() {
     }
 
     return (
-        <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-4">
@@ -698,7 +698,7 @@ export default function LiveQueuePage() {
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                         {filteredEntries.length === 0 ? (
                             <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100 col-span-full">
                                 <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
