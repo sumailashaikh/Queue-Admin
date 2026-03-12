@@ -133,7 +133,7 @@ export default function LoginPage() {
                     {step === 1 ? (
                         <div
                             className="space-y-6"
-                            onKeyDown={(e) => { if (e.key === 'Enter' && phone.length >= 10) handleSendOTP(e); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && phone.length >= 9) handleSendOTP(e); }}
                         >
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-foreground">{regionSettings ? i18n.t(regionSettings.language, 'login.phone_lbl') : 'Phone Number'}</label>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={handleSendOTP}
-                                disabled={loading || phone.length < 10}
+                                disabled={loading || phone.length < 9}
                                 className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all disabled:opacity-50 active:scale-[0.98]"
                             >
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
