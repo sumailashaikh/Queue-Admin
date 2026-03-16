@@ -27,7 +27,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminDashboard() {
-    const { t, language } = useLanguage();
+    const { t: baseT, language } = useLanguage();
+    const t = (key: string, params?: any) => baseT(key, params, 'en');
     const { business } = useAuth();
     const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('users');
     const [users, setUsers] = useState<DashboardUser[]>([]);

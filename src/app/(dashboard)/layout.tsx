@@ -15,10 +15,12 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const { business } = useAuth();
-    const { t } = useLanguage();
+    const { t: baseT } = useLanguage();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const pathname = usePathname();
+    const isAdminPath = pathname.startsWith('/dashboard/admin');
+    const t = (key: string, params?: any) => baseT(key, params, isAdminPath ? 'en' : undefined);
     const segment = pathname.split('/').pop() || 'dashboard';
     const pageTitle = segment === 'dashboard' ? 'Overview' : segment.replace(/-/g, ' ');
 
