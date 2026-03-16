@@ -174,9 +174,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                 </div>
                             ))
                         ) : (
-                            <div className="flex-1 rounded-[48px] bg-white border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-12 shadow-inner">
-                                <Clock className="h-32 w-32 text-slate-100 mb-8" />
-                                <p className="text-4xl font-black text-slate-200 uppercase tracking-widest">{t('display.waiting_for_next')}</p>
+                            <div className="flex-1 rounded-[24px] md:rounded-[48px] bg-white border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-6 md:p-12 shadow-inner">
+                                <Clock className="h-16 w-16 md:h-32 md:w-32 text-slate-100 mb-4 md:mb-8" />
+                                <p className="text-xl md:text-4xl font-black text-slate-200 uppercase tracking-widest">{t('display.waiting_for_next')}</p>
                             </div>
                         )}
                     </div>

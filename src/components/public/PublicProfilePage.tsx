@@ -80,7 +80,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const lang = customerLangOverride || business?.language || 'en';
+    const lang = customerLangOverride || 'en';
     const currency = business?.currency || 'USD';
 
     const formatCurrency = (amount: number) => {
