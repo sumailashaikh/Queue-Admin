@@ -100,7 +100,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
 
     return (
         <div className={cn(
-            "min-h-screen bg-slate-50 text-slate-900 p-2 md:p-12 flex flex-col gap-4 md:gap-12 overflow-hidden",
+            "min-h-screen bg-slate-50 text-slate-900 p-2 md:p-8 lg:p-12 flex flex-col gap-4 lg:gap-12 overflow-x-hidden w-full max-w-[100vw]",
             isRTL ? "font-arabic" : ""
         )} dir={isRTL ? "rtl" : "ltr"}>
             {/* Premium Elite Header Area */}
@@ -125,13 +125,13 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-12 flex-1 min-h-0">
-                <div className="col-span-12 lg:col-span-7 flex flex-col gap-8">
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-12 flex-1 min-h-0 w-full">
+                <div className="col-span-1 lg:col-span-7 flex flex-col gap-4 md:gap-8 w-full">
                     <div className="flex items-center gap-3 md:gap-4 px-2 md:px-6">
-                        <div className="h-8 w-8 md:h-14 md:w-14 bg-slate-900 rounded-lg md:rounded-2xl flex items-center justify-center text-white shadow-lg md:shadow-xl shadow-slate-200">
+                        <div className="h-8 w-8 md:h-14 md:w-14 bg-slate-900 rounded-lg md:rounded-2xl flex flex-shrink-0 items-center justify-center text-white shadow-lg md:shadow-xl shadow-slate-200">
                             <Play className={cn("h-4 w-4 md:h-8 md:w-8 fill-current", isRTL && "rotate-180")} />
                         </div>
-                        <h2 className="text-lg md:text-4xl font-black uppercase tracking-widest text-slate-900">{t('display.now_serving')}</h2>
+                        <h2 className="text-lg md:text-4xl font-black uppercase tracking-widest text-slate-900 break-words flex-1 min-w-0">{t('display.now_serving')}</h2>
                     </div>
 
                     <div className={cn(
@@ -174,16 +174,16 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                 </div>
                             ))
                         ) : (
-                            <div className="flex-1 w-full rounded-[24px] md:rounded-[48px] bg-white border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-6 md:p-12 shadow-inner overflow-hidden">
+                            <div className="flex-1 w-full min-h-[250px] md:min-h-[400px] rounded-[24px] md:rounded-[48px] bg-white border-2 md:border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-6 md:p-12 shadow-inner overflow-hidden">
                                 <Clock className="h-16 w-16 md:h-32 md:w-32 text-slate-100 mb-4 md:mb-8 flex-shrink-0" />
-                                <p className="w-full text-lg md:text-4xl font-black text-slate-200 uppercase tracking-wider md:tracking-widest break-words whitespace-normal px-2 leading-snug">{t('display.waiting_for_next')}</p>
+                                <p className="w-full text-lg md:text-4xl font-black text-slate-200 uppercase tracking-widest flex-shrink break-words whitespace-normal px-2 leading-relaxed">{t('display.waiting_for_next')}</p>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* Right: Waitlist & Interactions */}
-                <div className="col-span-12 lg:col-span-5 flex flex-col gap-4 md:gap-8 bg-white rounded-[24px] md:rounded-[40px] border border-slate-100 p-4 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.05)] overflow-hidden">
+                <div className="col-span-1 lg:col-span-5 flex flex-col gap-4 md:gap-8 bg-white rounded-[24px] md:rounded-[40px] border border-slate-100 p-4 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.05)] overflow-hidden w-full">
                     <div className="flex items-center justify-between border-b border-slate-50 pb-4 md:pb-6">
                         <div className="flex items-center gap-2 md:gap-3">
                             <Users className="h-5 w-5 md:h-8 md:w-8 text-slate-900" />
@@ -197,12 +197,12 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
 
                     <div className="flex-1 space-y-2 md:space-y-4 overflow-y-auto pr-1 md:pr-4 scrollbar-hide">
                         {waitingEntries.slice(0, 8).map((item) => (
-                            <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group">
-                                <div className="space-y-0.5">
-                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize">{item.customer_name}</p>
-                                    <p className="text-[9px] md:text-sm font-black text-slate-400 uppercase tracking-[0.1em]">{getTranslatedServiceName(item)}</p>
+                            <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group w-full overflow-hidden gap-2">
+                                <div className="space-y-0.5 flex-1 min-w-0 pr-2">
+                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize truncate">{item.customer_name}</p>
+                                    <p className="text-[9px] md:text-sm font-black text-slate-400 uppercase tracking-[0.1em] truncate">{getTranslatedServiceName(item)}</p>
                                 </div>
-                                <div className="h-7 md:h-14 min-w-[2.5rem] md:min-w-[6rem] w-auto px-2 md:px-4 bg-white rounded-[6px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-xs md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
+                                <div className="h-7 md:h-14 min-w-[2.5rem] md:min-w-[6rem] flex-shrink-0 w-auto px-2 md:px-4 bg-white rounded-[6px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-xs md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
                                     {item.display_token}
                                 </div>
                             </div>
@@ -223,11 +223,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             )}
                         </div>
                         <div className="space-y-0.5 md:space-y-2 relative z-10 text-center sm:text-left">
-                            <h3 className={cn("text-base md:text-xl font-black tracking-tighter uppercase", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
-                            <p className="text-[8px] md:text-xs font-bold text-slate-400 leading-tight uppercase tracking-widest">{t('queue.join_link')}</p>
-                            <div className="flex items-center gap-2 mt-1 md:mt-4 px-2 py-0.5 md:py-1.5 bg-white/10 rounded-full w-fit border border-white/10 mx-auto sm:mx-0">
-                                <Wifi className="h-2 w-2 md:h-3.5 md:w-3.5 text-emerald-400" />
-                                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.2em]">{t('queue.active_queue')}</span>
+                            <h3 className={cn("text-base md:text-xl font-black tracking-tighter uppercase break-words whitespace-normal", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
+                            <p className="text-[8px] md:text-xs font-bold text-slate-400 leading-tight uppercase tracking-widest break-words">{t('queue.join_link')}</p>
+                            <div className="flex items-center gap-2 mt-1 md:mt-4 px-2 py-0.5 md:py-1.5 bg-white/10 rounded-full w-fit max-w-[90%] border border-white/10 mx-auto sm:mx-0 overflow-hidden">
+                                <Wifi className="h-2 w-2 md:h-3.5 md:w-3.5 text-emerald-400 flex-shrink-0" />
+                                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] truncate">{t('queue.active_queue')}</span>
                             </div>
                         </div>
                     </div>
