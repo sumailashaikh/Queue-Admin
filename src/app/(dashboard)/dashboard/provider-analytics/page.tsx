@@ -186,18 +186,25 @@ export default function ProviderAnalyticsPage() {
                     { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(business?.currency), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                     { label: t('provider_analytics.avg_service_time'), value: formatDuration(summary?.avg_service_time || 0, t), iconText: null, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between">
-                            <div className={cn("p-3 rounded-xl", stat.bg)}>
+                    <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className={cn("p-3 rounded-xl shrink-0", stat.bg)}>
                                 {stat.iconText ? (
                                     <span className={cn("text-lg font-black", stat.color)}>{stat.iconText}</span>
                                 ) : stat.icon ? (
                                     <stat.icon className={cn("h-6 w-6", stat.color)} />
                                 ) : null}
                             </div>
-                            <span className="text-3xl font-bold text-slate-900 tracking-tight">
-                                {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-200" /> : stat.value}
-                            </span>
+                            <div className="text-right min-w-0">
+                                <span className={cn(
+                                    "font-bold text-slate-900 tracking-tight block",
+                                    typeof stat.value === 'string' && stat.value.length > 12 
+                                        ? "text-lg sm:text-xl leading-snug" 
+                                        : "text-2xl sm:text-3xl leading-none"
+                                )}>
+                                    {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-200 ml-auto" /> : stat.value}
+                                </span>
+                            </div>
                         </div>
                         <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-[0.2em] opacity-60">
                             {stat.label}

@@ -10,7 +10,7 @@ import {
     CheckCircle2
 } from "lucide-react";
 import { ProviderAnalytics, ProviderServiceStats } from "@/services/analyticsService";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -85,7 +85,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                                                 </span>
                                                 <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
                                                     <Clock className="h-3 w-3" />
-                                                    {s.avg_time}m {t('provider_analytics.avg')}
+                                                    {formatDuration(s.avg_time, t)} {t('provider_analytics.avg')}
                                                 </span>
                                             </div>
                                         </div>
@@ -114,7 +114,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">{t('provider_analytics.efficiency')}</p>
-                            <p className="text-lg font-bold text-white tracking-tight">{provider.avg_service_time_minutes}m {t('provider_analytics.avg')}</p>
+                             <p className="text-lg font-bold text-white tracking-tight">{formatDuration(provider.avg_service_time_minutes, t)} {t('provider_analytics.avg')}</p>
                         </div>
                     </div>
 
