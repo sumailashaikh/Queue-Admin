@@ -19,7 +19,7 @@ const dictionaries: Record<string, Dictionary> = {
             min: "min",
             no_queue: "No open queue available right now.",
             door_closed: "Door's Closed!",
-            door_closed_desc: "We couldn't find this business. Please check the link and try again.",
+            door_closed_desc: "We are currently not accepting entries. This might be because we're closed or haven't opened our live queue yet.",
             fully_booked: "We're Fully Booked for Today",
             fully_booked_desc: "Thank you for your interest. We're unable to accept new queue entries today. Please book an appointment for tomorrow.",
             book_tomorrow: "Book for Tomorrow",

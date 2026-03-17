@@ -102,7 +102,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
         const now = new Date();
         const istTimeStr = now.toLocaleTimeString('en-GB', {
-            timeZone: 'Asia/Kolkata',
+            timeZone: business.timezone || 'UTC',
             hour12: false,
             hour: '2-digit',
             minute: '2-digit',
@@ -142,6 +142,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 return h * 60 + m;
             };
 
+            const timezone = business.timezone || 'UTC';
+
             const checkAvailability = (dateStr: string) => {
                 const openMins = parseToMins(business.open_time || "09:00");
                 const closeMins = parseToMins(business.close_time || "21:00");
@@ -151,7 +153,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 if (dateStr === today) {
                     const now = new Date();
                     const istMins = now.toLocaleTimeString('en-GB', {
-                        timeZone: 'Asia/Kolkata',
+                        timeZone: timezone,
                         hour12: false,
                         hour: '2-digit',
                         minute: '2-digit'
@@ -182,12 +184,20 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
         try {
             const service_ids = selectedServices.map(s => s.id);
-            const formattedPhone = formatGlobalPhone(phone, 'IN') || phone;
+            
+            // Try to derive country code from business phone or default to IN
+            let defaultCountry: any = 'IN';
+            if (business?.phone?.startsWith('+')) {
+                // If business phone has a +, libphonenumber might be able to infer it
+                defaultCountry = undefined; 
+            }
+            
+            const formattedPhone = formatGlobalPhone(phone, defaultCountry) || phone;
 
             if (activeView === 'queue') {
                 const openQueue = business!.queues?.find(q => q.status === 'open');
                 if (!openQueue) {
-                    setError("No open queue available right now.");
+                    setError(i18n.t(lang, 'public.no_queue'));
                     return;
                 }
 
@@ -250,7 +260,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 <p className="text-slate-500 font-bold mb-10 max-w-sm mx-auto leading-relaxed text-sm">
                     {isFullyBooked
                         ? i18n.t(lang, 'public.fully_booked_desc')
-                        : (error || i18n.t(lang, 'public.door_closed_desc'))
+                        : (error && error !== i18n.t(lang, 'public.no_queue') ? error : i18n.t(lang, 'public.door_closed_desc'))
                     }
                 </p>
 
@@ -374,6 +384,18 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     {i18n.t(lang, 'public.book_appointment')}
                                 </button>
                             </div>
+
+                            {activeView === 'queue' && error === i18n.t(lang, 'public.no_queue') && (
+                                <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">Queue Unavailable</p>
+                                        <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                                            {i18n.t(lang, 'public.no_queue')}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {!isOpen && (
                                 <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
