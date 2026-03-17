@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { Users, Clock, Loader2, Monitor, Play, Wifi, Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import { businessService } from "@/services/businessService";
 import { QRCodeSVG } from "qrcode.react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -243,7 +243,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 <div className="h-4 md:h-10 w-[1px] md:w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">
                     <div className="inline-block animate-marquee text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
-                        {t('display.welcome')} {business.name} • {t('display.please_wait').toUpperCase().includes('PLEASE') ? t('display.please_wait') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {(waitingEntries.length * 10)} {t('display.min')} •
+                        {t('display.welcome')} {business.name} • {t('display.please_wait').toUpperCase().includes('PLEASE') ? t('display.please_wait') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
                     </div>
                 </div>
             </div>

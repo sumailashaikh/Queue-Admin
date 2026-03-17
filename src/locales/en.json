@@ -408,7 +408,12 @@
     "archived": "Archived",
     "error_updating": "Error updating item",
     "confirm": "Confirm",
-    "got_it": "Got It!"
+    "got_it": "Got It!",
+    "duration_m": "{{m}} minutes",
+    "duration_h": "{{h}} hour",
+    "duration_hs": "{{h}} hours",
+    "duration_hm": "{{h}} hour and {{m}} minutes",
+    "duration_hsm": "{{h}} hours and {{m}} minutes"
   },
   "appointments": {
     "title": "Appointments",

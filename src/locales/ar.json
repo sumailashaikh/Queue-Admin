@@ -339,7 +339,12 @@
     "edit": "تعديل",
     "delete": "حذف",
     "loading": "جاري التحميل...",
-    "got_it": "حسناً!"
+    "got_it": "حسناً!",
+    "duration_m": "{{m}} دقيقة",
+    "duration_h": "ساعة {{h}}",
+    "duration_hs": "ساعات {{h}}",
+    "duration_hm": "ساعة {{h}} و {{m}} دقيقة",
+    "duration_hsm": "ساعات {{h}} و {{m}} دقيقة"
   },
   "appointments": {
     "title": "المواعيد",

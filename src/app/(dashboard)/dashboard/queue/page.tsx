@@ -28,7 +28,7 @@ import {
     Calendar,
     Wallet
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { queueService, QueueEntry, Queue } from "@/services/queueService";
 import { businessService } from "@/services/businessService";
@@ -646,12 +646,12 @@ export default function LiveQueuePage() {
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-0.5">{t('queue.estimated_wait')}</p>
                             <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">
-                                {entries
+                                {formatDuration(entries
                                     .filter(e => e.status === 'waiting')
                                     .reduce((acc, e) => {
                                         const serviceDuration = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.duration_minutes || 0), 0) || (selectedQueue?.current_wait_time_minutes || 0);
                                         return acc + serviceDuration;
-                                    }, 0)}<span className="text-sm ml-1 uppercase text-slate-400 tracking-tighter">{t('queue.min')}</span>
+                                    }, 0), t)}
                             </p>
                         </div>
                     </div>

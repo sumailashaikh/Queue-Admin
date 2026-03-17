@@ -14,7 +14,7 @@ import {
     Users,
     Filter
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { analyticsService, ProviderAnalytics, AnalyticsSummaryStats } from "@/services/analyticsService";
 import { format } from "date-fns";
@@ -184,7 +184,7 @@ export default function ProviderAnalyticsPage() {
                 {[
                     { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, iconText: null, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
                     { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(business?.currency), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: t('provider_analytics.avg_service_time'), value: `${summary?.avg_service_time || 0}m`, iconText: null, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
+                    { label: t('provider_analytics.avg_service_time'), value: formatDuration(summary?.avg_service_time || 0, t), iconText: null, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between">
@@ -266,12 +266,12 @@ export default function ProviderAnalyticsPage() {
                                         <span className="font-bold text-slate-900 text-sm truncate block">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.avg_time')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{p.avg_service_time_minutes}m</span>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.avg_time')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{formatDuration(p.avg_service_time_minutes, t)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.active_mins')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{p.total_active_minutes.toFixed(0)}m</span>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.active_mins')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{formatDuration(Math.round(p.total_active_minutes), t)}</span>
                                     </div>
                                 </div>
                             </div>

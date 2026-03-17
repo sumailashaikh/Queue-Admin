@@ -44,3 +44,17 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
     }
 }
 
+export function formatDuration(minutes: number, t: (key: string, options?: any) => string) {
+    if (minutes < 60) {
+        return t('common.duration_m', { m: minutes });
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (remainingMinutes === 0) {
+        return t(hours === 1 ? 'common.duration_h' : 'common.duration_hs', { h: hours });
+    }
+
+    return t(hours === 1 ? 'common.duration_hm' : 'common.duration_hsm', { h: hours, m: remainingMinutes });
+}

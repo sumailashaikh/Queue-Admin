@@ -344,7 +344,12 @@
     "archived": "संग्रहीत",
     "error_updating": "अपडेट करने में त्रुटि",
     "confirm": "पुष्टि करें",
-    "got_it": "समझ गया!"
+    "got_it": "समझ गया!",
+    "duration_m": "{{m}} मिनट",
+    "duration_h": "{{h}} घंटा",
+    "duration_hs": "{{h}} घंटे",
+    "duration_hm": "{{h}} घंटा और {{m}} मिनट",
+    "duration_hsm": "{{h}} घंटे और {{m}} मिनट"
   },
   "appointments": {
     "title": "नियुक्तियाँ",

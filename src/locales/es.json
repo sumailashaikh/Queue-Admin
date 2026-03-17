@@ -350,7 +350,12 @@
     "archived": "Archivado",
     "error_updating": "Error al actualizar el elemento",
     "confirm": "Confirmar",
-    "got_it": "¡Entendido!"
+    "got_it": "¡Entendido!",
+    "duration_m": "{{m}} minutos",
+    "duration_h": "{{h}} hora",
+    "duration_hs": "{{h}} horas",
+    "duration_hm": "{{h}} hora y {{m}} minutos",
+    "duration_hsm": "{{h}} horas y {{m}} minutos"
   },
   "appointments": {
     "title": "Citas",
