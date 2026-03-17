@@ -241,7 +241,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         );
     }
 
-    if (error || !business) {
+    if ((error && error !== i18n.t(lang, 'public.no_queue')) || !business) {
         const isFullyBooked = error?.toLowerCase().includes('fully booked') || error?.toLowerCase().includes('closing time') || error?.toLowerCase().includes('tomorrow');
 
         return (
