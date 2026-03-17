@@ -62,7 +62,13 @@ const dictionaries: Record<string, Dictionary> = {
             queue_position: "Queue Position",
             whatsapp_help: "WhatsApp Help",
             track_live_status: "Track Live Status",
-            done: "Done"
+            done: "Done",
+            err_load_business: "Failed to load business details",
+            err_something_went_wrong: "Something went wrong",
+            opening_doors: "Opening Doors...",
+            digital_management: "Digital Appointment Management",
+            select_time: "Select Time",
+            check_in_unavailable: "Check-in Unavailable"
         },
         status: {
             access_denied: "Access Denied",
@@ -224,7 +230,13 @@ const dictionaries: Record<string, Dictionary> = {
             queue_position: "Posición en la Fila",
             whatsapp_help: "Ayuda por WhatsApp",
             track_live_status: "Rastrear Estado en Vivo",
-            done: "Hecho"
+            done: "Hecho",
+            err_load_business: "Error al cargar los detalles del negocio",
+            err_something_went_wrong: "Algo salió mal",
+            opening_doors: "Abriendo Puertas...",
+            digital_management: "Gestión Digital de Citas",
+            select_time: "Seleccionar Hora",
+            check_in_unavailable: "Check-in no disponible"
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -318,7 +330,13 @@ const dictionaries: Record<string, Dictionary> = {
             queue_position: "कतार में स्थिति",
             whatsapp_help: "व्हाट्सएप सहायता",
             track_live_status: "लाइव स्थिति ट्रैक करें",
-            done: "पूर्ण"
+            done: "पूर्ण",
+            err_load_business: "व्यवसाय विवरण लोड करने में विफल",
+            err_something_went_wrong: "कुछ गलत हो गया",
+            opening_doors: "दरवाजे खुल रहे हैं...",
+            digital_management: "डिजिटल अपॉइंटमेंट प्रबंधन",
+            select_time: "समय चुनें",
+            check_in_unavailable: "चेक-इन अनुपलब्ध"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -480,7 +498,13 @@ const dictionaries: Record<string, Dictionary> = {
             queue_position: "موقعك في الطابور",
             whatsapp_help: "مساعدة عبر الواتساب",
             track_live_status: "تتبع الحالة مباشرة",
-            done: "تم"
+            done: "تم",
+            err_load_business: "فشل في تحميل تفاصيل العمل",
+            err_something_went_wrong: "حدث خطأ ما",
+            opening_doors: "جاري فتح الأبواب...",
+            digital_management: "إدارة المواعيد الرقمية",
+            select_time: "اختر الوقت",
+            check_in_unavailable: "تسجيل الدخول غير متاح"
         },
         status: {
             access_denied: "تم رفض الوصول",

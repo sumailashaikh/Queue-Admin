@@ -124,7 +124,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 const data = await businessService.getBusinessBySlug(slug);
                 setBusiness(data);
             } catch (err: any) {
-                setError(err.message || "Failed to load business details");
+                setError(i18n.t(lang, 'public.err_load_business'));
             } finally {
                 setLoading(false);
             }
@@ -197,7 +197,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             if (activeView === 'queue') {
                 const openQueue = business!.queues?.find(q => q.status === 'open');
                 if (!openQueue) {
-                    setError(i18n.t(lang, 'public.no_queue'));
+                    setError('ERR_NO_QUEUE');
                     return;
                 }
 
@@ -226,7 +226,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             }
             setStep(3);
         } catch (err: any) {
-            setError(err.message || "Something went wrong");
+            setError(err.message || i18n.t(lang, 'public.err_something_went_wrong'));
         } finally {
             setIsSubmitting(false);
         }
@@ -236,12 +236,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Opening Doors...</p>
+                <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.opening_doors')}</p>
             </div>
         );
     }
 
-    if ((error && error !== i18n.t(lang, 'public.no_queue')) || !business) {
+    if ((error && error !== 'ERR_NO_QUEUE' && error !== i18n.t(lang, 'public.no_queue')) || !business) {
         const isFullyBooked = error?.toLowerCase().includes('fully booked') || error?.toLowerCase().includes('closing time') || error?.toLowerCase().includes('tomorrow');
 
         return (
@@ -260,7 +260,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 <p className="text-slate-500 font-bold mb-10 max-w-sm mx-auto leading-relaxed text-sm">
                     {isFullyBooked
                         ? i18n.t(lang, 'public.fully_booked_desc')
-                        : (error && error !== i18n.t(lang, 'public.no_queue') ? error : i18n.t(lang, 'public.door_closed_desc'))
+                        : (error && error !== 'ERR_NO_QUEUE' && error !== i18n.t(lang, 'public.no_queue') ? error : i18n.t(lang, 'public.door_closed_desc'))
                     }
                 </p>
 
@@ -339,7 +339,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight lowercase">{business.name}</h1>
                         <p className="text-slate-300 text-[10px] font-bold uppercase tracking-widest mt-1 opacity-80">
-                            {business.address || "Digital Appointment Management"}
+                            {business.address || i18n.t(lang, 'public.digital_management')}
                         </p>
                     </div>
                 </div>
@@ -385,11 +385,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 </button>
                             </div>
 
-                            {activeView === 'queue' && error === i18n.t(lang, 'public.no_queue') && (
+                            {activeView === 'queue' && (error === 'ERR_NO_QUEUE' || error === i18n.t(lang, 'public.no_queue')) && (
                                 <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
                                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
-                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">Queue Unavailable</p>
+                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">{i18n.t(lang, 'public.no_queue')}</p>
                                         <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
                                             {i18n.t(lang, 'public.no_queue')}
                                         </p>
@@ -482,7 +482,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 onChange={(e) => setBookingTime(e.target.value)}
                                                 className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm outline-none"
                                             >
-                                                <option value="">Select Time</option>
+                                                <option value="">{i18n.t(lang, 'public.select_time')}</option>
                                                 {(() => {
                                                     const slots = [];
                                                     if (!business || !bookingDate) return null;
@@ -530,7 +530,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         disabled={(activeView === 'appointment' && !bookingTime) || (!isOpen && activeView === 'queue')}
                                         className="w-full h-16 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] shadow-md active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                                     >
-                                        {(!isOpen && activeView === 'queue') ? "Check-in Unavailable" : i18n.t(lang, 'public.continue')}
+                                        {(!isOpen && activeView === 'queue') ? i18n.t(lang, 'public.check_in_unavailable') : i18n.t(lang, 'public.continue')}
                                         {(isOpen || activeView === 'appointment') && <ArrowRight className="h-4 w-4" />}
                                     </button>
                                 </div>
