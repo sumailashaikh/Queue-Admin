@@ -375,7 +375,7 @@ export default function LiveQueuePage() {
         setIsSubmitting(true);
         setError(null);
         try {
-            await queueService.createQueue(formData);
+            await queueService.createQueue({ ...formData, business_id: business?.id });
             await fetchQueues();
             setIsAddModalOpen(false);
             setFormData({ name: "", description: "", current_wait_time_minutes: 0, status: 'open' });

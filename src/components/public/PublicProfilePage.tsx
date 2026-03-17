@@ -390,9 +390,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
                                         <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">{i18n.t(lang, 'public.no_queue')}</p>
-                                        <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
-                                            {i18n.t(lang, 'public.no_queue')}
-                                        </p>
                                     </div>
                                 </div>
                             )}
