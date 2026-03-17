@@ -135,14 +135,15 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     // Auto-select first available date logic
     useEffect(() => {
         if (activeView === 'appointment' && business && !bookingDate) {
-            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+            const tz = business.timezone || 'UTC';
+            const today = new Date().toLocaleDateString('en-CA', { timeZone: tz });
 
             const parseToMins = (t: string) => {
                 const [h, m] = t.split(':').map(Number);
                 return h * 60 + m;
             };
 
-            const timezone = business.timezone || 'UTC';
+            const timezone = tz;
 
             const checkAvailability = (dateStr: string) => {
                 const openMins = parseToMins(business.open_time || "09:00");
@@ -169,7 +170,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             if (!checkAvailability(today)) {
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                const tomorrowStr = tomorrow.toLocaleDateString('en-CA', { timeZone: tz });
                 setBookingDate(tomorrowStr);
             } else {
                 setBookingDate(today);
@@ -465,7 +466,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Date</label>
                                             <input
                                                 type="date"
-                                                min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
+                                                min={new Date().toLocaleDateString('en-CA', { timeZone: business?.timezone || 'UTC' })}
                                                 value={bookingDate}
                                                 onChange={(e) => setBookingDate(e.target.value)}
                                                 className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm"
@@ -490,12 +491,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     const openMins = parseToMins(business.open_time || "09:00");
                                                     const closeMins = parseToMins(business.close_time || "21:00");
                                                     const bufferLimit = closeMins - 10;
-                                                    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                                                    const tz = business?.timezone || 'UTC';
+                                                    const today = new Date().toLocaleDateString('en-CA', { timeZone: tz });
                                                     let startMins = openMins;
                                                     if (bookingDate === today) {
                                                         const now = new Date();
                                                         const istMins = now.toLocaleTimeString('en-GB', {
-                                                            timeZone: 'Asia/Kolkata',
+                                                            timeZone: business?.timezone || 'UTC',
                                                             hour12: false,
                                                             hour: '2-digit',
                                                             minute: '2-digit'
