@@ -135,7 +135,15 @@ export default function ServicesPage() {
         };
 
         if (!cleanedService.name) {
-            setError(t('services.name_placeholder')); // Or a better "Name is required" key if exists
+            setError(t('services.name_placeholder'));
+            setIsSubmitting(false);
+            return;
+        }
+
+        // Client-side duplicate check (as a safeguard)
+        const isDuplicate = services.some(s => s.name.toLowerCase() === cleanedService.name.toLowerCase());
+        if (isDuplicate) {
+            setError(t('services.err_duplicate'));
             setIsSubmitting(false);
             return;
         }
