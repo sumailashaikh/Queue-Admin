@@ -404,6 +404,7 @@
     "confirm_delete": "تأكيد الحذف",
     "delete_error": "الخدمة غير موجودة أو تم حذفها مسبقًا.",
     "delete_fail": "فشل حذف الخدمة.",
+    "err_duplicate": "توجد خدمة بهذا الاسم بالفعل.",
     "original": "الأصلي: "
   },
   "display": {

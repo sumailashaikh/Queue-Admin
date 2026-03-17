@@ -472,7 +472,9 @@
     "delete_desc": "Are you sure you want to continuously remove '{name}'? This cannot be fully undone.",
     "confirm_delete": "Confirm Delete",
     "delete_error": "Service not found or already deleted.",
-    "delete_fail": "Failed to delete service."
+    "delete_fail": "Failed to delete service.",
+    "err_duplicate": "A service with this name already exists.",
+    "original": "Original: "
   },
   "display": {
     "title": "Live Status",

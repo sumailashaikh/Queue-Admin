@@ -127,11 +127,21 @@ export default function ServicesPage() {
 
         setIsSubmitting(true);
         setError(null);
+        const cleanedService = {
+            ...newService,
+            name: newService.name.trim(),
+            description: newService.description.trim(),
+            business_id: business.id
+        };
+
+        if (!cleanedService.name) {
+            setError(t('services.name_placeholder')); // Or a better "Name is required" key if exists
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
-            await serviceService.createService({
-                ...newService,
-                business_id: business.id
-            });
+            await serviceService.createService(cleanedService);
             await fetchServices();
             setIsAddModalOpen(false);
             setNewService({
@@ -142,7 +152,11 @@ export default function ServicesPage() {
                 translations: { hi: "", es: "", ar: "" }
             });
         } catch (err: any) {
-            setError(err.message || "Failed to add service");
+            let msg = err.message || "Failed to add service";
+            if (msg.includes("already exists")) {
+                msg = t('services.err_duplicate');
+            }
+            setError(msg);
         } finally {
             setIsSubmitting(false);
         }
