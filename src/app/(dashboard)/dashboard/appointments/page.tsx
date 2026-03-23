@@ -507,7 +507,7 @@ export default function AppointmentsPage() {
                                         </>
                                     )}
 
-                                    {apt.status === 'confirmed' && (
+                                    {(apt.status === 'confirmed' || (apt.status === 'checked_in' && !apt.queue_entry)) && (
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'alert')}
@@ -529,7 +529,7 @@ export default function AppointmentsPage() {
                                                 className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm ml-2"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
-                                                {t('appointments.check_in')}
+                                                {apt.status === 'checked_in' ? t('appointments.sync_with_queue') || 'Sync Queue' : t('appointments.check_in')}
                                             </button>
                                         </div>
                                     )}

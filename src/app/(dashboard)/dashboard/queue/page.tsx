@@ -84,7 +84,25 @@ export default function LiveQueuePage() {
 
     const fetchQueues = useCallback(async () => {
         try {
-            const data = await queueService.getMyQueues();
+            let data = await queueService.getMyQueues();
+            
+            // AUTO-CREATE: If no queues exist, create a default one automatically
+            if (data.length === 0 && business?.id) {
+                console.log("No queues found, auto-creating 'Main Queue'...");
+                try {
+                    const newQueue = await queueService.createQueue({
+                        name: 'Main Queue',
+                        description: 'Primary customer queue',
+                        business_id: business.id,
+                        status: 'open',
+                        current_wait_time_minutes: 0
+                    });
+                    data = [newQueue];
+                } catch (createErr) {
+                    console.error("Auto-creation of queue failed:", createErr);
+                }
+            }
+
             setQueues(data);
 
             setSelectedQueue(current => {
@@ -104,7 +122,7 @@ export default function LiveQueuePage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [business?.id]);
 
     const fetchEntries = useCallback(async (queueId: string) => {
         setEntriesLoading(true);
@@ -549,17 +567,7 @@ export default function LiveQueuePage() {
                                                     {q.name}
                                                 </button>
                                             ))}
-                                            <div className="h-px bg-slate-100 my-1 mx-2" />
-                                            <button
-                                                onClick={() => {
-                                                    setIsAddModalOpen(true);
-                                                    setIsQueueDropdownOpen(false);
-                                                }}
-                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                                {t('queue.create_new')}
-                                            </button>
+                                            {/* Removed manual Create New button as requested by user - it is now automatic */}
                                         </div>
                                     </>
                                 )}
@@ -766,20 +774,11 @@ export default function LiveQueuePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <p className="text-xl font-black text-slate-900">{t('queue.queue_is_clear')}</p>
-                                        <p className="text-sm font-bold text-slate-400 leading-relaxed mb-4">
+                                        <p className="text-sm font-bold text-slate-400 leading-relaxed">
                                             {selectedQueue
                                                 ? t('queue.no_customers')
                                                 : t('queue.select_queue_hint')}
                                         </p>
-                                        {!selectedQueue && (
-                                            <button
-                                                onClick={() => setIsAddModalOpen(true)}
-                                                className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold tracking-wide transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 mx-auto"
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                                {t('queue.create_new')}
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             </div>
