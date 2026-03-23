@@ -507,6 +507,65 @@ export default function LiveQueuePage() {
                         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                     </h1>
                     <div className="flex flex-wrap items-center gap-3">
+                        {/* Queue Selector & Creation */}
+                        <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsQueueDropdownOpen(!isQueueDropdownOpen)}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all min-w-[160px] justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Layout className="h-4 w-4 text-primary" />
+                                        <span>{selectedQueue?.name || t('queue.select_queue')}</span>
+                                    </div>
+                                    <ChevronDown className={cn("h-4 w-4 transition-transform", isQueueDropdownOpen && "rotate-180")} />
+                                </button>
+
+                                {isQueueDropdownOpen && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-10" 
+                                            onClick={() => setIsQueueDropdownOpen(false)}
+                                        />
+                                        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                                            {queues.map((q) => (
+                                                <button
+                                                    key={q.id}
+                                                    onClick={() => {
+                                                        setSelectedQueue(q);
+                                                        setIsQueueDropdownOpen(false);
+                                                    }}
+                                                    className={cn(
+                                                        "w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors",
+                                                        selectedQueue?.id === q.id
+                                                            ? "bg-primary/5 text-primary"
+                                                            : "text-slate-600 hover:bg-slate-50"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "h-2 w-2 rounded-full",
+                                                        q.status === 'open' ? "bg-green-500" : "bg-slate-300"
+                                                    )} />
+                                                    {q.name}
+                                                </button>
+                                            ))}
+                                            <div className="h-px bg-slate-100 my-1 mx-2" />
+                                            <button
+                                                onClick={() => {
+                                                    setIsAddModalOpen(true);
+                                                    setIsQueueDropdownOpen(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/5 transition-colors"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                {t('queue.create_new')}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
                         {business && (
                             <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
                                 <button
@@ -707,11 +766,20 @@ export default function LiveQueuePage() {
                                     </div>
                                     <div className="space-y-2">
                                         <p className="text-xl font-black text-slate-900">{t('queue.queue_is_clear')}</p>
-                                        <p className="text-sm font-bold text-slate-400 leading-relaxed">
+                                        <p className="text-sm font-bold text-slate-400 leading-relaxed mb-4">
                                             {selectedQueue
                                                 ? t('queue.no_customers')
                                                 : t('queue.select_queue_hint')}
                                         </p>
+                                        {!selectedQueue && (
+                                            <button
+                                                onClick={() => setIsAddModalOpen(true)}
+                                                className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold tracking-wide transition-all hover:bg-primary/90 shadow-lg shadow-primary/20 mx-auto"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                {t('queue.create_new')}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
