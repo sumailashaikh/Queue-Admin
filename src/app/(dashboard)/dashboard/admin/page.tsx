@@ -65,6 +65,7 @@ export default function AdminDashboard() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [createUserData, setCreateUserData] = useState({ full_name: "", phone: "", role: "owner" });
     const [createLoading, setCreateLoading] = useState(false);
+    const [createError, setCreateError] = useState<string | null>(null);
 
     // Region States
     const [selectedRegionInvite, setSelectedRegionInvite] = useState(REGIONS[0]);
@@ -172,15 +173,15 @@ export default function AdminDashboard() {
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setCreateLoading(true);
+        setCreateError(null);
         try {
             const formattedPhone = formatPhoneForSubmit(createUserData.phone, selectedRegionCreate.dial);
             await adminService.createUser({ ...createUserData, phone: formattedPhone });
             setIsCreateModalOpen(false);
             setCreateUserData({ full_name: "", phone: "", role: "owner" });
             fetchData();
-            alert(t('admin.create_modal.success'));
         } catch (err: any) {
-            alert(err.response?.data?.message || t('admin.create_modal.err_fail'));
+            setCreateError(err.response?.data?.message || t('admin.create_modal.err_fail'));
         } finally {
             setCreateLoading(false);
         }
@@ -626,6 +627,17 @@ export default function AdminDashboard() {
                                     </div>
                                     <p className="text-[10px] font-bold text-slate-400 ml-1">Example: {selectedRegionInvite.dial} 123456789</p>
                                 </div>
+
+                                <div className="p-5 bg-indigo-50/50 rounded-[28px] border border-indigo-100/50 flex gap-4 text-left">
+                                    <Globe className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Helpful Tip</p>
+                                        <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                                            Admins must have a registered profile. Ask the person to login to the app once using OTP before you invite them.
+                                        </p>
+                                    </div>
+                                </div>
+
                                 <button
                                     disabled={inviteLoading || invitePhone.length < selectedRegionInvite.phoneLimit}
                                     type="submit"
@@ -739,11 +751,30 @@ export default function AdminDashboard() {
                             <div className="flex items-center justify-between w-full">
                                 <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('admin.create_modal.title')}</h3>
                                 <button
-                                    onClick={() => setIsCreateModalOpen(false)}
+                                    onClick={() => {
+                                        setIsCreateModalOpen(false);
+                                        setCreateError(null);
+                                    }}
                                     className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
                                 >
                                     <XCircle className="h-6 w-6 text-slate-400" />
                                 </button>
+                            </div>
+
+                            {createError && (
+                                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold uppercase tracking-wider animate-in shake-1 leading-relaxed">
+                                    {createError}
+                                </div>
+                            )}
+
+                            <div className="p-5 bg-indigo-50/50 rounded-[28px] border border-indigo-100/50 flex gap-4">
+                                <ShieldCheck className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                                <div className="space-y-1 text-left">
+                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Registration Notice</p>
+                                    <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                                        For security, new users must initialize their account by logging in via Mobile OTP first. After their first login, they will appear here for role management.
+                                    </p>
+                                </div>
                             </div>
 
                             <form onSubmit={handleCreateUser} className="space-y-4">
