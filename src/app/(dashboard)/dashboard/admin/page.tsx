@@ -39,7 +39,7 @@ export default function AdminDashboard() {
     const { t: baseT, language } = useLanguage();
     const t = (key: string, params?: any) => baseT(key, params, 'en');
     const { business } = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('businesses');
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [businesses, setBusinesses] = useState<DashboardBusiness[]>([]);
     const [loading, setLoading] = useState(true);
@@ -258,6 +258,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
+                    {/* Hiding individual create/invite buttons per user request to simplify console 
                     <button
                         onClick={() => setIsInviteModalOpen(true)}
                         className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-xl shadow-indigo-200 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
@@ -272,8 +273,10 @@ export default function AdminDashboard() {
                         <UserPlus className="h-4 w-4" />
                         {t('admin.create_user')}
                     </button>
+                    */}
 
                     <div className="flex items-center p-1 bg-slate-100 rounded-[20px] border border-slate-200/50">
+                        {/* 
                         <button
                             onClick={() => setActiveTab('users')}
                             className={cn(
@@ -284,6 +287,7 @@ export default function AdminDashboard() {
                             <Users className="h-4 w-4" />
                             {t('admin.users_tab')}
                         </button>
+                        */}
                         <button
                             onClick={() => setActiveTab('businesses')}
                             className={cn(

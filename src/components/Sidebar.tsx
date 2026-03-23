@@ -51,14 +51,14 @@ export default function Sidebar({ onClose, isCollapsed = false, forceLanguage }:
                     !isCollapsed && "mr-3"
                 )}>
                     <span className="text-white font-black text-base">
-                        {business?.name?.charAt(0) || 'Q'}
+                        {user?.role === 'admin' ? 'P' : (business?.name?.charAt(0) || 'Q')}
                     </span>
                 </div>
                 {!isCollapsed && (
                     <div className="flex flex-col truncate animate-in fade-in duration-300">
                         <div className="flex items-center gap-1 min-w-0">
                             <span className="text-lg font-black tracking-tight text-white truncate">
-                                {business?.name || 'QueueUp'}
+                                {user?.role === 'admin' ? 'Platform Admin' : (business?.name || 'QueueUp')}
                             </span>
                             {isVerified && (
                                 <BadgeCheck className="h-4 w-4 text-emerald-400 shrink-0" fill="currentColor" fillOpacity={0.1} />
