@@ -534,7 +534,7 @@ export default function AppointmentsPage() {
                                         </div>
                                     )}
 
-                                    {(apt.status === 'checked_in' || apt.status === 'in_service') && (
+                                    {(apt.status === 'in_service' || (apt.status === 'checked_in' && apt.queue_entry)) && (
                                         <div className="flex items-center gap-2">
                                             <div className="px-6 py-2 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
                                                 {t('appointments.active_in_queue')}

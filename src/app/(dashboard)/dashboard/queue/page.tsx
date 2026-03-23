@@ -51,7 +51,8 @@ export default function LiveQueuePage() {
     const [search, setSearch] = useState("");
 
     // Management State
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    // Management State
+
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -59,7 +60,7 @@ export default function LiveQueuePage() {
     const [error, setError] = useState<string | null>(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, queueId: "", queueName: "" });
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-    const [isQueueDropdownOpen, setIsQueueDropdownOpen] = useState(false);
+
     const [isServiceFilterOpen, setIsServiceFilterOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -388,22 +389,6 @@ export default function LiveQueuePage() {
         showToast(t('queue.link_copied'));
     };
 
-    const handleCreateQueue = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setError(null);
-        try {
-            await queueService.createQueue({ ...formData, business_id: business?.id });
-            await fetchQueues();
-            setIsAddModalOpen(false);
-            setFormData({ name: "", description: "", current_wait_time_minutes: 0, status: 'open' });
-            showToast(t('queue.success_create'));
-        } catch (err: any) {
-            showToast(err.message || t('queue.err_create'), "error");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const handleUpdateQueue = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -525,53 +510,11 @@ export default function LiveQueuePage() {
                         <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                     </h1>
                     <div className="flex flex-wrap items-center gap-3">
-                        {/* Queue Selector & Creation */}
-                        <div className="flex items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsQueueDropdownOpen(!isQueueDropdownOpen)}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all min-w-[160px] justify-between"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <Layout className="h-4 w-4 text-primary" />
-                                        <span>{selectedQueue?.name || t('queue.select_queue')}</span>
-                                    </div>
-                                    <ChevronDown className={cn("h-4 w-4 transition-transform", isQueueDropdownOpen && "rotate-180")} />
-                                </button>
-
-                                {isQueueDropdownOpen && (
-                                    <>
-                                        <div 
-                                            className="fixed inset-0 z-10" 
-                                            onClick={() => setIsQueueDropdownOpen(false)}
-                                        />
-                                        <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                                            {queues.map((q) => (
-                                                <button
-                                                    key={q.id}
-                                                    onClick={() => {
-                                                        setSelectedQueue(q);
-                                                        setIsQueueDropdownOpen(false);
-                                                    }}
-                                                    className={cn(
-                                                        "w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors",
-                                                        selectedQueue?.id === q.id
-                                                            ? "bg-primary/5 text-primary"
-                                                            : "text-slate-600 hover:bg-slate-50"
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        "h-2 w-2 rounded-full",
-                                                        q.status === 'open' ? "bg-green-500" : "bg-slate-300"
-                                                    )} />
-                                                    {q.name}
-                                                </button>
-                                            ))}
-                                            {/* Removed manual Create New button as requested by user - it is now automatic */}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                        {/* Static Queue Identity */}
+                        <div className="flex items-center gap-3 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                            <Layout className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-bold text-slate-900">{selectedQueue?.name || t('queue.active_queue')}</span>
+                            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                         </div>
 
                         {business && (
@@ -832,14 +775,14 @@ export default function LiveQueuePage() {
 
             {/* Modals & Dialogs */}
             <ManagementModal
-                isOpen={isAddModalOpen || isEditModalOpen}
-                onClose={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }}
-                onSubmit={isAddModalOpen ? handleCreateQueue : handleUpdateQueue}
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSubmit={handleUpdateQueue}
                 formData={formData}
                 setFormData={setFormData}
                 isSubmitting={isSubmitting}
                 error={error}
-                mode={isAddModalOpen ? 'create' : 'edit'}
+                mode="edit"
             />
 
             <DeleteDialog

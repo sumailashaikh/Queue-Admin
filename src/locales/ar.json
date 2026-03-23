@@ -378,6 +378,7 @@
     "whatsapp_next": "تنبيه: أنت التالي",
     "whatsapp_ready": "تنبيه: نحن مستعدون",
     "check_in": "تسجيل الوصول",
+    "sync_with_queue": "مزامنة مع الطابور",
     "active_in_queue": "نشط في الطابور"
   },
   "services": {

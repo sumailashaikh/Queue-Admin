@@ -447,6 +447,7 @@
     "whatsapp_next": "Alert: You're Next",
     "whatsapp_ready": "Alert: We're Ready",
     "check_in": "Check In",
+    "sync_with_queue": "Sync with Queue",
     "active_in_queue": "Active in Queue"
   },
   "services": {
