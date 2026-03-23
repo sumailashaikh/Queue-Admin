@@ -37,44 +37,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [router]);
 
+    const refreshUser = useCallback(async () => {
+        try {
+            const { data: profile } = await authService.getProfile();
+            if (profile) {
+                setUser(profile);
+                localStorage.setItem('auth_user', JSON.stringify(profile));
+                return profile;
+            }
+        } catch (error) {
+            console.error('Failed to refresh user profile:', error);
+        }
+        return null;
+    }, []);
+
     const refreshBusiness = useCallback(async () => {
         try {
             const biz = await businessService.getMyBusiness();
             setBusiness(biz);
+            // Also refresh user data whenever business is refreshed to keep sync
+            await refreshUser();
             return biz;
         } catch (error: any) {
             console.error('Failed to refresh business:', error);
-            // If it's an Unauthorized error, api.ts already handled the redirect
-            // but we should still clear state here if it wasn't already
             if (error.message === 'Unauthorized') {
                 setUser(null);
                 setBusiness(null);
             }
             return null;
         }
-    }, []);
+    }, [refreshUser]);
 
     useEffect(() => {
         const initAuth = async () => {
-            const storedUser = localStorage.getItem('auth_user');
             const token = authService.getToken();
 
-            if (storedUser && token) {
-                setUser(JSON.parse(storedUser));
+            if (token) {
+                // Always fetch fresh profile on init
+                await refreshUser();
                 await refreshBusiness();
             }
             setLoading(false);
         };
         initAuth();
-    }, [refreshBusiness]);
+    }, [refreshBusiness, refreshUser]);
 
     const login = async (userData: any, token: string, isNewUser?: boolean) => {
-        setUser(userData);
         localStorage.setItem('auth_token', token);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
+        // Fetch fresh profile after login to get all fields
+        const profile = await refreshUser();
+        const userToUse = profile || userData;
 
         // Admins go straight to dashboard
-        if (userData.role === 'admin') {
+        if (userToUse.role === 'admin') {
             router.push('/dashboard');
             return;
         }
@@ -84,7 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (isNewUser) {
             router.push('/setup');
         } else if (biz) {
-            router.push('/dashboard');
+            if (userToUse.role === 'owner' && !userToUse.is_verified) {
+                router.push('/dashboard/verification-pending');
+            } else {
+                router.push('/dashboard');
+            }
         } else {
             router.push('/setup');
         }

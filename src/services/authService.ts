@@ -24,5 +24,9 @@ export const authService = {
 
     getToken() {
         return typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    },
+
+    async getProfile() {
+        return api.get<any>('/users/me');
     }
 };

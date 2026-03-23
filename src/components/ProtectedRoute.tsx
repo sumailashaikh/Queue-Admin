@@ -23,6 +23,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                 router.push("/setup");
             } else if (hasBusiness && pathname === "/setup") {
                 router.push("/dashboard");
+            } else if (hasBusiness && user?.role === 'owner' && !user?.is_verified && pathname !== "/dashboard/verification-pending") {
+                router.push("/dashboard/verification-pending");
+            } else if (hasBusiness && user?.role === 'owner' && user?.is_verified && pathname === "/dashboard/verification-pending") {
+                router.push("/dashboard");
             }
         }
     }, [isAuthenticated, hasBusiness, loading, router, pathname, user?.role]);

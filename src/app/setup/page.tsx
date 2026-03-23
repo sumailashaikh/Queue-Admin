@@ -74,8 +74,11 @@ export default function SetupPage() {
             };
 
             await businessService.createBusiness(payload);
-            await refreshBusiness();
-            router.push("/dashboard");
+            const biz = await refreshBusiness();
+            if (biz) {
+                // refreshBusiness already refreshed the user profile
+                router.push("/dashboard");
+            }
         } catch (err: any) {
             setError(err.message || "Failed to create business profile");
         } finally {
