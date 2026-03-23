@@ -79,7 +79,7 @@ export default function Sidebar({ onClose, isCollapsed = false, forceLanguage }:
 
             <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
                 {/* Business Section */}
-                {business && (
+                {business && user?.role !== 'admin' && (
                     <div>
                         {!isCollapsed && (
                             <div className="px-4 mb-3 mt-2">
