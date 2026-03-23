@@ -117,6 +117,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     };
 
     const isOpen = isStoreOpen();
+    const hasOpenQueue = business?.queues?.some(q => q.status === 'open');
 
     useEffect(() => {
         const loadBusiness = async () => {
@@ -386,7 +387,19 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 </button>
                             </div>
 
-                            {activeView === 'queue' && (error === 'ERR_NO_QUEUE' || error === i18n.t(lang, 'public.no_queue')) && (
+                            {activeView === 'queue' && business && !hasOpenQueue && (
+                                <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">{i18n.t(lang, 'public.no_queue')}</p>
+                                        <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                                            {i18n.t(lang, 'public.no_queue_owner_desc') || "The owner hasn't opened any live queues right now. You can still book an appointment for later."}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeView === 'queue' && (error === 'ERR_NO_QUEUE' || error === i18n.t(lang, 'public.no_queue')) && step === 2 && (
                                 <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
                                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
@@ -437,7 +450,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 isSelected
                                                     ? "bg-primary border-primary ring-4 ring-primary/30 text-white scale-[1.02] shadow-xl shadow-primary/20"
                                                     : "border-slate-50 bg-white hover:border-primary/20 hover:shadow-md shadow-sm",
-                                                !isOpen && activeView === 'queue' && "opacity-60 grayscale-[0.5] cursor-not-allowed"
+                                                (!isOpen || (activeView === 'queue' && !hasOpenQueue)) && activeView === 'queue' && "opacity-60 grayscale-[0.5] cursor-not-allowed"
                                             )}
                                         >
                                             <div className={cn(
@@ -526,11 +539,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <div className="fixed bottom-0 left-0 right-0 md:relative md:mt-auto p-6 bg-white border-t border-slate-100 md:border-none md:p-0 md:pt-4 animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0">
                                     <button
                                         onClick={() => setStep(2)}
-                                        disabled={(activeView === 'appointment' && !bookingTime) || (!isOpen && activeView === 'queue')}
+                                        disabled={(activeView === 'appointment' && !bookingTime) || (!isOpen && activeView === 'queue') || (activeView === 'queue' && !hasOpenQueue)}
                                         className="w-full h-16 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] shadow-md active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                                     >
-                                        {(!isOpen && activeView === 'queue') ? i18n.t(lang, 'public.check_in_unavailable') : i18n.t(lang, 'public.continue')}
-                                        {(isOpen || activeView === 'appointment') && <ArrowRight className="h-4 w-4" />}
+                                        {(!isOpen && activeView === 'queue') ? i18n.t(lang, 'public.check_in_unavailable') : (activeView === 'queue' && !hasOpenQueue) ? i18n.t(lang, 'public.no_queue') : i18n.t(lang, 'public.continue')}
+                                        {(isOpen || activeView === 'appointment') && hasOpenQueue && <ArrowRight className="h-4 w-4" />}
                                     </button>
                                 </div>
                             )}
