@@ -14,7 +14,7 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { business } = useAuth();
+    const { user, business } = useAuth();
     const { t: baseT } = useLanguage();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -86,7 +86,7 @@ export default function DashboardLayout({
                                 </button>
                             </div>
                             <div className="h-9 w-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm">
-                                {business?.name?.charAt(0) || 'AD'}
+                                {user?.full_name?.charAt(0) || business?.name?.charAt(0) || 'AD'}
                             </div>
                         </div>
                     </header>

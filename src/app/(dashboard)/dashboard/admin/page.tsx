@@ -38,7 +38,7 @@ const REGIONS = [
 export default function AdminDashboard() {
     const { t: baseT, language } = useLanguage();
     const t = (key: string, params?: any) => baseT(key, params, 'en');
-    const { business } = useAuth();
+    const { user, business } = useAuth();
     const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('businesses');
     const [users, setUsers] = useState<DashboardUser[]>([]);
     const [businesses, setBusinesses] = useState<DashboardBusiness[]>([]);
@@ -48,6 +48,7 @@ export default function AdminDashboard() {
     const [updatingRole, setUpdatingRole] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [globalStats, setGlobalStats] = useState<any>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     // Invite Modal State
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -83,6 +84,7 @@ export default function AdminDashboard() {
         try {
             const stats = await adminService.getGlobalStats();
             setGlobalStats(stats);
+            setLastUpdated(new Date());
             if (activeTab === 'users') {
                 const res = await adminService.getAllUsers({
                     search,
@@ -249,10 +251,17 @@ export default function AdminDashboard() {
 
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-1 bg-indigo-600 rounded-full" />
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 uppercase">{t('admin.title')}</h1>
+                <div className="space-y-2 flex-1">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-1 bg-indigo-600 rounded-full" />
+                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 uppercase">{t('admin.title')}</h1>
+                        </div>
+                        {lastUpdated && (
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:block">
+                                Last Sync: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </p>
+                        )}
                     </div>
                     <p className="text-slate-500 font-medium text-sm">{t('admin.desc')}</p>
                 </div>
@@ -455,8 +464,21 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-2">
-                                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t('admin.active')}</span>
+                                                    {business.owner?.status === 'active' ? (
+                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                                    ) : business.owner?.status === 'blocked' ? (
+                                                        <XCircle className="h-4 w-4 text-red-500" />
+                                                    ) : (
+                                                        <Clock className="h-4 w-4 text-amber-500" />
+                                                    )}
+                                                    <span className={cn(
+                                                        "text-xs font-bold uppercase tracking-wider",
+                                                        business.owner?.status === 'active' ? "text-emerald-600" :
+                                                            business.owner?.status === 'blocked' ? "text-red-600" :
+                                                                "text-amber-600"
+                                                    )}>
+                                                        {business.owner?.status || 'Pending'}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6">
