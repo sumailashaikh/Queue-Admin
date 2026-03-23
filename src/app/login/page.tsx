@@ -9,12 +9,12 @@ import { i18n } from "@/lib/i18n";
 import { useLanguage } from "@/context/LanguageContext";
 
 const REGIONS = [
-    { code: "US", name: "United States", currency: "USD", timezone: "America/New_York", lang: "en", dial_code: "+1" },
-    { code: "GB", name: "United Kingdom", currency: "GBP", timezone: "Europe/London", lang: "en", dial_code: "+44" },
-    { code: "IN", name: "India", currency: "INR", timezone: "Asia/Kolkata", lang: "en", dial_code: "+91" },
-    { code: "AE", name: "United Arab Emirates", currency: "AED", timezone: "Asia/Dubai", lang: "ar", dial_code: "+971" },
-    { code: "ES", name: "Spain", currency: "EUR", timezone: "Europe/Madrid", lang: "es", dial_code: "+34" },
-    { code: "AU", name: "Australia", currency: "AUD", timezone: "Australia/Sydney", lang: "en", dial_code: "+61" },
+    { code: "US", name: "United States", currency: "USD", timezone: "America/New_York", lang: "en", dial_code: "+1", phoneLimit: 10 },
+    { code: "GB", name: "United Kingdom", currency: "GBP", timezone: "Europe/London", lang: "en", dial_code: "+44", phoneLimit: 10 },
+    { code: "IN", name: "India", currency: "INR", timezone: "Asia/Kolkata", lang: "en", dial_code: "+91", phoneLimit: 10 },
+    { code: "AE", name: "United Arab Emirates", currency: "AED", timezone: "Asia/Dubai", lang: "ar", dial_code: "+971", phoneLimit: 9 },
+    { code: "ES", name: "Spain", currency: "EUR", timezone: "Europe/Madrid", lang: "es", dial_code: "+34", phoneLimit: 9 },
+    { code: "AU", name: "Australia", currency: "AUD", timezone: "Australia/Sydney", lang: "en", dial_code: "+61", phoneLimit: 9 },
 ];
 
 export default function LoginPage() {
@@ -26,7 +26,18 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [regionSettings, setRegionSettings] = useState<any>(null);
+    const [resendTimer, setResendTimer] = useState(0);
     const router = useRouter();
+
+    useEffect(() => {
+        let timer: any;
+        if (resendTimer > 0) {
+            timer = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendTimer]);
 
     useEffect(() => {
         let currentRegion = REGIONS.find(r => r.code === "IN");
@@ -40,16 +51,15 @@ export default function LoginPage() {
         } catch (e) { }
 
         setRegionSettings(currentRegion);
-        // Sync the fresh structure back to storage just in case
         if (currentRegion) {
             localStorage.setItem('app_region_settings', JSON.stringify(currentRegion));
         }
     }, []);
 
-    const handleSendOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
+    const handleSendOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent, isResend = false) => {
         if (e && e.preventDefault) e.preventDefault();
 
-        if (loading) return; // Prevent double clicks
+        if (loading || (isResend && resendTimer > 0)) return;
 
         setLoading(true);
         setError("");
@@ -57,11 +67,10 @@ export default function LoginPage() {
         try {
             const dialCode = regionSettings?.dial_code || '+91';
             const formattedPhone = phone.startsWith('+') ? phone : `${dialCode}${phone}`;
-            console.log(`[OTP] Sending OTP to ${formattedPhone}...`);
             await authService.sendOTP(formattedPhone);
             setStep(2);
+            setResendTimer(60); // Start 60s countdown
         } catch (err: any) {
-            console.error("[OTP] Send Failed: ", err);
             setError(err.message || "Failed to send OTP. Please try again.");
         } finally {
             setLoading(false);
@@ -69,11 +78,9 @@ export default function LoginPage() {
     };
 
     const handleVerifyOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
-        if (e && e.preventDefault) {
-            e.preventDefault();
-        }
+        if (e && e.preventDefault) e.preventDefault();
 
-        if (loading) return; // Prevent double clicks
+        if (loading) return;
 
         setLoading(true);
         setError("");
@@ -81,11 +88,9 @@ export default function LoginPage() {
         try {
             const dialCode = regionSettings?.dial_code || '+91';
             const formattedPhone = phone.startsWith('+') ? phone : `${dialCode}${phone}`;
-            console.log(`[OTP] Attempting to verify OTP for ${formattedPhone}...`);
             const response = await authService.verifyOTP(formattedPhone, otp);
 
             if (response.data?.user && response.data?.session?.access_token) {
-                console.log(`[OTP] Verification successful. Proceeding to login...`);
                 const userObj = response.data.user;
                 const isNewUser = response.data.is_new_user;
 
@@ -96,18 +101,18 @@ export default function LoginPage() {
                 if (regionSettings?.language) {
                     await setLanguage(regionSettings.language, true);
                 }
-                // Redirection is handled internally by the login context/hook.
             } else {
-                console.error("[OTP] Verification succeeded but session data was missing/invalid in response.", response);
                 throw new Error("Invalid session data received");
             }
         } catch (err: any) {
-            console.error("[OTP] Verification Failed: ", err);
             setError(err.message || "Invalid OTP. Please check and try again.");
         } finally {
             setLoading(false);
         }
     };
+
+    const phoneLimit = regionSettings?.phoneLimit || 10;
+    const isPhoneValid = phone.length === phoneLimit;
 
     return (
         <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 pb-24">
@@ -133,7 +138,7 @@ export default function LoginPage() {
                     {step === 1 ? (
                         <div
                             className="space-y-6"
-                            onKeyDown={(e) => { if (e.key === 'Enter' && phone.length >= 9) handleSendOTP(e); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && isPhoneValid) handleSendOTP(e); }}
                         >
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-foreground">{regionSettings ? i18n.t(regionSettings.language, 'login.phone_lbl') : 'Phone Number'}</label>
@@ -145,6 +150,7 @@ export default function LoginPage() {
                                                 const region = REGIONS.find(r => r.dial_code === e.target.value);
                                                 if (region) {
                                                     setRegionSettings(region);
+                                                    setPhone(""); // Clear phone on region change to enforce limits
                                                     localStorage.setItem('app_region_settings', JSON.stringify(region));
                                                 }
                                             }}
@@ -163,17 +169,21 @@ export default function LoginPage() {
                                     <input
                                         type="tel"
                                         required
+                                        maxLength={phoneLimit}
                                         value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        placeholder="99887 76655"
+                                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, phoneLimit))}
+                                        placeholder={phoneLimit === 9 ? "50 123 4567" : "99887 76655"}
                                         className="w-full px-4 py-4 bg-transparent border-none text-lg font-medium outline-none"
                                     />
                                 </div>
+                                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest px-1">
+                                    {regionSettings?.name} ({phoneLimit} Digits)
+                                </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleSendOTP}
-                                disabled={loading || phone.length < 9}
+                                disabled={loading || !isPhoneValid}
                                 className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all disabled:opacity-50 active:scale-[0.98]"
                             >
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
@@ -193,14 +203,27 @@ export default function LoginPage() {
                                     required
                                     autoFocus
                                     maxLength={6}
+                                    autoComplete="one-time-code"
+                                    inputMode="numeric"
                                     value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
+                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                     placeholder="000000"
                                     className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-center text-3xl font-black tracking-[0.5em] focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 />
-                                <p className="text-center text-xs text-secondary pt-2">
-                                    {regionSettings ? i18n.t(regionSettings.language, 'login.code_sent') : 'Code sent to'} {regionSettings?.dial_code || "+91"} {phone}. <button type="button" onClick={() => setStep(1)} className="text-primary font-bold">Edit</button>
-                                </p>
+                                <div className="flex flex-col items-center gap-4 pt-2">
+                                    <p className="text-center text-xs text-secondary">
+                                        {regionSettings ? i18n.t(regionSettings.language, 'login.code_sent') : 'Code sent to'} {regionSettings?.dial_code || "+91"} {phone}. <button type="button" onClick={() => setStep(1)} className="text-primary font-bold">Edit</button>
+                                    </p>
+                                    
+                                    <button 
+                                        type="button"
+                                        disabled={resendTimer > 0 || loading}
+                                        onClick={(e) => handleSendOTP(e, true)}
+                                        className="text-[11px] font-black uppercase tracking-widest text-primary disabled:opacity-40"
+                                    >
+                                        {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
+                                    </button>
+                                </div>
                             </div>
                             <button
                                 type="button"

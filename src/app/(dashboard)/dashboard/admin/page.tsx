@@ -203,6 +203,37 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             )}
+            {/* Verification Alert Banner */}
+            {globalStats?.pendingVerifications > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-[32px] p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-700 shadow-xl shadow-amber-200/20">
+                    <div className="flex items-center gap-5">
+                        <div className="h-14 w-14 bg-amber-500 rounded-[22px] flex items-center justify-center text-white shadow-lg shadow-amber-200">
+                            <ShieldCheck className="h-7 w-7" />
+                        </div>
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold text-amber-900 leading-tight">
+                                {globalStats.pendingVerifications} New Businesses Pending Verification
+                            </h3>
+                            <p className="text-amber-700/70 text-sm font-medium">
+                                Review and approve business owners to grant access to their portals.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setActiveTab('businesses');
+                            setStatusFilter('pending');
+                            // Scroll to table
+                            document.getElementById('admin-table')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="px-8 py-3.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-amber-200 flex items-center gap-2 group whitespace-nowrap"
+                    >
+                        Review Now
+                        <ArrowUpDown className="h-4 w-4 rotate-90 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
@@ -243,12 +274,15 @@ export default function AdminDashboard() {
                         <button
                             onClick={() => setActiveTab('businesses')}
                             className={cn(
-                                "px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-[16px] transition-all duration-300 flex items-center gap-2",
+                                "px-8 py-3 text-xs font-bold uppercase tracking-wider rounded-[16px] transition-all duration-300 flex items-center gap-2 relative",
                                 activeTab === 'businesses' ? "bg-white text-indigo-600 shadow-xl shadow-indigo-500/10 scale-105" : "text-slate-500 hover:text-slate-900"
                             )}
                         >
                             <Store className="h-4 w-4" />
                             {t('admin.businesses_tab')}
+                            {globalStats?.pendingVerifications > 0 && (
+                                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 border-2 border-white rounded-full animate-pulse" />
+                            )}
                         </button>
                     </div>
                 </div>
@@ -277,7 +311,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-white border border-slate-100 rounded-[40px] shadow-sm overflow-hidden min-h-[500px]">
+            <div id="admin-table" className="bg-white border border-slate-100 rounded-[40px] shadow-sm overflow-hidden min-h-[500px]">
                 <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="relative max-w-md w-full group">
                         <Search className="absolute left-4.5 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
