@@ -37,6 +37,7 @@ import { api } from "@/lib/api";
 import { QRCodeSVG } from "qrcode.react";
 import { QueueRow } from "./components/QueueRow";
 import { useLanguage } from "@/context/LanguageContext";
+import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 
 // Local types have been replaced by imports from @/services/queueService
 
@@ -820,10 +821,10 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
 
     const handleSendInvite = (e: React.FormEvent) => {
         e.preventDefault();
-        const link = `${window.location.origin}/${business.slug}`;
+        const link = `${window.location.host}/${business.slug}`;
         const message = `Hello ${inviteData.name},\n\nThis is ${business.name}. You can join the queue online using this link: ${link}\n\nAfter joining, you'll see your token number and live waiting time.\n\nThank you.`;
-        let phone = inviteData.phone.replace(/\D/g, '');
-        if (phone.length === 10) phone = `91${phone}`;
+        // CountryPhoneInput already provides the full number with +
+        let phone = inviteData.phone.replace(/\+/g, '');
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
         onClose();
     };
@@ -851,13 +852,11 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
-                        <input
-                            required
-                            type="tel"
-                            placeholder={t('queue.whatsapp_number_placeholder')}
+                        <CountryPhoneInput
                             value={inviteData.phone}
-                            onChange={(e) => setInviteData({ ...inviteData, phone: e.target.value })}
-                            className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
+                            onChange={(full) => setInviteData({ ...inviteData, phone: full })}
+                            placeholder={t('queue.whatsapp_number_placeholder')}
+                            required
                         />
                     </div>
                     <button

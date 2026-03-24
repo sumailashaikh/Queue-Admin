@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 
 export default function SetupPage() {
     const router = useRouter();
@@ -198,17 +199,12 @@ export default function SetupPage() {
                                 <div className="grid gap-4">
                                     <div className="space-y-2">
                                         <p className="text-sm font-bold text-slate-700">{t('setup.phone')}</p>
-                                        <div className="relative">
-                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                            <input
-                                                required
-                                                type="tel"
-                                                placeholder={regionSettings?.dial_code ? `${regionSettings.dial_code} 00000 00000` : "+91 00000 00000"}
-                                                value={formData.phone}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium"
-                                            />
-                                        </div>
+                                        <CountryPhoneInput
+                                            value={formData.phone}
+                                            onChange={(full) => setFormData(prev => ({ ...prev, phone: full }))}
+                                            placeholder="Business phone number"
+                                            required
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <p className="text-sm font-bold text-slate-700">{t('setup.address')}</p>

@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Admins go straight to dashboard
         if (userToUse.role === 'admin') {
-            router.push('/dashboard');
+            router.push('/dashboard/admin');
             return;
         }
 

@@ -26,14 +26,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown, Globe } from "lucide-react";
-
-const REGIONS = [
-    { code: 'IN', dial: '+91', name: 'India', flag: '🇮🇳', phoneLimit: 10 },
-    { code: 'AE', dial: '+971', name: 'UAE', flag: '🇦🇪', phoneLimit: 9 },
-    { code: 'SA', dial: '+966', name: 'Saudi Arabia', flag: '🇸🇦', phoneLimit: 9 },
-    { code: 'US', dial: '+1', name: 'USA', flag: '🇺🇸', phoneLimit: 10 },
-    { code: 'GB', dial: '+44', name: 'UK', flag: '🇬🇧', phoneLimit: 10 },
-];
+import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 
 export default function AdminDashboard() {
     const { t: baseT, language } = useLanguage();
@@ -75,17 +68,6 @@ export default function AdminDashboard() {
     const [createUserData, setCreateUserData] = useState({ full_name: "", phone: "", role: "owner" });
     const [createLoading, setCreateLoading] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
-
-    // Region States
-    const [selectedRegionInvite, setSelectedRegionInvite] = useState(REGIONS[0]);
-    const [selectedRegionCreate, setSelectedRegionCreate] = useState(REGIONS[0]);
-    const [isRegionDropdownOpenInvite, setIsRegionDropdownOpenInvite] = useState(false);
-    const [isRegionDropdownOpenCreate, setIsRegionDropdownOpenCreate] = useState(false);
-
-    const formatPhoneForSubmit = (phone: string, dial: string) => {
-        const cleaned = phone.replace(/\D/g, '');
-        return `${dial}${cleaned}`;
-    };
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -157,9 +139,8 @@ export default function AdminDashboard() {
         setInviteError(null);
         setInviteSuccess(null);
         try {
-            const formattedPhone = formatPhoneForSubmit(invitePhone, selectedRegionInvite.dial);
-            await adminService.inviteAdmin(formattedPhone);
-            setInviteSuccess(t('admin.invite_modal.success', { phone: formattedPhone }));
+            await adminService.inviteAdmin(invitePhone);
+            setInviteSuccess(t('admin.invite_modal.success', { phone: invitePhone }));
             setInvitePhone("");
             fetchData();
         } catch (err: any) {
@@ -188,8 +169,7 @@ export default function AdminDashboard() {
         setCreateLoading(true);
         setCreateError(null);
         try {
-            const formattedPhone = formatPhoneForSubmit(createUserData.phone, selectedRegionCreate.dial);
-            await adminService.createUser({ ...createUserData, phone: formattedPhone });
+            await adminService.createUser(createUserData);
             setIsCreateModalOpen(false);
             setCreateUserData({ full_name: "", phone: "", role: "owner" });
             fetchData();
@@ -615,66 +595,13 @@ export default function AdminDashboard() {
 
                             <form onSubmit={handleInviteAdmin} className="w-full space-y-6">
                                 <div className="space-y-4">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 block text-left">Phone Number</label>
-                                    <div className="flex gap-2">
-                                        {/* Country Selector */}
-                                        <div className="relative">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsRegionDropdownOpenInvite(!isRegionDropdownOpenInvite)}
-                                                className="h-14 px-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-2 hover:bg-slate-100 transition-all min-w-[100px]"
-                                            >
-                                                <span className="text-xl">{selectedRegionInvite.flag}</span>
-                                                <span className="text-sm font-bold text-slate-700">{selectedRegionInvite.dial}</span>
-                                                <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", isRegionDropdownOpenInvite && "rotate-180")} />
-                                            </button>
-
-                                            {isRegionDropdownOpenInvite && (
-                                                <div className="absolute top-full left-0 mt-2 w-[240px] bg-white border border-slate-100 rounded-2xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                                                    <div className="p-2 space-y-1">
-                                                        {REGIONS.map((region) => (
-                                                            <button
-                                                                key={region.code}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedRegionInvite(region);
-                                                                    setIsRegionDropdownOpenInvite(false);
-                                                                    setInvitePhone("");
-                                                                }}
-                                                                className={cn(
-                                                                    "w-full px-4 py-3 rounded-xl flex items-center justify-between text-left hover:bg-indigo-50 transition-colors group",
-                                                                    selectedRegionInvite.code === region.code && "bg-indigo-50"
-                                                                )}
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="text-xl">{region.flag}</span>
-                                                                    <div>
-                                                                        <p className="text-sm font-bold text-slate-900">{region.name}</p>
-                                                                        <p className="text-[10px] text-slate-400 font-bold">{region.dial}</p>
-                                                                    </div>
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-indigo-500 opacity-0 group-hover:opacity-100">{region.code}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="relative flex-1 group">
-                                            <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                                            <input
-                                                required
-                                                type="tel"
-                                                maxLength={selectedRegionInvite.phoneLimit}
-                                                placeholder={`${selectedRegionInvite.phoneLimit} digits`}
-                                                value={invitePhone}
-                                                onChange={(e) => setInvitePhone(e.target.value.replace(/\D/g, '').slice(0, selectedRegionInvite.phoneLimit))}
-                                                className="w-full pl-12 pr-6 h-14 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                                            />
-                                        </div>
-                                    </div>
-                                    <p className="text-[10px] font-bold text-slate-400 ml-1">Example: {selectedRegionInvite.dial} 123456789</p>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 block text-left">{t('admin.create_modal.phone')}</label>
+                                    <CountryPhoneInput
+                                        value={invitePhone}
+                                        onChange={setInvitePhone}
+                                        placeholder="Admin phone number"
+                                        required
+                                    />
                                 </div>
 
                                 <div className="p-5 bg-indigo-50/50 rounded-[28px] border border-indigo-100/50 flex gap-4 text-left">
@@ -688,7 +615,7 @@ export default function AdminDashboard() {
                                 </div>
 
                                 <button
-                                    disabled={inviteLoading || invitePhone.length < selectedRegionInvite.phoneLimit}
+                                    disabled={inviteLoading || invitePhone.length < 10}
                                     type="submit"
                                     className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-lg shadow-indigo-200"
                                 >
@@ -840,67 +767,12 @@ export default function AdminDashboard() {
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">{t('admin.create_modal.phone')}</label>
-                                    <div className="flex gap-2">
-                                        {/* Country Selector */}
-                                        <div className="relative">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsRegionDropdownOpenCreate(!isRegionDropdownOpenCreate)}
-                                                className="h-14 px-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-2 hover:bg-slate-100 transition-all min-w-[100px]"
-                                            >
-                                                <span className="text-xl">{selectedRegionCreate.flag}</span>
-                                                <span className="text-sm font-bold text-slate-700">{selectedRegionCreate.dial}</span>
-                                                <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", isRegionDropdownOpenCreate && "rotate-180")} />
-                                            </button>
-
-                                            {isRegionDropdownOpenCreate && (
-                                                <div className="absolute top-full left-0 mt-2 w-[240px] bg-white border border-slate-100 rounded-2xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                                                    <div className="p-2 space-y-1">
-                                                        {REGIONS.map((region) => (
-                                                            <button
-                                                                key={region.code}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedRegionCreate(region);
-                                                                    setIsRegionDropdownOpenCreate(false);
-                                                                    setCreateUserData(prev => ({ ...prev, phone: "" }));
-                                                                }}
-                                                                className={cn(
-                                                                    "w-full px-4 py-3 rounded-xl flex items-center justify-between text-left hover:bg-indigo-50 transition-colors group",
-                                                                    selectedRegionCreate.code === region.code && "bg-indigo-50"
-                                                                )}
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="text-xl">{region.flag}</span>
-                                                                    <div>
-                                                                        <p className="text-sm font-bold text-slate-900">{region.name}</p>
-                                                                        <p className="text-[10px] text-slate-400 font-bold">{region.dial}</p>
-                                                                    </div>
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-indigo-500 opacity-0 group-hover:opacity-100">{region.code}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="relative flex-1 group">
-                                            <Phone className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                                            <input
-                                                required
-                                                type="tel"
-                                                maxLength={selectedRegionCreate.phoneLimit}
-                                                placeholder={`${selectedRegionCreate.phoneLimit} digits`}
-                                                value={createUserData.phone}
-                                                onChange={(e) => setCreateUserData(prev => ({ 
-                                                    ...prev, 
-                                                    phone: e.target.value.replace(/\D/g, '').slice(0, selectedRegionCreate.phoneLimit) 
-                                                }))}
-                                                className="w-full pl-12 pr-6 h-14 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                                            />
-                                        </div>
-                                    </div>
+                                    <CountryPhoneInput
+                                        value={createUserData.phone}
+                                        onChange={(full) => setCreateUserData(prev => ({ ...prev, phone: full }))}
+                                        placeholder="User phone number"
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-2 block">{t('admin.create_modal.role')}</label>
@@ -915,7 +787,7 @@ export default function AdminDashboard() {
                                     </select>
                                 </div>
                                 <button
-                                    disabled={createLoading || createUserData.phone.length < selectedRegionCreate.phoneLimit}
+                                    disabled={createLoading || createUserData.phone.length < 10}
                                     type="submit"
                                     className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 mt-4 shadow-lg shadow-indigo-200"
                                 >

@@ -21,6 +21,7 @@ import {
     AlertCircle
 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { api } from "@/lib/api";
@@ -537,12 +538,10 @@ export default function ProvidersPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-700 ml-1">{t('providers.phone_number')}</label>
-                                        <input
-                                            type="tel"
-                                            placeholder={t('providers.phone_placeholder')}
+                                        <CountryPhoneInput
                                             value={formData.phone}
-                                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all"
+                                            onChange={(full) => setFormData({ ...formData, phone: full })}
+                                            placeholder={t('providers.phone_placeholder')}
                                         />
                                     </div>
                                 </div>
