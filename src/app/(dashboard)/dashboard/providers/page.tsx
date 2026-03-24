@@ -280,6 +280,7 @@ export default function ProvidersPage() {
     };
 
     const openLeaveModal = async (provider: ServiceProvider) => {
+        setError(null);
         setSelectedProvider(provider);
         try {
             const data = await providerService.getLeaves(provider.id);
@@ -311,6 +312,14 @@ export default function ProvidersPage() {
             showToast(t('providers.err_invalid_range'), "error");
             return;
         }
+
+        // Language Guard for Note
+        if (leaveFormData.note && !validateLanguage(leaveFormData.note, language)) {
+            setError(t('common.err_invalid_chars'));
+            return;
+        }
+
+        setError(null);
 
         setIsSubmitting(true);
         try {
@@ -891,7 +900,13 @@ export default function ProvidersPage() {
                                     </div>
 
                                     <div className="p-5 md:p-10 flex-1 overflow-y-auto custom-scrollbar">
-                                        <form onSubmit={handleAddLeave} className="space-y-8">
+                                        <form onSubmit={(e) => handleAddLeave(e, false)} className="space-y-8">
+                                            {error && (
+                                                <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-sm font-bold animate-in slide-in-from-top-2">
+                                                    <AlertCircle className="h-5 w-5" />
+                                                    {error}
+                                                </div>
+                                            )}
                                             <div className="grid grid-cols-2 gap-6">
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('providers.start_date')}</label>
