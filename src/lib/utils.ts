@@ -62,6 +62,9 @@ export function formatDuration(minutes: number, t: (key: string, options?: any) 
 export function validateLanguage(text: string, language: string): boolean {
     if (!text) return true;
 
+    // Normalize language (e.g., 'en-US' -> 'en')
+    const baseLang = language?.split('-')[0].toLowerCase() || 'en';
+
     // Common symbols, numbers and punctuation allowed across all languages
     const common = "0-9\\s.,!?'\"()&@#%*+=\\-\\/\\[\\]{}|_\\\\";
 
@@ -72,6 +75,6 @@ export function validateLanguage(text: string, language: string): boolean {
         'ar': new RegExp(`^[\\u0600-\\u06FF${common}]*$`)
     };
 
-    const regex = regexMap[language] || regexMap['en'];
+    const regex = regexMap[baseLang] || regexMap['en'];
     return regex.test(text);
 }

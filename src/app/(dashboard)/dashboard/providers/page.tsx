@@ -108,8 +108,10 @@ export default function ProvidersPage() {
         const trimmedDept = formData.department.trim();
         const trimmedPhone = formData.phone.trim();
 
-        // Validation: Required fields
-        if (!trimmedName || !trimmedRole || !trimmedDept || !trimmedPhone) {
+        // Validation: Required fields (Check if phone has more than just a dial code)
+        const isPhoneValid = trimmedPhone.length > 4 && /\d$/.test(trimmedPhone);
+
+        if (!trimmedName || !trimmedRole || !trimmedDept || !isPhoneValid) {
             setError(t('providers.all_fields_required'));
             return;
         }
@@ -137,11 +139,13 @@ export default function ProvidersPage() {
                 // Validation: Language Guard
                 if (!validateLanguage(trimmedName, language) || !validateLanguage(trimmedRole, language) || !validateLanguage(trimmedDept, language)) {
                     setError(t('common.err_invalid_chars'));
+                    setIsSubmitting(false);
                     return;
                 }
 
                 if (!hasChanges) {
                     setError(t('providers.no_changes_detected'));
+                    setIsSubmitting(false);
                     return;
                 }
 
@@ -349,7 +353,8 @@ export default function ProvidersPage() {
     const filteredProviders = providers.filter(p =>
         p.is_active !== false && (
             p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.role?.toLowerCase().includes(search.toLowerCase())
+            p.role?.toLowerCase().includes(search.toLowerCase()) ||
+            p.department?.toLowerCase().includes(search.toLowerCase())
         )
     );
 

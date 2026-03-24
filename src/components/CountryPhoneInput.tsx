@@ -18,6 +18,7 @@ export const COUNTRIES: Country[] = [
     { code: "US", name: "USA", dialCode: "+1", flag: "🇺🇸", digits: 10 },
     { code: "GB", name: "UK", dialCode: "+44", flag: "🇬🇧", digits: 10 },
     { code: "SA", name: "Saudi Arabia", dialCode: "+966", flag: "🇸🇦", digits: 9 },
+    { code: "ES", name: "Spain", dialCode: "+34", flag: "🇪🇸", digits: 9 },
 ];
 
 interface CountryPhoneInputProps {
