@@ -198,7 +198,7 @@ export default function ServicesPage() {
                 editingService.price !== originalService.price;
             
             if (!hasChanges) {
-                setError(t('services.no_changes_detected') || "No changes detected.");
+                setError(t('services.no_changes_detected'));
                 return;
             }
         }
@@ -285,13 +285,13 @@ export default function ServicesPage() {
             {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                         <div className="h-10 w-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
                             <Sparkles className="h-5 w-5" />
                         </div>
                         {t('services.title')}
                     </h1>
-                    <p className="text-slate-500 text-xs font-black uppercase tracking-[0.2em] ml-1">
+                    <p className="text-slate-500 text-sm mt-1 uppercase tracking-wider font-semibold">
                         {t('services.subtitle')}
                     </p>
                 </div>
@@ -310,9 +310,16 @@ export default function ServicesPage() {
                     <button
                         onClick={() => {
                             setError(null);
+                            setNewService({
+                                name: "",
+                                description: "",
+                                duration_minutes: 30,
+                                price: 0,
+                                translations: { hi: "", es: "", ar: "" }
+                            });
                             setIsAddModalOpen(true);
                         }}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 group"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-sm font-bold transition-all shadow-lg active:scale-95 group"
                     >
                         <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
                         {t('services.new_service')}
@@ -368,15 +375,15 @@ export default function ServicesPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <h3 className="text-xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-blue-600 transition-colors">
+                                    <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight group-hover:text-blue-600 transition-colors">
                                         {getDisplayName(service)}
                                     </h3>
                                     {service.translations && service.translations[language] && (
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                             {t('services.original')}{service.name}
                                         </p>
                                     )}
-                                    <p className="text-sm font-bold text-slate-500/70 leading-relaxed line-clamp-2 min-h-[2.5rem]">
+                                    <p className="text-xs font-semibold text-slate-500/70 leading-relaxed line-clamp-2 min-h-[2.5rem]">
                                         {service.description || t('services.default_desc')}
                                     </p>
                                 </div>
@@ -384,10 +391,10 @@ export default function ServicesPage() {
                                 <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
                                     <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 text-slate-600 shadow-inner">
                                         <Clock className="h-3.5 w-3.5 text-blue-500" />
-                                        <span className="text-xs font-black uppercase tracking-wider">{service.duration_minutes} {t('queue.min')}</span>
+                                        <span className="text-xs font-semibold uppercase tracking-wider">{service.duration_minutes} {t('queue.min')}</span>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{t('services.price_label')}</span>
+                                        <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-0.5">{t('services.price_label')}</span>
                                         <span className="text-2xl font-black text-slate-900 tracking-tighter">{formatCurrency(service.price, business?.currency, language)}</span>
                                     </div>
                                 </div>
@@ -417,8 +424,8 @@ export default function ServicesPage() {
                                     <Pencil className="h-3.5 w-3.5" />
                                     {t('common.edit')}
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">{t('services.save_changes')}</h2>
-                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">{t('services.subtitle')}</p>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">{t('services.save_changes')}</h2>
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{t('services.subtitle')}</p>
                             </div>
                             <button onClick={() => setIsEditModalOpen(false)} className="p-3 bg-white hover:bg-rose-50 rounded-2xl shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-all active:scale-90 hover:rotate-90 group">
                                 <X className="h-5 w-5 group-hover:drop-shadow-sm" />
@@ -433,7 +440,7 @@ export default function ServicesPage() {
                             )}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.name_label')}</label>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.name_label')}</label>
                                     <input
                                         required
                                         type="text"
@@ -445,7 +452,7 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.duration_label')}</label>
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.duration_label')}</label>
                                         <input
                                             required
                                             type="number"
@@ -456,7 +463,7 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.price_label')} ({business?.currency || '₹'})</label>
                                         <input
                                             required
                                             type="number"
@@ -468,7 +475,7 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.desc_label')}</label>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
@@ -501,8 +508,8 @@ export default function ServicesPage() {
                                     <Plus className="h-3.5 w-3.5" />
                                     {t('services.new_service')}
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">{t('services.create_service')}</h2>
-                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">{t('services.add_subtitle')}</p>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">{t('services.create_service')}</h2>
+                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{t('services.add_subtitle')}</p>
                             </div>
                             <button onClick={() => setIsAddModalOpen(false)} className="p-3 bg-white hover:bg-rose-50 rounded-2xl shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-all active:scale-90 hover:rotate-90 group">
                                 <X className="h-5 w-5 group-hover:drop-shadow-sm" />
@@ -517,7 +524,7 @@ export default function ServicesPage() {
                             )}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.name_label')}</label>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.name_label')}</label>
                                     <input
                                         required
                                         type="text"
@@ -529,7 +536,7 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.duration_label')}</label>
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.duration_label')}</label>
                                         <input
                                             required
                                             type="number"
@@ -540,7 +547,7 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.price_label')} ({business?.currency || '₹'})</label>
                                         <input
                                             required
                                             type="number"
@@ -552,7 +559,7 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.desc_label')}</label>
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}

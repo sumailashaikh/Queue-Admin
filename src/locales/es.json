@@ -417,7 +417,8 @@
     "delete_fail": "Fallo al eliminar el servicio.",
     "err_duplicate": "Ya existe un servicio con este nombre.",
     "original": "Original: ",
-    "all_fields_required": "Todos los campos son obligatorios"
+    "all_fields_required": "Todos los campos son obligatorios",
+    "no_changes_detected": "No se detectaron cambios"
   },
   "display": {
     "title": "Estado en Vivo",

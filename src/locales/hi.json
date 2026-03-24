@@ -412,7 +412,8 @@
     "delete_fail": "सेवा हटाने में विफल.",
     "err_duplicate": "इस नाम की सेवा पहले से मौजूद है।",
     "original": "मूल: ",
-    "all_fields_required": "सभी फ़ील्ड आवश्यक हैं"
+    "all_fields_required": "सभी फ़ील्ड आवश्यक हैं",
+    "no_changes_detected": "कोई बदलाव नहीं पाया गया"
   },
   "display": {
     "title": "लाइव स्थिति",

@@ -483,7 +483,8 @@
     "original": "Original: ",
     "save_changes": "Save Changes",
     "create_service": "Create Service",
-    "all_fields_required": "All Fields Are Required"
+    "all_fields_required": "All Fields Are Required",
+    "no_changes_detected": "No Changes Detected"
   },
   "display": {
     "title": "Live Status",

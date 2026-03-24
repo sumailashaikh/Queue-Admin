@@ -407,7 +407,8 @@
     "delete_fail": "فشل حذف الخدمة.",
     "err_duplicate": "توجد خدمة بهذا الاسم بالفعل.",
     "original": "الأصلي: ",
-    "all_fields_required": "جميع الحقول مطلوبة"
+    "all_fields_required": "جميع الحقول مطلوبة",
+    "no_changes_detected": "لم يتم اكتشاف أي تغييرات"
   },
   "display": {
     "title": "الحالة المباشرة",
