@@ -545,7 +545,7 @@ export default function ProvidersPage() {
             {
                 isModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-visible animate-in zoom-in-95 duration-300">
                             <form onSubmit={handleSubmit} className="p-10 space-y-8">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xl font-bold text-slate-900 tracking-tight">

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/context/LanguageContext";
 
 export interface Country {
     code: string;
@@ -39,6 +40,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
     const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
     const [localNumber, setLocalNumber] = useState("");
     const [isOpen, setIsOpen] = useState(false);
+    const { t } = useLanguage();
 
     // Parse initial value
     useEffect(() => {
@@ -97,7 +99,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="text-lg">{c.flag}</span>
-                                        <span>{c.name}</span>
+                                        <span>{t('common.countries.' + c.code.toLowerCase())}</span>
                                     </div>
                                     <span className="text-xs font-bold text-slate-400">{c.dialCode}</span>
                                 </button>

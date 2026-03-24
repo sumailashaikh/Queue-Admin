@@ -361,7 +361,15 @@
     "duration_h": "{{h}} hora",
     "duration_hs": "{{h}} horas",
     "duration_hm": "{{h}} hora y {{m}} minutos",
-    "duration_hsm": "{{h}} horas y {{m}} minutos"
+    "duration_hsm": "{{h}}h {{m}}m",
+    "countries": {
+      "in": "India",
+      "ae": "EAU",
+      "us": "EE. UU.",
+      "gb": "Reino Unido",
+      "sa": "Arabia Saudita",
+      "es": "España"
+    }
   },
   "appointments": {
     "title": "Citas",

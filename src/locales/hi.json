@@ -355,7 +355,15 @@
     "duration_h": "{{h}} घंटा",
     "duration_hs": "{{h}} घंटे",
     "duration_hm": "{{h}} घंटा और {{m}} मिनट",
-    "duration_hsm": "{{h}} घंटे और {{m}} मिनट"
+    "duration_hsm": "{{h}} घंटे और {{m}} मिनट",
+    "countries": {
+      "in": "भारत",
+      "ae": "यूएई",
+      "us": "यूएसए",
+      "gb": "यूके",
+      "sa": "सऊदी अरब",
+      "es": "स्पेन"
+    }
   },
   "appointments": {
     "title": "नियुक्तियाँ",

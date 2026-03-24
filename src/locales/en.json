@@ -415,15 +415,23 @@
     "finished": "Finished",
     "archived": "Archived",
     "error_updating": "Error Updating Item",
-    "err_invalid_chars": "Please Use Only Characters From The Current Language.",
+    "err_invalid_chars": "Please use only characters from the current language.",
     "confirm": "Confirm",
     "got_it": "Got It!",
     "close": "Close",
     "duration_m": "{{m}} Minutes",
     "duration_h": "{{h}} Hour",
     "duration_hs": "{{h}} Hours",
-    "duration_hm": "{{h}} Hour And {{m}} Minutes",
-    "duration_hsm": "{{h}} Hours And {{m}} Minutes"
+    "duration_hm": "{{h}}h {{m}}m",
+    "duration_hsm": "{{h}}h {{m}}m",
+    "countries": {
+      "in": "India",
+      "ae": "UAE",
+      "us": "USA",
+      "gb": "UK",
+      "sa": "Saudi Arabia",
+      "es": "Spain"
+    }
   },
   "appointments": {
     "title": "Appointments",
