@@ -177,7 +177,6 @@
     "no_phone": "Sin teléfono",
     "assigned_services": "Servicios Asignados",
     "manage": "Administrar",
-    "no_services_assigned": "Ningún servicio asignado",
     "service_placeholder": "Servicio",
     "more": "más",
     "manage_leave": "Administrar Ausencias",
@@ -237,7 +236,8 @@
     "err_delete_leave": "Error al cancelar la ausencia",
     "already_exists": "Ya existe un proveedor con este nombre.",
     "all_fields_required": "Todos los campos son obligatorios.",
-    "no_changes_detected": "No se detectaron cambios."
+    "no_changes_detected": "No se detectaron cambios.",
+    "no_services_assigned": "No hay servicios asignados actualmente a este profesional."
   },
   "dashboard": {
     "link_copied_toast": "Enlace copiado",

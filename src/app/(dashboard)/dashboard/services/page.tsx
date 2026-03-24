@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { serviceService, Service } from "@/services/serviceService";
 import { useAuth } from "@/hooks/useAuth";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 // Custom Delete Dialog
@@ -135,8 +135,20 @@ export default function ServicesPage() {
         const trimmedName = newService.name.trim();
 
         // Validation: Required fields
-        if (!trimmedName || !newService.description.trim() || !newService.duration_minutes || !newService.price) {
-            setError(t('services.all_fields_required') || "All fields (Name, Description, Duration, and Price) are required.");
+        if (!trimmedName || !newService.description.trim() || newService.duration_minutes === undefined || newService.price === undefined) {
+            setError(t('services.all_fields_required'));
+            return;
+        }
+
+        // Validation: Non-negative
+        if (newService.duration_minutes < 0 || newService.price < 0) {
+            setError("Price and Duration cannot be negative."); 
+            return;
+        }
+
+        // Validation: Language Guard
+        if (!validateLanguage(trimmedName, language) || !validateLanguage(newService.description, language)) {
+            setError(t('common.err_invalid_chars'));
             return;
         }
 
@@ -178,8 +190,20 @@ export default function ServicesPage() {
         const originalService = services.find(s => s.id === editingService.id);
 
         // Validation: Required fields
-        if (!trimmedName || !editingService.description.trim() || !editingService.duration_minutes || !editingService.price) {
-            setError(t('services.all_fields_required') || "All fields (Name, Description, Duration, and Price) are required.");
+        if (!trimmedName || !editingService.description.trim() || editingService.duration_minutes === undefined || editingService.price === undefined) {
+            setError(t('services.all_fields_required'));
+            return;
+        }
+
+        // Validation: Non-negative
+        if (editingService.duration_minutes < 0 || editingService.price < 0) {
+            setError("Price and Duration cannot be negative.");
+            return;
+        }
+
+        // Validation: Language Guard
+        if (!validateLanguage(trimmedName, language) || !validateLanguage(editingService.description, language)) {
+            setError(t('common.err_invalid_chars'));
             return;
         }
 

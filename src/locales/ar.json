@@ -171,7 +171,6 @@
     "no_phone": "بدون هاتف",
     "assigned_services": "الخدمات المخصصة",
     "manage": "إدارة",
-    "no_services_assigned": "لا يوجد خدمات مخصصة",
     "service_placeholder": "خدمة",
     "more": "أكثر",
     "manage_leave": "إدارة الإجازات",
@@ -231,7 +230,8 @@
     "err_delete_leave": "فشل إلغاء الإجازة",
     "already_exists": "مزود بهذا الاسم موجود بالفعل.",
     "all_fields_required": "جميع الحقول مطلوبة.",
-    "no_changes_detected": "لم يتم اكتشاف أي تغييرات."
+    "no_changes_detected": "لم يتم اكتشاف أي تغييرات.",
+    "no_services_assigned": "لا توجد خدمات معينة حاليًا لهذا المحترف."
   },
   "dashboard": {
     "link_copied_toast": "تم نسخ الرابط",

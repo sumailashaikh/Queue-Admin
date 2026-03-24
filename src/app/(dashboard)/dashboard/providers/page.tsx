@@ -20,7 +20,7 @@ import {
     BarChart3,
     AlertCircle
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
@@ -134,6 +134,12 @@ export default function ProvidersPage() {
                     trimmedRole !== (selectedProvider.role || "") ||
                     trimmedDept !== (selectedProvider.department || "");
 
+                // Validation: Language Guard
+                if (!validateLanguage(trimmedName, language) || !validateLanguage(trimmedRole, language) || !validateLanguage(trimmedDept, language)) {
+                    setError(t('common.err_invalid_chars'));
+                    return;
+                }
+
                 if (!hasChanges) {
                     setError(t('providers.no_changes_detected'));
                     return;
@@ -148,13 +154,21 @@ export default function ProvidersPage() {
                 });
                 showToast(t('providers.success_update'));
             } else {
+                // Validation: Language Guard
+                if (!validateLanguage(trimmedName, language) || !validateLanguage(trimmedRole, language) || !validateLanguage(trimmedDept, language)) {
+                    setError(t('common.err_invalid_chars'));
+                    setIsSubmitting(false);
+                    return;
+                }
+
                 await providerService.createProvider({
                     ...formData,
                     name: trimmedName,
                     role: trimmedRole,
                     department: trimmedDept,
                     phone: trimmedPhone,
-                    business_id: business?.id
+                    business_id: business?.id,
+                    is_active: true
                 });
                 showToast(t('providers.success_add'));
             }
@@ -189,10 +203,11 @@ export default function ProvidersPage() {
         if (!deleteModal.provider) return;
         setIsSubmitting(true);
         try {
-            await providerService.deleteProvider(deleteModal.provider.id);
+            // Soft delete/deactivate to preserve analytics
+            await providerService.updateProvider(deleteModal.provider.id, { is_active: false });
             showToast(t('providers.success_deactivate'));
-            await fetchProviders();
             setDeleteModal({ isOpen: false, provider: null });
+            await fetchProviders();
         } catch (error: any) {
             showToast(t('providers.err_deactivate'), "error");
         } finally {
@@ -332,8 +347,10 @@ export default function ProvidersPage() {
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
     const filteredProviders = providers.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.role?.toLowerCase().includes(search.toLowerCase())
+        p.is_active !== false && (
+            p.name.toLowerCase().includes(search.toLowerCase()) ||
+            p.role?.toLowerCase().includes(search.toLowerCase())
+        )
     );
 
     if (loading) {
@@ -489,7 +506,7 @@ export default function ProvidersPage() {
                                     {(() => {
                                         const services = (provider as any).services || (provider as any).queue_entry_services || [];
                                         if (services.length === 0) {
-                                            return <span className="text-[10px] font-bold text-slate-400 italic">{t('providers.no_services_assigned')}</span>;
+                                            return <span className="text-[10px] font-bold text-slate-400 italic bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100/50">{t('providers.no_services_assigned')}</span>;
                                         }
                                         const displayed = services.slice(0, 3);
                                         const remaining = services.length - 3;
@@ -624,33 +641,44 @@ export default function ProvidersPage() {
                                 </div>
 
                                 <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                    {services.map(service => (
-                                        <div
-                                            key={service.id}
-                                            onClick={() => {
-                                                setAssignedServiceIds(prev =>
-                                                    prev.includes(service.id)
-                                                        ? prev.filter(id => id !== service.id)
-                                                        : [...prev, service.id]
-                                                );
-                                            }}
-                                            className={cn(
-                                                "flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all",
-                                                assignedServiceIds.includes(service.id)
-                                                    ? "bg-slate-900 border-slate-900 text-white"
-                                                    : "bg-slate-50 border-slate-50 text-slate-600 hover:border-slate-200"
-                                            )}
-                                        >
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs font-bold uppercase tracking-tight">{service.name}</p>
-                                                <p className={cn(
-                                                    "text-[9px] font-medium uppercase tracking-wider",
-                                                    assignedServiceIds.includes(service.id) ? "text-slate-400" : "text-slate-400"
-                                                )}>{service.duration_minutes} min • {formatCurrency(service.price, business?.currency, language)}</p>
+                                    {services.length === 0 ? (
+                                        <div className="py-12 flex flex-col items-center justify-center text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                                            <div className="h-12 w-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-300 mb-4">
+                                                <Briefcase className="h-6 w-6" />
                                             </div>
-                                            {assignedServiceIds.includes(service.id) && <CheckCircle2 className="h-4 w-4 text-white" />}
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-6 leading-relaxed">
+                                                {t('providers.no_services_assigned')}
+                                            </p>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        services.map(service => (
+                                            <div
+                                                key={service.id}
+                                                onClick={() => {
+                                                    setAssignedServiceIds(prev =>
+                                                        prev.includes(service.id)
+                                                            ? prev.filter(id => id !== service.id)
+                                                            : [...prev, service.id]
+                                                    );
+                                                }}
+                                                className={cn(
+                                                    "flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all",
+                                                    assignedServiceIds.includes(service.id)
+                                                        ? "bg-slate-900 border-slate-900 text-white"
+                                                        : "bg-slate-50 border-slate-50 text-slate-600 hover:border-slate-200"
+                                                )}
+                                            >
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs font-bold uppercase tracking-tight">{service.name}</p>
+                                                    <p className={cn(
+                                                        "text-[9px] font-medium uppercase tracking-wider",
+                                                        assignedServiceIds.includes(service.id) ? "text-slate-400" : "text-slate-400"
+                                                    )}>{service.duration_minutes} min • {formatCurrency(service.price, business?.currency, language)}</p>
+                                                </div>
+                                                {assignedServiceIds.includes(service.id) && <CheckCircle2 className="h-4 w-4 text-white" />}
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
 
                                 <button

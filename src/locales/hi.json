@@ -171,7 +171,6 @@
     "no_phone": "कोई फोन नहीं",
     "assigned_services": "सौंपी गई सेवाएं",
     "manage": "प्रबंधित करें",
-    "no_services_assigned": "कोई सेवा नहीं सौंपी गई",
     "service_placeholder": "सेवा",
     "more": "अधिक",
     "manage_leave": "छुट्टी प्रबंधित करें",
@@ -231,7 +230,8 @@
     "err_delete_leave": "छुट्टी रद्द करने में विफल",
     "already_exists": "इस नाम का प्रदाता पहले से मौजूद है।",
     "all_fields_required": "सभी फ़ील्ड आवश्यक हैं।",
-    "no_changes_detected": "कोई बदलाव नहीं पाया गया।"
+    "no_changes_detected": "कोई बदलाव नहीं पाया गया।",
+    "no_services_assigned": "इस पेशेवर को वर्तमान में कोई सेवा नहीं सौंपी गई है।"
   },
   "dashboard": {
     "link_copied_toast": "लिंक कॉपी हो गया",

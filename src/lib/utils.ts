@@ -58,3 +58,20 @@ export function formatDuration(minutes: number, t: (key: string, options?: any) 
 
     return t(hours === 1 ? 'common.duration_hm' : 'common.duration_hsm', { h: hours, m: remainingMinutes });
 }
+
+export function validateLanguage(text: string, language: string): boolean {
+    if (!text) return true;
+
+    // Common symbols, numbers and punctuation allowed across all languages
+    const common = "0-9\\s.,!?'\"()&@#%*+=\\-\\/\\[\\]{}|_\\\\";
+
+    const regexMap: Record<string, RegExp> = {
+        'en': new RegExp(`^[a-zA-Z${common}]*$`),
+        'es': new RegExp(`^[a-zA-Z${common}áéíóúüñÁÉÍÓÚÜÑ]*$`),
+        'hi': new RegExp(`^[\\u0900-\\u097F${common}]*$`),
+        'ar': new RegExp(`^[\\u0600-\\u06FF${common}]*$`)
+    };
+
+    const regex = regexMap[language] || regexMap['en'];
+    return regex.test(text);
+}
