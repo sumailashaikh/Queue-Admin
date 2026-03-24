@@ -313,6 +313,12 @@ export default function ProvidersPage() {
             return;
         }
 
+        // Mandatory Fields Check
+        if (!leaveFormData.start_date || !leaveFormData.end_date || !leaveFormData.leave_type || !leaveFormData.note?.trim()) {
+            setError(t('providers.all_fields_required'));
+            return;
+        }
+
         // Language Guard for Note
         if (leaveFormData.note && !validateLanguage(leaveFormData.note, language)) {
             setError(t('common.err_invalid_chars'));
@@ -349,6 +355,7 @@ export default function ProvidersPage() {
 
     const handleDeleteLeave = async (leaveId: string) => {
         if (!selectedProvider) return;
+        if (!window.confirm(t('providers.confirm_deny_leave'))) return;
         setIsSubmitting(true);
         try {
             await providerService.deleteLeave(leaveId);
@@ -958,6 +965,7 @@ export default function ProvidersPage() {
                                             <div className="space-y-2">
                                                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('providers.notes')}</label>
                                                 <textarea
+                                                    required
                                                     placeholder={t('providers.notes_placeholder')}
                                                     rows={2}
                                                     value={leaveFormData.note}
