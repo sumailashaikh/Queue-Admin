@@ -234,7 +234,10 @@
     "success_leave_add": "Ausencia programada con éxito",
     "err_add_leave": "Error al programar ausencia",
     "success_leave_delete": "Ausencia cancelada con éxito",
-    "err_delete_leave": "Error al cancelar la ausencia"
+    "err_delete_leave": "Error al cancelar la ausencia",
+    "already_exists": "Ya existe un proveedor con este nombre.",
+    "all_fields_required": "Todos los campos son obligatorios.",
+    "no_changes_detected": "No se detectaron cambios."
   },
   "dashboard": {
     "link_copied_toast": "Enlace copiado",

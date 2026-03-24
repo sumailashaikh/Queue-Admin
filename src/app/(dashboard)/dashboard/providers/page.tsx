@@ -55,6 +55,7 @@ export default function ProvidersPage() {
         department: ""
     });
 
+    const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -100,26 +101,61 @@ export default function ProvidersPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        const trimmedName = formData.name.trim();
+        const trimmedRole = formData.role.trim();
+        const trimmedDept = formData.department.trim();
+        const trimmedPhone = formData.phone.trim();
+
+        // Validation: Required fields
+        if (!trimmedName || !trimmedRole || !trimmedDept || !trimmedPhone) {
+            setError(t('providers.all_fields_required'));
+            return;
+        }
+
+        // Validation: Duplicate Name
+        const isDuplicate = providers.some(p => 
+            p.name.trim().toLowerCase() === trimmedName.toLowerCase() && 
+            (!selectedProvider || p.id !== selectedProvider.id)
+        );
+        if (isDuplicate) {
+            setError(t('providers.already_exists'));
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             if (selectedProvider) {
                 // Change Detection
                 const hasChanges =
-                    formData.name !== selectedProvider.name ||
-                    formData.phone !== (selectedProvider.phone || "") ||
-                    formData.role !== (selectedProvider.role || "") ||
-                    formData.department !== (selectedProvider.department || "");
+                    trimmedName !== selectedProvider.name ||
+                    trimmedPhone !== (selectedProvider.phone || "") ||
+                    trimmedRole !== (selectedProvider.role || "") ||
+                    trimmedDept !== (selectedProvider.department || "");
 
                 if (!hasChanges) {
-                    showToast(t('providers.no_changes'), "success");
-                    setIsModalOpen(false);
+                    setError(t('providers.no_changes_detected'));
                     return;
                 }
 
-                await providerService.updateProvider(selectedProvider.id, formData);
+                await providerService.updateProvider(selectedProvider.id, {
+                    ...formData,
+                    name: trimmedName,
+                    role: trimmedRole,
+                    department: trimmedDept,
+                    phone: trimmedPhone
+                });
                 showToast(t('providers.success_update'));
             } else {
-                await providerService.createProvider({ ...formData, business_id: business?.id });
+                await providerService.createProvider({
+                    ...formData,
+                    name: trimmedName,
+                    role: trimmedRole,
+                    department: trimmedDept,
+                    phone: trimmedPhone,
+                    business_id: business?.id
+                });
                 showToast(t('providers.success_add'));
             }
             await fetchProviders();
@@ -134,6 +170,7 @@ export default function ProvidersPage() {
     };
 
     const handleEdit = (provider: ServiceProvider) => {
+        setError(null);
         setSelectedProvider(provider);
         setFormData({
             name: provider.name,
@@ -335,6 +372,7 @@ export default function ProvidersPage() {
                     </div>
                     <button
                         onClick={() => {
+                            setError(null);
                             setSelectedProvider(null);
                             setFormData({ name: "", phone: "", role: "", department: "" });
                             setIsModalOpen(true);
@@ -498,9 +536,16 @@ export default function ProvidersPage() {
                                         {selectedProvider ? t('providers.update_professional') : t('providers.add_new_professional')}
                                     </h3>
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">
-                                        <X className="h-6 w-6" />
+                                        <X className="h-5 w-5" />
                                     </button>
                                 </div>
+
+                                {error && (
+                                    <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-sm font-bold animate-in slide-in-from-top-2">
+                                        <AlertCircle className="h-5 w-5" />
+                                        {error}
+                                    </div>
+                                )}
 
                                 <div className="space-y-6">
                                     <div className="space-y-2">

@@ -107,12 +107,7 @@ export default function ServicesPage() {
         name: "",
         description: "",
         duration_minutes: 30,
-        price: 0,
-        translations: {
-            hi: "",
-            es: "",
-            ar: ""
-        }
+        price: 0
     });
 
     const fetchServices = useCallback(async () => {
@@ -161,8 +156,7 @@ export default function ServicesPage() {
                 name: "",
                 description: "",
                 duration_minutes: 30,
-                price: 0,
-                translations: { hi: "", es: "", ar: "" }
+                price: 0
             });
             showToast(t('services.success_add') || "Service added successfully!");
         } catch (err: any) {
@@ -243,16 +237,12 @@ export default function ServicesPage() {
     };
 
     const getDisplayName = (service: Service) => {
-        if (service.translations && service.translations[language]) {
-            return service.translations[language];
-        }
         return service.name;
     };
 
     const filteredServices = services.filter(s =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (s.translations && Object.values(s.translations).some(v => v.toLowerCase().includes(searchQuery.toLowerCase())))
+        s.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (loading) {
@@ -314,8 +304,7 @@ export default function ServicesPage() {
                                 name: "",
                                 description: "",
                                 duration_minutes: 30,
-                                price: 0,
-                                translations: { hi: "", es: "", ar: "" }
+                                price: 0
                             });
                             setIsAddModalOpen(true);
                         }}
@@ -378,11 +367,7 @@ export default function ServicesPage() {
                                     <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight group-hover:text-blue-600 transition-colors">
                                         {getDisplayName(service)}
                                     </h3>
-                                    {service.translations && service.translations[language] && (
-                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                            {t('services.original')}{service.name}
-                                        </p>
-                                    )}
+                                    {/* Removed translation subtitle */}
                                     <p className="text-xs font-semibold text-slate-500/70 leading-relaxed line-clamp-2 min-h-[2.5rem]">
                                         {service.description || t('services.default_desc')}
                                     </p>

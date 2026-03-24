@@ -228,7 +228,10 @@
     "success_leave_add": "تم جدولة الإجازة بنجاح",
     "err_add_leave": "فشل جدولة الإجازة",
     "success_leave_delete": "تم إلغاء الإجازة بنجاح",
-    "err_delete_leave": "فشل إلغاء الإجازة"
+    "err_delete_leave": "فشل إلغاء الإجازة",
+    "already_exists": "مزود بهذا الاسم موجود بالفعل.",
+    "all_fields_required": "جميع الحقول مطلوبة.",
+    "no_changes_detected": "لم يتم اكتشاف أي تغييرات."
   },
   "dashboard": {
     "link_copied_toast": "تم نسخ الرابط",

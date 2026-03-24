@@ -228,7 +228,10 @@
     "success_leave_add": "छुट्टी सफलतापूर्वक निर्धारित की गई",
     "err_add_leave": "छुट्टी निर्धारित करने में विफल",
     "success_leave_delete": "छुट्टी सफलतापूर्वक रद्द की गई",
-    "err_delete_leave": "छुट्टी रद्द करने में विफल"
+    "err_delete_leave": "छुट्टी रद्द करने में विफल",
+    "already_exists": "इस नाम का प्रदाता पहले से मौजूद है।",
+    "all_fields_required": "सभी फ़ील्ड आवश्यक हैं।",
+    "no_changes_detected": "कोई बदलाव नहीं पाया गया।"
   },
   "dashboard": {
     "link_copied_toast": "लिंक कॉपी हो गया",
