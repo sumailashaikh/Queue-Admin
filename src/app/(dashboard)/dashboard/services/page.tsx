@@ -413,7 +413,7 @@ export default function ServicesPage() {
                     <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
                         <div className="px-8 py-8 md:py-10 border-b border-slate-100/50 bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-start justify-between shrink-0">
                             <div className="space-y-1.5 text-left">
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner mb-2 border border-blue-100/50">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider shadow-inner mb-2 border border-blue-100/50">
                                     <Pencil className="h-3.5 w-3.5" />
                                     {t('common.edit')}
                                 </div>
@@ -433,7 +433,7 @@ export default function ServicesPage() {
                             )}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.name_label')}</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.name_label')}</label>
                                     <input
                                         required
                                         type="text"
@@ -445,7 +445,7 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.duration_label')}</label>
                                         <input
                                             required
                                             type="number"
@@ -456,7 +456,7 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
                                         <input
                                             required
                                             type="number"
@@ -468,7 +468,7 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
@@ -480,8 +480,8 @@ export default function ServicesPage() {
                                 </div>
                             </div>
                             <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-4 bg-white text-slate-500 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95">{t('common.cancel')}</button>
-                                <button disabled={isSubmitting} onClick={handleEditService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-4 bg-slate-100 text-slate-500 border-2 border-slate-100 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-300 rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all active:scale-95">{t('common.cancel')}</button>
+                                <button disabled={isSubmitting} onClick={handleEditService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
                                     {t('services.save_changes')}
                                 </button>
@@ -497,7 +497,7 @@ export default function ServicesPage() {
                     <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
                         <div className="px-8 py-8 md:py-10 border-b border-slate-100/50 bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-start justify-between shrink-0">
                             <div className="space-y-1.5 text-left">
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner mb-2 border border-blue-100/50">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider shadow-inner mb-2 border border-blue-100/50">
                                     <Plus className="h-3.5 w-3.5" />
                                     {t('services.new_service')}
                                 </div>
@@ -517,7 +517,7 @@ export default function ServicesPage() {
                             )}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.name_label')}</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.name_label')}</label>
                                     <input
                                         required
                                         type="text"
@@ -529,7 +529,7 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.duration_label')}</label>
                                         <input
                                             required
                                             type="number"
@@ -540,7 +540,7 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
                                         <input
                                             required
                                             type="number"
@@ -552,7 +552,7 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
@@ -564,8 +564,8 @@ export default function ServicesPage() {
                                 </div>
                             </div>
                             <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
-                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-8 py-4 bg-white text-slate-500 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95">{t('common.cancel')}</button>
-                                <button disabled={isSubmitting} onClick={handleAddService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-8 py-4 bg-slate-100 text-slate-500 border-2 border-slate-100 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-300 rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all active:scale-95">{t('common.cancel')}</button>
+                                <button disabled={isSubmitting} onClick={handleAddService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
                                     {t('services.create_service')}
                                 </button>

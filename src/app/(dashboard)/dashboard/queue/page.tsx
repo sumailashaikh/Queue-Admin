@@ -833,14 +833,14 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-900 uppercase">{t('queue.whatsapp_invite')}</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                        <X className="h-5 w-5 text-slate-400" />
+                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('queue.whatsapp_invite')}</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
                 <form onSubmit={handleSendInvite} className="space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.customer_name')}</label>
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.customer_name')}</label>
                         <input
                             required
                             type="text"
@@ -851,7 +851,7 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
                         <CountryPhoneInput
                             value={inviteData.phone}
                             onChange={(full) => setInviteData({ ...inviteData, phone: full })}
@@ -861,7 +861,7 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
                     </div>
                     <button
                         type="submit"
-                        className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-bold uppercase tracking-wider shadow-xl shadow-emerald-500/10 transition-all active:scale-95"
+                        className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-xs font-bold uppercase tracking-wider shadow-xl shadow-emerald-500/10 transition-all active:scale-95"
                     >
                         {t('queue.generating_invite')}
                     </button>
@@ -884,12 +884,12 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                                 {mode === 'create' ? t('queue.create_queue') : t('queue.update_queue_config')}
                             </h2>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">
+                            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                 {mode === 'create' ? t('queue.define_new_flow') : t('queue.update_queue_config')}
                             </p>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                            <X className="h-6 w-6 text-slate-400" />
+                        <button onClick={onClose} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">
+                            <X className="h-6 w-6" />
                         </button>
                     </div>
 
@@ -902,7 +902,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.queue_identity')}</label>
+                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.queue_identity')}</label>
                             <input
                                 required
                                 type="text"
@@ -914,7 +914,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.description_optional')}</label>
+                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.description_optional')}</label>
                             <textarea
                                 rows={2}
                                 placeholder={t('queue.description_placeholder')}
@@ -926,7 +926,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{t('queue.avg_time_person')}</label>
+                                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.avg_time_person')}</label>
                                 <input
                                     type="number"
                                     value={formData.current_wait_time_minutes || ""}
@@ -996,7 +996,7 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
                         </button>
                         <button
                             onClick={onClose}
-                            className="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all"
+                            className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-500 border-2 border-slate-100 hover:border-slate-300 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all"
                         >
                             {t('queue.cancel')}
                         </button>
@@ -1026,7 +1026,7 @@ const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onClose}
-                            className="flex-1 h-14 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-2xl transition-all"
+                            className="flex-1 h-14 bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-200 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all"
                         >
                             {t('queue.keep_entries')}
                         </button>

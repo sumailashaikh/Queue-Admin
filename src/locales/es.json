@@ -416,7 +416,8 @@
     "delete_error": "Servicio no encontrado o ya eliminado.",
     "delete_fail": "Fallo al eliminar el servicio.",
     "err_duplicate": "Ya existe un servicio con este nombre.",
-    "original": "Original: "
+    "original": "Original: ",
+    "all_fields_required": "Todos los campos son obligatorios"
   },
   "display": {
     "title": "Estado en Vivo",

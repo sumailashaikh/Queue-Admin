@@ -482,7 +482,8 @@
     "err_duplicate": "A Service With This Name Already Exists.",
     "original": "Original: ",
     "save_changes": "Save Changes",
-    "create_service": "Create Service"
+    "create_service": "Create Service",
+    "all_fields_required": "All Fields Are Required"
   },
   "display": {
     "title": "Live Status",
