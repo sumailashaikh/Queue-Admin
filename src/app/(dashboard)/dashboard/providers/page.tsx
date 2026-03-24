@@ -89,6 +89,12 @@ export default function ProvidersPage() {
     useEffect(() => {
         fetchProviders();
         fetchServices();
+
+        const interval = setInterval(() => {
+            fetchProviders();
+            fetchServices();
+        }, 30000);
+        return () => clearInterval(interval);
     }, [fetchProviders, fetchServices]);
 
     const handleSubmit = async (e: React.FormEvent) => {

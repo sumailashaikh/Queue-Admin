@@ -77,6 +77,12 @@ export default function AppointmentsPage() {
     useEffect(() => {
         fetchAppointments();
         fetchProviders();
+
+        const interval = setInterval(() => {
+            fetchAppointments();
+            fetchProviders();
+        }, 30000);
+        return () => clearInterval(interval);
     }, [fetchAppointments, fetchProviders]);
 
     const handleUpdateStatus = async (id: string, status: AppointmentStatus) => {

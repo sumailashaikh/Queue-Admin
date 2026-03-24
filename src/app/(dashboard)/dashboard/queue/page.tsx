@@ -378,9 +378,12 @@ export default function LiveQueuePage() {
         const interval = setInterval(() => {
             // Force re-render to update "Xm ago" timers
             setEntries(prev => [...prev]);
-        }, 60000);
+            // Refresh data from API
+            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            fetchQueues();
+        }, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [selectedQueue?.id, fetchEntries, fetchQueues]);
 
     const handleCopyLink = () => {
         if (!business) return;

@@ -23,5 +23,10 @@ export const serviceService = {
 
     async deleteService(id: string): Promise<void> {
         await api.delete(`/services/${id}`);
+    },
+
+    async updateService(id: string, data: Partial<Service>): Promise<Service> {
+        const result = await api.patch<Service>(`/services/${id}`, data);
+        return result.data;
     }
 };
