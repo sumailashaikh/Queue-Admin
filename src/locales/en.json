@@ -235,6 +235,8 @@
     "service_placeholder": "Service",
     "more": "More",
     "manage_leave": "Manage Leave",
+    "notify_whatsapp": "Notify via WhatsApp",
+    "approve_and_notify": "Approve & Notify",
     "update_professional": "Update Professional",
     "add_new_professional": "Add New Professional",
     "full_name": "Full Name",

@@ -18,7 +18,8 @@ import {
     Clock,
     Trash2,
     BarChart3,
-    AlertCircle
+    AlertCircle,
+    MessageSquare
 } from "lucide-react";
 import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
@@ -290,7 +291,7 @@ export default function ProvidersPage() {
         }
     };
 
-    const handleAddLeave = async (e: React.FormEvent) => {
+    const handleAddLeave = async (e: React.FormEvent, shouldNotify: boolean = false) => {
         e.preventDefault();
         if (!selectedProvider) return;
 
@@ -315,6 +316,17 @@ export default function ProvidersPage() {
         try {
             await providerService.addLeave(selectedProvider.id, leaveFormData);
             showToast(t('providers.success_leave_add'));
+            
+            if (shouldNotify) {
+                const msg = t('providers.whatsapp_leave_msg', {
+                    name: selectedProvider.name,
+                    start: new Date(leaveFormData.start_date).toLocaleDateString(),
+                    end: new Date(leaveFormData.end_date).toLocaleDateString()
+                });
+                const url = `https://wa.me/${selectedProvider.phone?.replace('+', '')}?text=${encodeURIComponent(msg)}`;
+                window.open(url, '_blank');
+            }
+
             const data = await providerService.getLeaves(selectedProvider.id);
             setLeavesData(data);
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
@@ -842,10 +854,10 @@ export default function ProvidersPage() {
                                                                     const url = `https://wa.me/${selectedProvider.phone?.replace('+', '')}?text=${encodeURIComponent(msg)}`;
                                                                     window.open(url, '_blank');
                                                                 }}
-                                                                className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg flex items-center justify-center transition-all"
-                                                                title={t('appointments.whatsapp_customer')}
+                                                                className="h-8 w-8 bg-emerald-500 text-white hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-all shadow-sm"
+                                                                title={t('providers.notify_whatsapp')}
                                                             >
-                                                                <Phone className="h-4 w-4" />
+                                                                <MessageSquare className="h-4 w-4" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteLeave(leave.id)}
@@ -939,14 +951,26 @@ export default function ProvidersPage() {
                                                 />
                                             </div>
 
-                                            <button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-xl shadow-slate-200"
-                                            >
-                                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                                {t('providers.submit_leave')}
-                                            </button>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => handleAddLeave(e, false)}
+                                                    disabled={isSubmitting}
+                                                    className="w-full py-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-[24px] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 text-slate-400" />}
+                                                    {t('providers.submit_leave')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => handleAddLeave(e, true)}
+                                                    disabled={isSubmitting}
+                                                    className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[24px] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-xl shadow-emerald-100"
+                                                >
+                                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                                                    {t('providers.approve_and_notify')}
+                                                </button>
+                                            </div>
                                         </form>
                                     </div>
                                 </div>
