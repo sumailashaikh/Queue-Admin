@@ -69,7 +69,7 @@ export default function DashboardLayout({
                             </button>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-xs md:text-sm font-bold text-slate-800 uppercase tracking-wider truncate">
-                                    {pathname.startsWith('/dashboard/admin') ? 'System Oversight' : (business?.name || 'Dashboard')}
+                                    {pathname.startsWith('/dashboard/admin') ? 'Admin Dashboard' : (business?.name || 'Dashboard')}
                                 </h2>
                             </div>
                         </div>
@@ -77,7 +77,7 @@ export default function DashboardLayout({
                         <div className="flex items-center gap-6">
                             {!pathname.startsWith('/dashboard/admin') && <LanguageSwitcher />}
                             <div className="hidden sm:flex flex-col items-end">
-                                <p className="text-sm font-bold text-slate-900">{pathname.startsWith('/dashboard/admin') ? 'Administrator' : t('dashboard.business_portal')}</p>
+                                <p className="text-sm font-bold text-slate-900">{pathname.startsWith('/dashboard/admin') ? 'Admin' : t('dashboard.business_portal')}</p>
                                 <button
                                     onClick={() => { if (business?.slug) window.location.href = `/p/${business.slug}`; }}
                                     className="text-xs font-extrabold text-primary uppercase tracking-wider hover:text-blue-600 transition-colors"

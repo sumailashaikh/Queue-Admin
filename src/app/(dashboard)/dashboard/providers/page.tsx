@@ -252,12 +252,12 @@ export default function ProvidersPage() {
         const end = new Date(leaveFormData.end_date);
 
         if (start < tomorrow) {
-            showToast(t('providers.err_past_date') || "Start date must be tomorrow or later", "error");
+            showToast(t('providers.err_past_date'), "error");
             return;
         }
 
         if (end < start) {
-            showToast(t('providers.err_invalid_range') || "End date cannot be before start date", "error");
+            showToast(t('providers.err_invalid_range'), "error");
             return;
         }
 
@@ -886,7 +886,7 @@ export default function ProvidersPage() {
                                         onClick={() => setDeleteModal({ isOpen: false, provider: null })}
                                         className="py-4 bg-slate-50 text-slate-600 rounded-[20px] text-xs font-bold uppercase tracking-wider hover:bg-slate-100 transition-all"
                                     >
-                                        {t('providers.cancel')}
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         onClick={confirmDelete}

@@ -137,22 +137,24 @@ export default function ServicesPage() {
         e.preventDefault();
         setError(null);
 
+        const trimmedName = newService.name.trim();
+
         // Validation: Required fields
-        if (!newService.name.trim() || !newService.description.trim() || !newService.duration_minutes || !newService.price) {
-            setError("All fields (Name, Description, Duration, and Price) are required.");
+        if (!trimmedName || !newService.description.trim() || !newService.duration_minutes || !newService.price) {
+            setError(t('services.all_fields_required') || "All fields (Name, Description, Duration, and Price) are required.");
             return;
         }
 
         // Validation: Duplicate Name
-        const isDuplicate = services.some(s => s.name.toLowerCase() === newService.name.toLowerCase());
+        const isDuplicate = services.some(s => s.name.trim().toLowerCase() === trimmedName.toLowerCase());
         if (isDuplicate) {
-            setError("Service with this name already exists.");
+            setError(t('services.err_duplicate'));
             return;
         }
 
         setIsSubmitting(true);
         try {
-            await serviceService.createService({ ...newService, business_id: business?.id });
+            await serviceService.createService({ ...newService, name: trimmedName, business_id: business?.id });
             await fetchServices();
             setIsAddModalOpen(false);
             setNewService({
@@ -162,7 +164,7 @@ export default function ServicesPage() {
                 price: 0,
                 translations: { hi: "", es: "", ar: "" }
             });
-            showToast("Service added successfully!");
+            showToast(t('services.success_add') || "Service added successfully!");
         } catch (err: any) {
             setError(err.message || "Failed to add service");
         } finally {
@@ -176,43 +178,45 @@ export default function ServicesPage() {
 
         setError(null);
 
+        const trimmedName = editingService.name.trim();
+
         // Find original service to compare
         const originalService = services.find(s => s.id === editingService.id);
 
         // Validation: Required fields
-        if (!editingService.name.trim() || !editingService.description.trim() || !editingService.duration_minutes || !editingService.price) {
-            setError("All fields (Name, Description, Duration, and Price) are required.");
+        if (!trimmedName || !editingService.description.trim() || !editingService.duration_minutes || !editingService.price) {
+            setError(t('services.all_fields_required') || "All fields (Name, Description, Duration, and Price) are required.");
             return;
         }
 
         // Validation: No changes detected
         if (originalService) {
             const hasChanges = 
-                editingService.name !== originalService.name ||
-                editingService.description !== originalService.description ||
+                trimmedName !== originalService.name ||
+                editingService.description.trim() !== originalService.description ||
                 editingService.duration_minutes !== originalService.duration_minutes ||
                 editingService.price !== originalService.price;
             
             if (!hasChanges) {
-                setError("No changes detected.");
+                setError(t('services.no_changes_detected') || "No changes detected.");
                 return;
             }
         }
 
         // Validation: Duplicate Name (excluding self)
-        const isDuplicate = services.some(s => s.id !== editingService.id && s.name.toLowerCase() === editingService.name.toLowerCase());
+        const isDuplicate = services.some(s => s.id !== editingService.id && s.name.trim().toLowerCase() === trimmedName.toLowerCase());
         if (isDuplicate) {
-            setError("Service with this name already exists.");
+            setError(t('services.err_duplicate'));
             return;
         }
 
         setIsSubmitting(true);
         try {
-            await serviceService.updateService(editingService.id, editingService);
+            await serviceService.updateService(editingService.id, { ...editingService, name: trimmedName });
             await fetchServices();
             setIsEditModalOpen(false);
             setEditingService(null);
-            showToast("Service updated successfully!");
+            showToast(t('services.success_update') || "Service updated successfully!");
         } catch (err: any) {
             setError(err.message || "Failed to update service");
         } finally {
@@ -269,42 +273,48 @@ export default function ServicesPage() {
             {toast && (
                 <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-10 duration-500">
                     <div className={cn(
-                        "flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl border backdrop-blur-md",
-                        toast.type === 'success' ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-red-500/90 border-red-400 text-white"
+                        "flex items-center gap-3 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border backdrop-blur-md",
+                        toast.type === 'success' ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-rose-500/90 border-rose-400 text-white"
                     )}>
                         {toast.type === 'success' ? <ShieldCheck className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
                         <p className="text-xs font-black uppercase tracking-wider">{toast.message}</p>
                     </div>
                 </div>
             )}
+            
             {/* Header section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                        <Sparkles className="h-6 w-6 text-primary" />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+                        <div className="h-10 w-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
+                            <Sparkles className="h-5 w-5" />
+                        </div>
                         {t('services.title')}
                     </h1>
-                    <p className="text-slate-500 text-sm mt-1 uppercase tracking-wider font-semibold">
+                    <p className="text-slate-500 text-xs font-black uppercase tracking-[0.2em] ml-1">
                         {t('services.subtitle')}
                     </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="relative w-full sm:w-64 md:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <div className="relative w-full sm:w-72 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <input
                             type="text"
                             placeholder={t('services.search_placeholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-medium shadow-sm"
+                            className="w-full pl-12 pr-4 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm outline-none focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 transition-all font-bold text-slate-900 shadow-sm"
                         />
                     </div>
                     <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold transition-all shadow-sm hover:bg-slate-800 active:scale-95"
+                        onClick={() => {
+                            setError(null);
+                            setIsAddModalOpen(true);
+                        }}
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 hover:bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 group"
                     >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
                         {t('services.new_service')}
                     </button>
                 </div>
@@ -312,13 +322,13 @@ export default function ServicesPage() {
 
             {/* Grid Section */}
             {filteredServices.length === 0 ? (
-                <div className="pro-card py-32 text-center space-y-8 bg-white/50 backdrop-blur-sm">
-                    <div className="h-28 w-28 bg-slate-100 rounded-[40px] flex items-center justify-center mx-auto border-2 border-dashed border-slate-200">
+                <div className="py-32 text-center space-y-8 bg-slate-50/50 rounded-[40px] border-4 border-dashed border-slate-100">
+                    <div className="h-28 w-28 bg-white rounded-[40px] flex items-center justify-center mx-auto shadow-xl border border-slate-100 relative grayscale opacity-50">
                         <LayoutGrid className="h-12 w-12 text-slate-300" />
                     </div>
-                    <div className="space-y-3">
-                        <p className="text-2xl font-bold text-slate-900 uppercase tracking-tight">{t('services.empty_workspace')}</p>
-                        <p className="text-sm font-bold text-slate-500 max-w-sm mx-auto leading-relaxed">
+                    <div className="space-y-2">
+                        <p className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{t('services.empty_workspace')}</p>
+                        <p className="text-sm font-bold text-slate-400 max-w-xs mx-auto leading-relaxed">
                             {t('services.no_match')}
                         </p>
                     </div>
@@ -328,28 +338,28 @@ export default function ServicesPage() {
                     {filteredServices.map((service) => (
                         <div
                             key={service.id}
-                            className="group relative bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between gap-4 overflow-hidden"
+                            className="group relative bg-white border-2 border-slate-100 rounded-[32px] p-8 shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:border-blue-500/10 transition-all duration-500 flex flex-col justify-between gap-6 overflow-hidden animate-in fade-in zoom-in-95"
                         >
-
-                            <div className="relative space-y-4">
+                            <div className="relative space-y-6">
                                 <div className="flex justify-between items-start">
-                                    <div className="h-10 w-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                                        <Sparkles className="h-5 w-5" />
+                                    <div className="h-14 w-14 bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm border border-blue-100/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                        <Sparkles className="h-6 w-6" />
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 translate-x-2 -translate-y-2">
                                         <button
                                             onClick={() => {
+                                                setError(null);
                                                 setEditingService(service);
                                                 setIsEditModalOpen(true);
                                             }}
-                                            className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                            className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"
                                             title="Edit Service"
                                         >
                                             <Pencil className="h-4 w-4" />
                                         </button>
                                         <button
                                             onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name, error: null })}
-                                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-90"
                                             title="Delete Service"
                                         >
                                             <TrashIcon className="h-4 w-4" />
@@ -357,28 +367,28 @@ export default function ServicesPage() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">
+                                <div className="space-y-2">
+                                    <h3 className="text-xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-blue-600 transition-colors">
                                         {getDisplayName(service)}
                                     </h3>
                                     {service.translations && service.translations[language] && (
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                                             {t('services.original')}{service.name}
                                         </p>
                                     )}
-                                    <p className="mt-1 text-sm text-slate-500 leading-relaxed line-clamp-2">
+                                    <p className="text-sm font-bold text-slate-500/70 leading-relaxed line-clamp-2 min-h-[2.5rem]">
                                         {service.description || t('services.default_desc')}
                                     </p>
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 rounded-md border border-slate-200 text-slate-600">
-                                        <Clock className="h-3.5 w-3.5" />
-                                        <span className="text-xs font-semibold">{service.duration_minutes} min</span>
+                                <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 text-slate-600 shadow-inner">
+                                        <Clock className="h-3.5 w-3.5 text-blue-500" />
+                                        <span className="text-xs font-black uppercase tracking-wider">{service.duration_minutes} {t('queue.min')}</span>
                                     </div>
                                     <div className="flex flex-col items-end">
-                                        <span className="text-xs font-semibold text-slate-400 mb-0.5">{t('services.price_label')}</span>
-                                        <span className="text-xl font-bold text-slate-900 tracking-tight">{formatCurrency(service.price, business?.currency, language)}</span>
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{t('services.price_label')}</span>
+                                        <span className="text-2xl font-black text-slate-900 tracking-tighter">{formatCurrency(service.price, business?.currency, language)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -402,19 +412,19 @@ export default function ServicesPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
                         <div className="px-8 py-8 md:py-10 border-b border-slate-100/50 bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-start justify-between shrink-0">
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 text-left">
                                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner mb-2 border border-blue-100/50">
                                     <Pencil className="h-3.5 w-3.5" />
-                                    Edit Workspace
+                                    {t('common.edit')}
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Edit Service</h2>
-                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">Modify your service details below.</p>
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">{t('services.save_changes')}</h2>
+                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">{t('services.subtitle')}</p>
                             </div>
                             <button onClick={() => setIsEditModalOpen(false)} className="p-3 bg-white hover:bg-rose-50 rounded-2xl shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-all active:scale-90 hover:rotate-90 group">
                                 <X className="h-5 w-5 group-hover:drop-shadow-sm" />
                             </button>
                         </div>
-                        <div className="overflow-y-auto p-8 space-y-8">
+                        <div className="overflow-y-auto p-8 space-y-8 text-left">
                             {error && (
                                 <div className="p-5 bg-rose-50 border border-rose-100/50 rounded-2xl flex items-center gap-4 text-rose-600 shadow-sm animate-in slide-in-from-top-2">
                                     <AlertCircle className="h-5 w-5 text-rose-500" />
@@ -423,10 +433,11 @@ export default function ServicesPage() {
                             )}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Service Name</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.name_label')}</label>
                                     <input
                                         required
                                         type="text"
+                                        placeholder={t('services.name_placeholder')}
                                         value={editingService.name}
                                         onChange={(e) => setEditingService({ ...editingService, name: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
@@ -434,42 +445,45 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Duration (min)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
                                         <input
                                             required
                                             type="number"
+                                            min="0"
                                             value={editingService.duration_minutes}
-                                            onChange={(e) => setEditingService({ ...editingService, duration_minutes: parseInt(e.target.value) || 0 })}
+                                            onChange={(e) => setEditingService({ ...editingService, duration_minutes: Math.max(0, parseInt(e.target.value) || 0) })}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Price ({business?.currency || '₹'})</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
                                         <input
                                             required
                                             type="number"
+                                            min="0"
                                             value={editingService.price}
-                                            onChange={(e) => setEditingService({ ...editingService, price: parseInt(e.target.value) || 0 })}
+                                            onChange={(e) => setEditingService({ ...editingService, price: Math.max(0, parseInt(e.target.value) || 0) })}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Description</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
+                                        placeholder={t('services.desc_placeholder')}
                                         value={editingService.description}
                                         onChange={(e) => setEditingService({ ...editingService, description: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm resize-none"
                                     />
                                 </div>
                             </div>
-                            <div className="pt-6 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white/95 pb-4">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-4 bg-slate-50 text-slate-600 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all">Cancel</button>
-                                <button disabled={isSubmitting} onClick={handleEditService} className="px-8 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
-                                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-blue-400" />}
-                                    Save Changes
+                            <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-4 bg-white text-slate-500 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95">{t('common.cancel')}</button>
+                                <button disabled={isSubmitting} onClick={handleEditService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
+                                    {t('services.save_changes')}
                                 </button>
                             </div>
                         </div>
@@ -482,19 +496,19 @@ export default function ServicesPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
                         <div className="px-8 py-8 md:py-10 border-b border-slate-100/50 bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-start justify-between shrink-0">
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 text-left">
                                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner mb-2 border border-blue-100/50">
                                     <Plus className="h-3.5 w-3.5" />
-                                    New Service
+                                    {t('services.new_service')}
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Add Service</h2>
-                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">Create a new service for your business.</p>
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter">{t('services.create_service')}</h2>
+                                <p className="text-sm font-bold text-slate-500/80 tracking-tight">{t('services.add_subtitle')}</p>
                             </div>
                             <button onClick={() => setIsAddModalOpen(false)} className="p-3 bg-white hover:bg-rose-50 rounded-2xl shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 transition-all active:scale-90 hover:rotate-90 group">
                                 <X className="h-5 w-5 group-hover:drop-shadow-sm" />
                             </button>
                         </div>
-                        <div className="overflow-y-auto p-8 space-y-8">
+                        <div className="overflow-y-auto p-8 space-y-8 text-left">
                             {error && (
                                 <div className="p-5 bg-rose-50 border border-rose-100/50 rounded-2xl flex items-center gap-4 text-rose-600 shadow-sm animate-in slide-in-from-top-2">
                                     <AlertCircle className="h-5 w-5 text-rose-500" />
@@ -503,11 +517,11 @@ export default function ServicesPage() {
                             )}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Service Name</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.name_label')}</label>
                                     <input
                                         required
                                         type="text"
-                                        placeholder="Full Service Name"
+                                        placeholder={t('services.name_placeholder')}
                                         value={newService.name}
                                         onChange={(e) => setNewService({ ...newService, name: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
@@ -515,43 +529,45 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Duration (min)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.duration_label')}</label>
                                         <input
                                             required
                                             type="number"
+                                            min="0"
                                             value={newService.duration_minutes}
-                                            onChange={(e) => setNewService({ ...newService, duration_minutes: parseInt(e.target.value) || 0 })}
+                                            onChange={(e) => setNewService({ ...newService, duration_minutes: Math.max(0, parseInt(e.target.value) || 0) })}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Price ({business?.currency || '₹'})</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.price_label')} ({business?.currency || '₹'})</label>
                                         <input
                                             required
                                             type="number"
+                                            min="0"
                                             value={newService.price}
-                                            onChange={(e) => setNewService({ ...newService, price: parseInt(e.target.value) || 0 })}
+                                            onChange={(e) => setNewService({ ...newService, price: Math.max(0, parseInt(e.target.value) || 0) })}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Description</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
-                                        placeholder="What's included in this service?"
+                                        placeholder={t('services.desc_placeholder')}
                                         value={newService.description}
                                         onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm resize-none"
                                     />
                                 </div>
                             </div>
-                            <div className="pt-6 border-t border-slate-100 flex justify-end gap-3 sticky bottom-0 bg-white/95 pb-4">
-                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-4 bg-slate-50 text-slate-600 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all">Cancel</button>
-                                <button disabled={isSubmitting} onClick={handleAddService} className="px-8 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
-                                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
-                                    Create Service
+                            <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
+                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-8 py-4 bg-white text-slate-500 border-2 border-slate-100 hover:bg-slate-50 hover:text-slate-700 hover:border-slate-200 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95">{t('common.cancel')}</button>
+                                <button disabled={isSubmitting} onClick={handleAddService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
+                                    {t('services.create_service')}
                                 </button>
                             </div>
                         </div>
