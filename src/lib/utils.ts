@@ -60,21 +60,23 @@ export function formatDuration(minutes: number, t: (key: string, options?: any) 
 }
 
 export function validateLanguage(text: string, language: string): boolean {
-    if (!text) return true;
+    if (!text || !text.trim()) return true;
 
     // Normalize language (e.g., 'en-US' -> 'en')
-    const baseLang = language?.split('-')[0].toLowerCase() || 'en';
+    const baseLang = (language || 'en').split('-')[0].toLowerCase();
 
-    // Common symbols, numbers and punctuation allowed across all languages
-    const common = "0-9\\s.,!?'\"()&@#%*+=\\-\\/\\[\\]{}|_\\\\";
+    // Standard punctuation, numbers and symbols allowed in all languages
+    const commonPattern = "0-9\\s\\.,!?'\"()&@#%*+=\\-\\/\\[\\]{}|_\\\\";
 
-    const regexMap: Record<string, RegExp> = {
-        'en': new RegExp(`^[a-zA-Z${common}]*$`),
-        'es': new RegExp(`^[a-zA-Z${common}áéíóúüñÁÉÍÓÚÜÑ]*$`),
-        'hi': new RegExp(`^[\\u0900-\\u097F${common}]*$`),
-        'ar': new RegExp(`^[\\u0600-\\u06FF${common}]*$`)
+    const patterns: Record<string, string> = {
+        'en': `a-zA-Z${commonPattern}`,
+        'es': `a-zA-ZáéíóúüñÁÉÍÓÚÜÑ${commonPattern}`,
+        'hi': `\\u0900-\\u097F${commonPattern}`,
+        'ar': `\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF${commonPattern}`
     };
 
-    const regex = regexMap[baseLang] || regexMap['en'];
+    const pattern = patterns[baseLang] || patterns['en'];
+    const regex = new RegExp(`^[${pattern}]*$`);
+    
     return regex.test(text);
 }
