@@ -142,7 +142,7 @@ export default function ServicesPage() {
 
         // Validation: Non-negative
         if (newService.duration_minutes < 0 || newService.price < 0) {
-            setError("Price and Duration cannot be negative."); 
+            setError(t('services.err_negative_values')); 
             return;
         }
 
@@ -170,9 +170,9 @@ export default function ServicesPage() {
                 duration_minutes: 30,
                 price: 0
             });
-            showToast(t('services.success_add') || "Service added successfully!");
+            showToast(t('services.success_add'));
         } catch (err: any) {
-            setError(err.message || "Failed to add service");
+            setError(err.message || t('services.err_add'));
         } finally {
             setIsSubmitting(false);
         }
@@ -197,7 +197,7 @@ export default function ServicesPage() {
 
         // Validation: Non-negative
         if (editingService.duration_minutes < 0 || editingService.price < 0) {
-            setError("Price and Duration cannot be negative.");
+            setError(t('services.err_negative_values'));
             return;
         }
 
@@ -234,9 +234,9 @@ export default function ServicesPage() {
             await fetchServices();
             setIsEditModalOpen(false);
             setEditingService(null);
-            showToast(t('services.success_update') || "Service updated successfully!");
+            showToast(t('services.success_update'));
         } catch (err: any) {
-            setError(err.message || "Failed to update service");
+            setError(err.message || t('services.err_update'));
         } finally {
             setIsSubmitting(false);
         }

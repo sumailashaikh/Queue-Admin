@@ -233,6 +233,7 @@
     "success_leave_add": "Ausencia programada con éxito",
     "err_add_leave": "Error al programar ausencia",
     "success_leave_delete": "Ausencia cancelada con éxito",
+    "whatsapp_leave_msg": "Hola {{name}}, su permiso del {{start}} al {{end}} ha sido aprobado.",
     "err_delete_leave": "Error al cancelar la ausencia",
     "already_exists": "Ya existe un proveedor con este nombre.",
     "all_fields_required": "Todos los campos son obligatorios.",
@@ -421,7 +422,12 @@
     "err_duplicate": "Ya existe un servicio con este nombre.",
     "original": "Original: ",
     "all_fields_required": "Todos los campos son obligatorios",
-    "no_changes_detected": "No se detectaron cambios"
+    "no_changes_detected": "No se detectaron cambios",
+    "success_add": "Servicio añadido con éxito",
+    "success_update": "Servicio actualizado con éxito",
+    "err_negative_values": "El precio y la duración no pueden ser negativos",
+    "err_add": "Error al añadir servicio",
+    "err_update": "Error al actualizar servicio"
   },
   "display": {
     "title": "Estado en Vivo",

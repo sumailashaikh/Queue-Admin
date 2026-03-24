@@ -116,6 +116,12 @@ export default function ProvidersPage() {
             return;
         }
 
+        // Validation: Language Guard (Moved to top for better feedback)
+        if (!validateLanguage(trimmedName, language) || !validateLanguage(trimmedRole, language) || !validateLanguage(trimmedDept, language)) {
+            setError(t('common.err_invalid_chars'));
+            return;
+        }
+
         // Validation: Duplicate Name
         const isDuplicate = providers.some(p => 
             p.name.trim().toLowerCase() === trimmedName.toLowerCase() && 
@@ -136,13 +142,6 @@ export default function ProvidersPage() {
                     trimmedRole !== (selectedProvider.role || "") ||
                     trimmedDept !== (selectedProvider.department || "");
 
-                // Validation: Language Guard
-                if (!validateLanguage(trimmedName, language) || !validateLanguage(trimmedRole, language) || !validateLanguage(trimmedDept, language)) {
-                    setError(t('common.err_invalid_chars'));
-                    setIsSubmitting(false);
-                    return;
-                }
-
                 if (!hasChanges) {
                     setError(t('providers.no_changes_detected'));
                     setIsSubmitting(false);
@@ -158,12 +157,7 @@ export default function ProvidersPage() {
                 });
                 showToast(t('providers.success_update'));
             } else {
-                // Validation: Language Guard
-                if (!validateLanguage(trimmedName, language) || !validateLanguage(trimmedRole, language) || !validateLanguage(trimmedDept, language)) {
-                    setError(t('common.err_invalid_chars'));
-                    setIsSubmitting(false);
-                    return;
-                }
+                // (Language guard already performed at top)
 
                 await providerService.createProvider({
                     ...formData,
@@ -837,12 +831,29 @@ export default function ProvidersPage() {
                                                                 {new Date(leave.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - {new Date(leave.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                                             </p>
                                                         </div>
-                                                        <button
-                                                            onClick={() => handleDeleteLeave(leave.id)}
-                                                            className="h-8 w-8 bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-600 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover/item:opacity-100 shrink-0"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
+                                                        <div className="flex items-center gap-1.5 opacity-0 group-hover/item:opacity-100 transition-all shrink-0">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const msg = t('providers.whatsapp_leave_msg', {
+                                                                        name: selectedProvider.name,
+                                                                        start: new Date(leave.start_date).toLocaleDateString(),
+                                                                        end: new Date(leave.end_date).toLocaleDateString()
+                                                                    });
+                                                                    const url = `https://wa.me/${selectedProvider.phone?.replace('+', '')}?text=${encodeURIComponent(msg)}`;
+                                                                    window.open(url, '_blank');
+                                                                }}
+                                                                className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg flex items-center justify-center transition-all"
+                                                                title="Notify via WhatsApp"
+                                                            >
+                                                                <Phone className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteLeave(leave.id)}
+                                                                className="h-8 w-8 bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-600 rounded-lg flex items-center justify-center transition-all"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 );
                                             })

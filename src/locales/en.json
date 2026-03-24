@@ -290,6 +290,7 @@
     "err_add_leave": "Failed To Schedule Leave",
     "success_leave_delete": "Leave Canceled Successfully",
     "err_delete_leave": "Failed To Cancel Leave",
+    "whatsapp_leave_msg": "Hi {{name}}, your leave from {{start}} to {{end}} has been approved.",
     "err_past_date": "Start Date Must Be Tomorrow Or Later",
     "err_invalid_range": "End Date Cannot Be Before Start Date",
     "already_exists": "A Provider With This Name Already Exists.",
@@ -488,7 +489,12 @@
     "save_changes": "Save Changes",
     "create_service": "Create Service",
     "all_fields_required": "All Fields Are Required",
-    "no_changes_detected": "No Changes Detected"
+    "no_changes_detected": "No Changes Detected",
+    "success_add": "Service Added Successfully",
+    "success_update": "Service Updated Successfully",
+    "err_negative_values": "Price And Duration Cannot Be Negative",
+    "err_add": "Failed To Add Service",
+    "err_update": "Failed To Update Service"
   },
   "display": {
     "title": "Live Status",

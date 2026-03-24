@@ -227,6 +227,7 @@
     "success_leave_add": "छुट्टी सफलतापूर्वक निर्धारित की गई",
     "err_add_leave": "छुट्टी निर्धारित करने में विफल",
     "success_leave_delete": "छुट्टी सफलतापूर्वक रद्द की गई",
+    "whatsapp_leave_msg": "नमस्ते {{name}}, {{start}} से {{end}} तक की आपकी छुट्टी स्वीकृत हो गई है।",
     "err_delete_leave": "छुट्टी रद्द करने में विफल",
     "already_exists": "इस नाम का प्रदाता पहले से मौजूद है।",
     "all_fields_required": "सभी फ़ील्ड आवश्यक हैं।",
@@ -416,7 +417,12 @@
     "err_duplicate": "इस नाम की सेवा पहले से मौजूद है।",
     "original": "मूल: ",
     "all_fields_required": "सभी फ़ील्ड आवश्यक हैं",
-    "no_changes_detected": "कोई बदलाव नहीं पाया गया"
+    "no_changes_detected": "कोई बदलाव नहीं पाया गया",
+    "success_add": "सेवा सफलतापूर्वक जोड़ी गई",
+    "success_update": "सेवा सफलतापूर्वक अपडेट की गई",
+    "err_negative_values": "मूल्य और अवधि नकारात्मक नहीं हो सकते",
+    "err_add": "सेवा जोड़ने में विफल",
+    "err_update": "सेवा अपडेट करने में विफल"
   },
   "display": {
     "title": "लाइव स्थिति",
