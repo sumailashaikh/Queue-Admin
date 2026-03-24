@@ -353,12 +353,23 @@ export default function ProvidersPage() {
         }
     };
 
-    const handleDeleteLeave = async (leaveId: string) => {
+    const handleDeleteLeave = async (leave: any) => {
         if (!selectedProvider) return;
         if (!window.confirm(t('providers.confirm_deny_leave'))) return;
+        
         setIsSubmitting(true);
         try {
-            await providerService.deleteLeave(leaveId);
+            await providerService.deleteLeave(leave.id);
+            
+            // Send WhatsApp Rejection Message
+            const msg = t('providers.whatsapp_deny_msg', {
+                name: selectedProvider.name,
+                start: new Date(leave.start_date).toLocaleDateString(),
+                end: new Date(leave.end_date).toLocaleDateString()
+            });
+            const url = `https://wa.me/${selectedProvider.phone?.replace('+', '')}?text=${encodeURIComponent(msg)}`;
+            window.open(url, '_blank');
+
             showToast(t('providers.success_leave_delete'));
             const data = await providerService.getLeaves(selectedProvider.id);
             setLeavesData(data);
@@ -876,7 +887,7 @@ export default function ProvidersPage() {
                                                                 <MessageSquare className="h-4 w-4" />
                                                             </button>
                                                             <button
-                                                                onClick={() => handleDeleteLeave(leave.id)}
+                                                                onClick={() => handleDeleteLeave(leave)}
                                                                 className="h-8 w-8 bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-600 rounded-lg flex items-center justify-center transition-all"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />

@@ -230,6 +230,7 @@
     "err_add_leave": "فشل جدولة الإجازة",
     "success_leave_delete": "تم إلغاء الإجازة بنجاح",
     "whatsapp_leave_msg": "مرحباً {{name}}، تمت الموافقة على إجازتك من {{start}} إلى {{end}}.",
+    "whatsapp_deny_msg": "مرحباً {{name}}، عذراً، لم تتم الموافقة على طلب إجازتك من {{start}} إلى {{end}}.",
     "err_delete_leave": "فشل إلغاء الإجازة",
     "confirm_deny_leave": "هل أنت متأكد أنك تريد رفض طلب الإجازة هذا؟",
     "deny_leave": "رفض الإجازة",

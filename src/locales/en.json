@@ -295,6 +295,7 @@
     "confirm_deny_leave": "Are you sure you want to deny this leave request?",
     "deny_leave": "Deny Leave",
     "whatsapp_leave_msg": "Hi {{name}}, your leave from {{start}} to {{end}} has been approved.",
+    "whatsapp_deny_msg": "Hi {{name}}, unfortunately your leave request from {{start}} to {{end}} could not be approved.",
     "err_past_date": "Start Date Must Be Tomorrow Or Later",
     "err_invalid_range": "End Date Cannot Be Before Start Date",
     "already_exists": "A Provider With This Name Already Exists.",

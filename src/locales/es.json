@@ -236,6 +236,7 @@
     "err_add_leave": "Error al programar ausencia",
     "success_leave_delete": "Ausencia cancelada con éxito",
     "whatsapp_leave_msg": "Hola {{name}}, su permiso del {{start}} al {{end}} ha sido aprobado.",
+    "whatsapp_deny_msg": "Hola {{name}}, lamentablemente su solicitud de permiso del {{start}} al {{end}} no pudo ser aprobada.",
     "err_delete_leave": "Error al cancelar la ausencia",
     "confirm_deny_leave": "¿Está seguro de que desea denegar esta solicitud de ausencia?",
     "deny_leave": "Denegar ausencia",
