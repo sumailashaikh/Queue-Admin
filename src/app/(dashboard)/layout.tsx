@@ -69,7 +69,7 @@ export default function DashboardLayout({
                             </button>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-xs md:text-sm font-bold text-slate-800 uppercase tracking-wider truncate">
-                                    {business?.name || 'Dashboard'}
+                                    {pathname.startsWith('/dashboard/admin') ? 'System Oversight' : (business?.name || 'Dashboard')}
                                 </h2>
                             </div>
                         </div>
@@ -77,7 +77,7 @@ export default function DashboardLayout({
                         <div className="flex items-center gap-6">
                             {!pathname.startsWith('/dashboard/admin') && <LanguageSwitcher />}
                             <div className="hidden sm:flex flex-col items-end">
-                                <p className="text-sm font-bold text-slate-900">{t('dashboard.business_portal')}</p>
+                                <p className="text-sm font-bold text-slate-900">{pathname.startsWith('/dashboard/admin') ? 'Administrator' : t('dashboard.business_portal')}</p>
                                 <button
                                     onClick={() => { if (business?.slug) window.location.href = `/p/${business.slug}`; }}
                                     className="text-xs font-extrabold text-primary uppercase tracking-wider hover:text-blue-600 transition-colors"
@@ -86,7 +86,7 @@ export default function DashboardLayout({
                                 </button>
                             </div>
                             <div className="h-9 w-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 shadow-sm">
-                                {user?.full_name?.charAt(0) || business?.name?.charAt(0) || 'AD'}
+                                {pathname.startsWith('/dashboard/admin') ? 'AD' : (user?.full_name?.charAt(0) || business?.name?.charAt(0) || 'U')}
                             </div>
                         </div>
                     </header>
