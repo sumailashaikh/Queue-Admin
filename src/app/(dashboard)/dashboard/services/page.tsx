@@ -373,14 +373,14 @@ export default function ServicesPage() {
                                                 setIsEditModalOpen(true);
                                             }}
                                             className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"
-                                            title="Edit Service"
+                                            title={t('common.edit')}
                                         >
                                             <Pencil className="h-4 w-4" />
                                         </button>
                                         <button
                                             onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name, error: null })}
                                             className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-90"
-                                            title="Delete Service"
+                                            title={t('common.delete')}
                                         >
                                             <TrashIcon className="h-4 w-4" />
                                         </button>

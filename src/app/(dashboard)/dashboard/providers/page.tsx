@@ -467,7 +467,7 @@ export default function ProvidersPage() {
                                             <button
                                                 onClick={() => handleDelete(provider)}
                                                 className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                                                title={t('providers.deactivate_provider')}
+                                                title={t('providers.deactivate_expert')}
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
@@ -672,7 +672,7 @@ export default function ProvidersPage() {
                                                     <p className={cn(
                                                         "text-[9px] font-medium uppercase tracking-wider",
                                                         assignedServiceIds.includes(service.id) ? "text-slate-400" : "text-slate-400"
-                                                    )}>{service.duration_minutes} min • {formatCurrency(service.price, business?.currency, language)}</p>
+                                                    )}>{service.duration_minutes} {t('queue.min')} • {formatCurrency(service.price, business?.currency, language)}</p>
                                                 </div>
                                                 {assignedServiceIds.includes(service.id) && <CheckCircle2 className="h-4 w-4 text-white" />}
                                             </div>
@@ -843,7 +843,7 @@ export default function ProvidersPage() {
                                                                     window.open(url, '_blank');
                                                                 }}
                                                                 className="h-8 w-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg flex items-center justify-center transition-all"
-                                                                title="Notify via WhatsApp"
+                                                                title={t('appointments.whatsapp_customer')}
                                                             >
                                                                 <Phone className="h-4 w-4" />
                                                             </button>
@@ -1009,7 +1009,7 @@ export default function ProvidersPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
-                                    {toast.type === 'error' ? 'Expertise System Alert' : 'System Update'}
+                                    {toast.type === 'error' ? t('common.status') : t('common.status')}
                                 </p>
                                 <p className="text-sm font-bold text-slate-900 truncate">{toast.message}</p>
                             </div>

@@ -345,7 +345,7 @@
   },
   "common": {
     "save": "Guardar",
-    "cancel": "Quizás luego",
+    "cancel": "Cerrar",
     "edit": "Editar",
     "delete": "Eliminar",
     "loading": "Cargando...",
@@ -353,8 +353,10 @@
     "finished": "Terminado",
     "archived": "Archivado",
     "error_updating": "Error al actualizar el elemento",
+    "err_invalid_chars": "Utilice únicamente caracteres del idioma actual.",
     "confirm": "Confirmar",
     "got_it": "¡Entendido!",
+    "close": "Cerrar",
     "duration_m": "{{m}} minutos",
     "duration_h": "{{h}} hora",
     "duration_hs": "{{h}} horas",
@@ -427,7 +429,9 @@
     "success_update": "Servicio actualizado con éxito",
     "err_negative_values": "El precio y la duración no pueden ser negativos",
     "err_add": "Error al añadir servicio",
-    "err_update": "Error al actualizar servicio"
+    "err_update": "Error al actualizar servicio",
+    "save_changes": "Guardar Cambios",
+    "create_service": "Crear Servicio"
   },
   "display": {
     "title": "Estado en Vivo",

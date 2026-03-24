@@ -339,11 +339,18 @@
   },
   "common": {
     "save": "حفظ",
-    "cancel": "ربما لاحقاً",
+    "cancel": "إغلاق",
     "edit": "تعديل",
     "delete": "حذف",
     "loading": "جاري التحميل...",
+    "status": "الحالة",
+    "finished": "المكتملة",
+    "archived": "المؤرشفة",
+    "error_updating": "فشل تحديث العنصر",
+    "err_invalid_chars": "يرجى استخدام الأحرف من اللغة الحالية فقط.",
+    "confirm": "تأكيد",
     "got_it": "حسناً!",
+    "close": "إغلاق",
     "duration_m": "{{m}} دقيقة",
     "duration_h": "ساعة {{h}}",
     "duration_hs": "ساعات {{h}}",
@@ -417,7 +424,9 @@
     "success_update": "تم تحديث الخدمة بنجاح",
     "err_negative_values": "لا يمكن أن يكون السعر والمدة بالسالب",
     "err_add": "فشل في إضافة الخدمة",
-    "err_update": "فشل في تحديث الخدمة"
+    "err_update": "فشل في تحديث الخدمة",
+    "save_changes": "حفظ التغييرات",
+    "create_service": "إنشاء خدمة"
   },
   "display": {
     "title": "الحالة المباشرة",
