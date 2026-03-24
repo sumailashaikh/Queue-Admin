@@ -50,6 +50,14 @@ export default function AdminDashboard() {
     const [globalStats, setGlobalStats] = useState<any>(null);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+    // Toast State
+    const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
     // Invite Modal State
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [invitePhone, setInvitePhone] = useState("");
@@ -108,6 +116,9 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchData();
+        // Auto-refresh every 30 seconds
+        const interval = setInterval(fetchData, 30000);
+        return () => clearInterval(interval);
     }, [fetchData]);
 
     const handleRoleChange = async (userId: string, newRole: string) => {
@@ -115,9 +126,9 @@ export default function AdminDashboard() {
         try {
             await adminService.updateUserRole(userId, newRole);
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
-            alert(t('admin.role_update_success'));
+            showToast(t('admin.role_update_success'));
         } catch (err) {
-            alert(t('admin.role_update_fail'));
+            showToast(t('admin.role_update_fail'), 'error');
         } finally {
             setUpdatingRole(null);
         }
@@ -132,9 +143,9 @@ export default function AdminDashboard() {
                 status: newStatus as any,
                 is_verified: isVerified ?? u.is_verified
             } : u));
-            alert(t('admin.status_update_success'));
+            showToast(t('admin.status_update_success'));
         } catch (err) {
-            alert(t('admin.status_update_fail'));
+            showToast(t('admin.status_update_fail'), 'error');
         } finally {
             setLoading(false);
         }
@@ -166,7 +177,7 @@ export default function AdminDashboard() {
             setBusinessDetails(res);
         } catch (err) {
             console.error("Failed to fetch business details:", err);
-            alert(t('admin.inspect_modal.fetch_fail'));
+            showToast(t('admin.inspect_modal.fetch_fail'), 'error');
         } finally {
             setDetailsLoading(false);
         }
@@ -193,6 +204,18 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-10 max-w-7xl mx-auto pb-20 animate-in fade-in duration-1000">
+            {/* Custom Toast Notification */}
+            {toast && (
+                <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-10 duration-500">
+                    <div className={cn(
+                        "flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl border backdrop-blur-md",
+                        toast.type === 'success' ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-red-500/90 border-red-400 text-white"
+                    )}>
+                        {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                        <p className="text-xs font-black uppercase tracking-wider">{toast.message}</p>
+                    </div>
+                </div>
+            )}
             {/* Reports Coming Soon Modal */}
             {isReportsModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setIsReportsModalOpen(false)}>
@@ -495,16 +518,16 @@ export default function AdminDashboard() {
                                                             onClick={async () => {
                                                                 try {
                                                                     await adminService.updateUserStatus(business.owner.id, 'active', true);
-                                                                    alert("Owner verified successfully");
+                                                                    showToast("Verification successful! The business is now live.");
                                                                     fetchData(); // Re-fetch data to update business list
                                                                 } catch (error) {
-                                                                    alert("Failed to verify owner.");
+                                                                    showToast("Failed to verify business.", 'error');
                                                                 }
                                                             }}
                                                             className="h-8 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all flex items-center gap-1"
                                                         >
                                                             <CheckCircle2 className="h-3 w-3" />
-                                                            {t('admin.verify_owner')}
+                                                            VERIFY BUSINESS
                                                         </button>
                                                     )}
                                                     <button
