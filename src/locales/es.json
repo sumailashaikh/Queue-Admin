@@ -393,7 +393,7 @@
     "upcoming": "Próximas",
     "past": "Pasadas",
     "quiet_day": "Día Tranquilo",
-    "no_bookings": "No hay citas programadas para {tab}.",
+    "no_bookings": "No hay citas programadas para {{tab}}.",
     "loading": "Cargando Citas...",
     "whatsapp_customer": "Enviar Mensaje al Cliente por WhatsApp",
     "pay": "Pagar",
