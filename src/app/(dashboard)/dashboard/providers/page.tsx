@@ -317,7 +317,7 @@ export default function ProvidersPage() {
                     {resignations.length > 0 && (
                         <button onClick={() => setIsResignationModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"><AlertCircle className="h-4 w-4" />{t('providers.resignation_requests')} ({resignations.length})</button>
                     )}
-                    <button onClick={() => { setInviteFormData({ name: "", phone: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('admin.invite_admin')}</button>
+                    <button onClick={() => { setInviteFormData({ name: "", phone: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
                     <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "" }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
                 </div>
             </div>
@@ -336,7 +336,7 @@ export default function ProvidersPage() {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className="h-14 w-14 lg:h-16 lg:w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 capitalize">{provider.name.charAt(0)}</div>
-                                    <div className="min-w-0 flex-1"><h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight uppercase truncate">{provider.name}</h3><p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5 truncate">{provider.role || t('providers.role_placeholder')}</p></div>
+                                    <div className="min-w-0 flex-1"><h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight capitalize line-clamp-2">{provider.name}</h3><p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5 truncate">{provider.role || t('providers.role_placeholder')}</p></div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border", provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-emerald-50 text-emerald-600 border-emerald-100")}>{t(provider.leave_status === 'on_leave' ? 'providers.on_leave' : 'providers.available')}</div>
@@ -425,12 +425,12 @@ export default function ProvidersPage() {
             {isInviteModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
                     <form onSubmit={handleInviteSubmit} className="bg-white w-full max-w-lg rounded-[40px] p-10 space-y-8 shadow-2xl animate-in zoom-in-95">
-                        <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase">{t('admin.invite_modal.title')}</h3><button type="button" onClick={() => setIsInviteModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
+                        <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase">{t('providers.invite_staff')}</h3><button type="button" onClick={() => setIsInviteModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
                         <div className="space-y-6">
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.full_name')}</label><input required type="text" value={inviteFormData.name} onChange={v => setInviteFormData({ ...inviteFormData, name: v.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black" /></div>
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.phone_number')}</label><CountryPhoneInput value={inviteFormData.phone} onChange={v => setInviteFormData({ ...inviteFormData, phone: v })} /></div>
                         </div>
-                        <button disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('admin.invite_modal.submit')}</button>
+                        <button disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.send_invite')}</button>
                     </form>
                 </div>
             )}

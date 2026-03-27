@@ -216,7 +216,7 @@ export default function ServicesPage() {
                 editingService.price !== originalService.price;
             
             if (!hasChanges) {
-                setError(t('services.no_changes_detected'));
+                showToast(t('services.no_changes_detected'), "error");
                 return;
             }
         }
