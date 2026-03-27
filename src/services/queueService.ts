@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { ServiceProvider } from "./providerService";
 
 export interface Queue {
     id: string;
@@ -151,6 +152,11 @@ export const queueService = {
     async updatePayment(entryId: string, paymentMethod: 'cash' | 'qr' | 'card' | 'unpaid'): Promise<QueueEntry> {
         const result = await api.patch<QueueEntry>(`/queues/entries/${entryId}/payment`, { payment_method: paymentMethod });
         return result.data;
+    },
+
+    async getMyTasks(): Promise<QueueEntry[]> {
+        const result = await api.get<QueueEntry[]>('/queues/my-tasks');
+        return result.data || [];
     },
 
     async initializeEntryTasks(entryId: string): Promise<{ status: string }> {

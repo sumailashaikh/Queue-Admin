@@ -1,0 +1,555 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { 
+    Briefcase, 
+    CalendarClock, 
+    CheckCircle2, 
+    Clock, 
+    LayoutDashboard, 
+    Loader2, 
+    LogOut, 
+    Play, 
+    User,
+    CalendarOff,
+    AlertCircle,
+    ChevronRight,
+    Star,
+    X
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn, formatCurrency } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { providerService, ServiceProvider } from "@/services/providerService";
+import { queueService, QueueEntry } from "@/services/queueService";
+import { useLanguage } from "@/context/LanguageContext";
+import { businessService } from "@/services/businessService";
+
+export default function EmployeeDashboard() {
+    const { user, business, logout } = useAuth();
+    const { t, language } = useLanguage();
+    
+    const [profile, setProfile] = useState<ServiceProvider | null>(null);
+    const [tasks, setTasks] = useState<QueueEntry[]>([]);
+    const [leaves, setLeaves] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [activeTab, setActiveTab] = useState<'work' | 'leave'>('work');
+    
+    // Leave Form State
+    const [leaveFormData, setLeaveFormData] = useState({
+        start_date: "",
+        end_date: "",
+        leave_type: "holiday",
+        note: ""
+    });
+    
+    // Resignation State
+    const [isResignationModalOpen, setIsResignationModalOpen] = useState(false);
+    const [resignationFormData, setResignationFormData] = useState({
+        requested_last_date: "",
+        reason: ""
+    });
+    
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
+    const fetchData = useCallback(async () => {
+        try {
+            const [profileData, tasksData, leavesData] = await Promise.all([
+                providerService.getMyProfile(),
+                queueService.getMyTasks(),
+                providerService.getLeaves(user?.id || "") // Backend will handle scoping
+            ]);
+            setProfile(profileData);
+            setTasks(tasksData);
+            setLeaves(leavesData);
+        } catch (error) {
+            console.error("Failed to fetch employee data:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user?.id]);
+
+    useEffect(() => {
+        fetchData();
+        const interval = setInterval(fetchData, 30000);
+        return () => clearInterval(interval);
+    }, [fetchData]);
+
+    const handleStartTask = async (taskId: string) => {
+        setIsSubmitting(true);
+        try {
+            await queueService.startTask(taskId);
+            showToast(t('queue.success_start'));
+            fetchData();
+        } catch (error) {
+            showToast(t('queue.err_start'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleCompleteTask = async (taskId: string) => {
+        setIsSubmitting(true);
+        try {
+            await queueService.completeTask(taskId);
+            showToast(t('queue.success_complete'));
+            fetchData();
+        } catch (error) {
+            showToast(t('queue.err_complete'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleLeaveSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!leaveFormData.start_date || !leaveFormData.end_date || !leaveFormData.note) {
+            showToast(t('providers.all_fields_required'), "error");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await providerService.addLeave(user?.id || "", leaveFormData);
+            showToast(t('employee.leave_success'));
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
+            fetchData();
+        } catch (error) {
+            showToast(t('providers.err_add_leave'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleResignationSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!resignationFormData.requested_last_date) {
+            showToast(t('providers.all_fields_required'), "error");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await businessService.submitResignation(resignationFormData);
+            showToast(t('employee.resignation_sent'));
+            setIsResignationModalOpen(false);
+            setResignationFormData({ requested_last_date: "", reason: "" });
+            fetchData();
+        } catch (error) {
+            showToast(t('providers.err_resignation'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+                <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+                    {t('dashboard.loading')}
+                </p>
+            </div>
+        );
+    }
+
+    const completedToday = tasks.filter(t => t.status === 'completed').length;
+    const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
+
+    return (
+        <div className="min-h-screen bg-[#F8FAFC] pb-24 md:pb-8">
+            {/* Header / Profile Card */}
+            <div className="relative overflow-hidden bg-slate-900 pt-12 pb-24 px-6">
+                <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl" />
+                
+                <div className="relative flex items-center justify-between z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 flex items-center justify-center">
+                            <User className="h-8 w-8 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold text-white tracking-tight uppercase">
+                                {user?.full_name || profile?.name}
+                            </h1>
+                            <p className="text-indigo-300 text-xs font-bold uppercase tracking-widest mt-1">
+                                {profile?.role || t('admin.role')} • {profile?.department || 'Staff'}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => setIsResignationModalOpen(true)}
+                            className="px-4 py-2.5 bg-white/5 hover:bg-rose-500/20 text-white/80 rounded-2xl border border-white/10 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                        >
+                            {t('employee.resign')}
+                        </button>
+                        <button 
+                            onClick={() => logout()}
+                            className="p-3 bg-white/5 hover:bg-rose-500/20 text-white/60 hover:text-rose-400 rounded-2xl border border-white/10 transition-all active:scale-95"
+                        >
+                            <LogOut className="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="px-6 -mt-12 grid grid-cols-2 gap-4 relative z-20">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white p-5 rounded-[32px] shadow-sm border border-slate-100 flex flex-col gap-2"
+                >
+                    <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                        <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div className="mt-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.stats.completed_today')}</p>
+                        <p className="text-2xl font-black text-slate-900">{completedToday}</p>
+                    </div>
+                </motion.div>
+
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white p-5 rounded-[32px] shadow-sm border border-slate-100 flex flex-col gap-2"
+                >
+                    <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                        <Clock className="h-5 w-5" />
+                    </div>
+                    <div className="mt-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.stats.pending_tasks')}</p>
+                        <p className="text-2xl font-black text-slate-900">{pendingTasks}</p>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Main Tabs */}
+            <div className="px-6 mt-8">
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+                    <button 
+                        onClick={() => setActiveTab('work')}
+                        className={cn(
+                            "flex-1 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
+                            activeTab === 'work' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                        )}
+                    >
+                        <Briefcase className="h-4 w-4" />
+                        {t('employee.my_work')}
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('leave')}
+                        className={cn(
+                            "flex-1 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
+                            activeTab === 'leave' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                        )}
+                    >
+                        <CalendarClock className="h-4 w-4" />
+                        {t('employee.leave_application')}
+                    </button>
+                </div>
+
+                <div className="mt-8">
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'work' ? (
+                            <motion.div 
+                                key="work"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                className="space-y-4"
+                            >
+                                {tasks.length === 0 ? (
+                                    <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
+                                        <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
+                                            <LayoutDashboard className="h-10 w-10" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900">{t('employee.no_tasks')}</h3>
+                                        <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider text-center px-8">{t('employee.no_tasks_desc')}</p>
+                                    </div>
+                                ) : (
+                                    tasks.map((task, idx) => (
+                                        <motion.div 
+                                            key={task.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all group"
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                                            #{task.ticket_number}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider",
+                                                            task.status === 'serving' ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-500"
+                                                        )}>
+                                                            {t(`status.${task.status}`)}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold text-slate-900 pt-1 leading-tight uppercase tracking-tight">
+                                                        {task.customer_name}
+                                                    </h3>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                        <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                                                        {task.service_name || 'Service'}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('queue.joined_at')}</p>
+                                                    <p className="text-xs font-extrabold text-slate-900">{new Date(task.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 flex gap-3">
+                                                {task.status === 'waiting' && (
+                                                    <button 
+                                                        disabled={isSubmitting}
+                                                        onClick={() => handleStartTask(task.id)}
+                                                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                                                    >
+                                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                                                        {t('employee.start_task')}
+                                                    </button>
+                                                )}
+                                                {task.status === 'serving' && (
+                                                    <button 
+                                                        disabled={isSubmitting}
+                                                        onClick={() => handleCompleteTask(task.id)}
+                                                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-emerald-500/20"
+                                                    >
+                                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                                                        {t('employee.complete_task')}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    ))
+                                )}
+                            </motion.div>
+                        ) : (
+                            <motion.div 
+                                key="leave"
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="space-y-8"
+                            >
+                                {/* Application Form */}
+                                <form onSubmit={handleLeaveSubmit} className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm space-y-6">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                                            <CalendarOff className="h-5 w-5" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">{t('employee.apply_new_leave')}</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.start_date')}</label>
+                                            <input 
+                                                required
+                                                type="date"
+                                                value={leaveFormData.start_date}
+                                                onChange={e => setLeaveFormData({...leaveFormData, start_date: e.target.value})}
+                                                className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.end_date')}</label>
+                                            <input 
+                                                required
+                                                type="date"
+                                                value={leaveFormData.end_date}
+                                                onChange={e => setLeaveFormData({...leaveFormData, end_date: e.target.value})}
+                                                className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.leave_category')}</label>
+                                        <select 
+                                            value={leaveFormData.leave_type}
+                                            onChange={e => setLeaveFormData({...leaveFormData, leave_type: e.target.value})}
+                                            className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
+                                        >
+                                            <option value="holiday">{t('providers.holiday')}</option>
+                                            <option value="sick">{t('providers.sick')}</option>
+                                            <option value="emergency">{t('providers.emergency')}</option>
+                                            <option value="other">{t('providers.other')}</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.notes')}</label>
+                                        <textarea 
+                                            required
+                                            rows={3}
+                                            placeholder={t('providers.notes_placeholder')}
+                                            value={leaveFormData.note}
+                                            onChange={e => setLeaveFormData({...leaveFormData, note: e.target.value})}
+                                            className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                                        />
+                                    </div>
+
+                                    <button 
+                                        disabled={isSubmitting}
+                                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.submit_leave')}
+                                    </button>
+                                </form>
+
+                                {/* Leave History */}
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('employee.applied_leaves')}</h3>
+                                    {leaves.length === 0 ? (
+                                        <div className="py-12 bg-white/50 border border-slate-100 border-dashed rounded-[32px] flex items-center justify-center">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('providers.no_history')}</p>
+                                        </div>
+                                    ) : (
+                                        leaves.map((leave, idx) => (
+                                            <div key={leave.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "h-12 w-12 rounded-2xl flex items-center justify-center",
+                                                        leave.status === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
+                                                        leave.status === 'REJECTED' ? "bg-rose-50 text-rose-600" :
+                                                        "bg-amber-50 text-amber-600"
+                                                    )}>
+                                                        <CalendarOff className="h-6 w-6" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-900 uppercase tracking-tight">
+                                                            {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                                                        </p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                            {leave.leave_type} 
+                                                            <span className="text-slate-200">•</span>
+                                                            <span className={cn(
+                                                                "font-black",
+                                                                leave.status === 'APPROVED' ? "text-emerald-500" :
+                                                                leave.status === 'REJECTED' ? "text-rose-500" :
+                                                                "text-amber-500"
+                                                            )}>{t(`employee.status_${leave.status.toLowerCase()}`)}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <ChevronRight className="h-5 w-5 text-slate-300" />
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            {/* Toasts */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                        className={cn(
+                            "fixed bottom-24 left-6 right-6 z-[100] p-4 rounded-2xl shadow-xl border flex items-center gap-3 md:left-auto md:right-8 md:bottom-8 md:w-80",
+                            toast.type === 'success' ? "bg-emerald-600 border-emerald-500 text-white" : "bg-rose-600 border-rose-500 text-white"
+                        )}
+                    >
+                        {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+                        <p className="text-xs font-bold uppercase tracking-wide">{toast.message}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Resignation Modal */}
+            {isResignationModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <form onSubmit={handleResignationSubmit} className="p-10 space-y-8">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('employee.resign')}</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('employee.resign_desc')}</p>
+                                </div>
+                                <button type="button" onClick={() => setIsResignationModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                    <X className="h-6 w-6 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('employee.last_date')}</label>
+                                    <input 
+                                        required
+                                        type="date"
+                                        min={new Date().toISOString().split('T')[0]}
+                                        value={resignationFormData.requested_last_date}
+                                        onChange={e => setResignationFormData({...resignationFormData, requested_last_date: e.target.value})}
+                                        className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-rose-500/20 transition-all"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('employee.resign_reason')}</label>
+                                    <textarea 
+                                        rows={3}
+                                        placeholder={t('providers.notes_placeholder')}
+                                        value={resignationFormData.reason}
+                                        onChange={e => setResignationFormData({...resignationFormData, reason: e.target.value})}
+                                        className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-rose-500/20 transition-all resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <button 
+                                disabled={isSubmitting}
+                                className="w-full py-5 bg-rose-600 hover:bg-rose-700 text-white rounded-[24px] text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50 shadow-xl shadow-rose-100"
+                            >
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                                {t('employee.submit_resignation')}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Bottom Nav Hint (Mobile) */}
+            <div className="fixed bottom-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-xl border-t border-slate-200 flex items-center justify-around px-6 md:hidden z-30 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+                <button 
+                    onClick={() => setActiveTab('work')}
+                    className={cn(
+                        "flex flex-col items-center gap-1 transition-all",
+                        activeTab === 'work' ? "text-indigo-600 scale-110" : "text-slate-400"
+                    )}
+                >
+                    <Briefcase className="h-5 w-5" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">{t('employee.my_work')}</span>
+                </button>
+                <button 
+                    onClick={() => setActiveTab('leave')}
+                    className={cn(
+                        "flex flex-col items-center gap-1 transition-all",
+                        activeTab === 'leave' ? "text-indigo-600 scale-110" : "text-slate-400"
+                    )}
+                >
+                    <CalendarClock className="h-5 w-5" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">{t('employee.leave_application')}</span>
+                </button>
+            </div>
+        </div>
+    );
+}

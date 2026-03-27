@@ -98,6 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (isNewUser) {
             router.push('/setup');
+        } else if (userToUse.role === 'employee') {
+            router.push('/dashboard/employee');
         } else if (biz) {
             if (userToUse.role === 'owner' && !userToUse.is_verified) {
                 router.push('/dashboard/verification-pending');

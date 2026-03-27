@@ -301,7 +301,14 @@
     "already_exists": "A Provider With This Name Already Exists.",
     "all_fields_required": "All Fields Are Required.",
     "no_changes_detected": "No Changes Detected.",
-    "no_services_assigned": "No Services Are Currently Assigned To This Professional."
+    "no_services_assigned": "No Services Are Currently Assigned To This Professional.",
+    "success_deactivate_full": "Employee deactivated successfully.",
+    "resignation_requests": "Resignation Requests",
+    "no_resignations": "No pending resignation requests.",
+    "approve_resignation": "Approve Resignation",
+    "deny_resignation": "Deny Resignation",
+    "err_resignation": "Failed to submit resignation request.",
+    "err_active_tasks": "Cannot deactivate: Employee has {{count}} active tasks."
   },
   "dashboard": {
     "link_copied_toast": "Link copied to clipboard",
@@ -535,5 +542,30 @@
     "confirmed": "Confirmed",
     "checked_in": "Checked In",
     "unpaid": "Unpaid"
+  },
+  "employee": {
+    "dashboard": "Employee Dashboard",
+    "my_work": "My Work",
+    "no_tasks": "No Assigned Tasks",
+    "no_tasks_desc": "When customers are assigned to you, they will appear here.",
+    "start_task": "Start Service",
+    "complete_task": "Mark Done",
+    "leave_application": "Leave Application",
+    "applied_leaves": "My Leave Requests",
+    "apply_new_leave": "Apply for Leave",
+    "leave_success": "Leave application submitted",
+    "status_pending": "Pending Approval",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "stats": {
+      "completed_today": "Completed Today",
+      "pending_tasks": "Pending Tasks"
+    },
+    "resign": "Resign",
+    "resign_desc": "Submit a resignation request to the business owner.",
+    "resign_reason": "Reason for resignation",
+    "last_date": "Requested last date",
+    "submit_resignation": "Submit Resignation",
+    "resignation_sent": "Resignation request submitted successfully."
   }
 }

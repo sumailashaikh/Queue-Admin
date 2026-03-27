@@ -71,5 +71,15 @@ export const providerService = {
 
     async deleteLeave(leaveId: string): Promise<void> {
         await api.delete(`/service-providers/leaves/${leaveId}`);
+    },
+
+    async getMyProfile(): Promise<ServiceProvider> {
+        const result = await api.get<ServiceProvider>('/service-providers/me');
+        return result.data;
+    },
+
+    async updateLeaveStatus(leaveId: string, status: 'APPROVED' | 'REJECTED'): Promise<any> {
+        const result = await api.patch<any>(`/service-providers/leaves/${leaveId}/status`, { status });
+        return result.data;
     }
 };

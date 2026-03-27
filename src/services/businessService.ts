@@ -58,5 +58,31 @@ export const businessService = {
     async getBusinessDisplayData(slug: string): Promise<{ business: Business & { queues: any[] }, entries: any[] }> {
         const result = await api.get<{ business: Business & { queues: any[] }, entries: any[] }>(`/public/business/${slug}/display-data`);
         return result.data;
+    },
+
+    async inviteEmployee(data: { name: string, phone: string, business_id: string, role?: string }): Promise<void> {
+        await api.post('/businesses/invite-employee', {
+            phone: data.phone,
+            full_name: data.name,
+            business_id: data.business_id,
+            role: data.role || 'employee'
+        });
+    },
+
+    async deactivateEmployee(employeeId: string): Promise<void> {
+        await api.post(`/businesses/deactivate-employee/${employeeId}`);
+    },
+
+    async submitResignation(data: { reason?: string, requested_last_date?: string }): Promise<void> {
+        await api.post('/service-providers/resignation', data);
+    },
+
+    async getResignationRequests(businessId: string): Promise<any[]> {
+        const result = await api.get<any[]>(`/service-providers/resignation/list?business_id=${businessId}`);
+        return result.data;
+    },
+
+    async updateResignationStatus(requestId: string, status: 'APPROVED' | 'REJECTED'): Promise<void> {
+        await api.patch(`/service-providers/resignation/${requestId}/status`, { status });
     }
 };
