@@ -219,6 +219,8 @@
     "deactivate_warning": "Ya no aparecerá en la lista activa.",
     "cancel": "Cancelar",
     "deactivate": "Desactivar",
+    "invite_staff": "Invitar Empleado",
+    "send_invite": "Enviar Invitación",
     "no_changes": "No se hicieron cambios",
     "success_update": "Proveedor actualizado con éxito",
     "success_add": "Proveedor añadido con éxito",

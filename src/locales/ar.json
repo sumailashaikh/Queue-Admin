@@ -213,6 +213,8 @@
     "deactivate_warning": "لن يظهر في القائمة النشطة بعد الآن.",
     "cancel": "إلغاء",
     "deactivate": "تعطيل",
+    "invite_staff": "دعوة موظف",
+    "send_invite": "إرسال دعوة",
     "no_changes": "لم يتم إجراء أية تغييرات",
     "success_update": "تم تحديث مزود الخدمة بنجاح",
     "success_add": "تمت إضافة مزود الخدمة بنجاح",
