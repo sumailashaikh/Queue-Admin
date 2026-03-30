@@ -19,9 +19,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
                 if (pathname === "/setup") {
                     router.push("/dashboard/admin");
                 }
-            } else if (user?.role === 'employee' || user?.role === 'staff') {
+            } else if (user?.role === 'employee' || user?.role === 'staff' || user?.business_id) {
                 // Employees/Staff don't own businesses, so they skip the /setup check
-                if (pathname === "/setup") {
+                // We also check business_id as a fallback for users whose role hasn't updated yet
+                if (pathname === "/setup" || pathname === "/dashboard") {
                     router.push("/dashboard/employee");
                 }
             } else if (!hasBusiness && pathname !== "/setup") {
@@ -44,8 +45,22 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         );
     }
 
+    const isEmployee = user?.role === 'employee' || user?.role === 'staff' || !!user?.business_id;
+
+    // 1. Not logged in -> Redirect to login
     if (!isAuthenticated) return null;
-    if (user?.role !== 'admin' && !hasBusiness && pathname !== "/setup") return null;
+
+    // 2. Admins are allowed anywhere except they are redirected to dashboard if on setup
+    if (user?.role === 'admin') return <>{children}</>;
+
+    // 3. Employees must NEVER see the setup page or the main dashboard
+    if (isEmployee) {
+        if (pathname === "/setup" || pathname === "/dashboard") return null; // Component will redirect via useEffect
+        return <>{children}</>;
+    }
+
+    // 4. Owners without business must see setup
+    if (!hasBusiness && pathname !== "/setup") return null;
 
     return <>{children}</>;
 }
