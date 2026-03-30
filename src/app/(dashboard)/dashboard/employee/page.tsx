@@ -22,8 +22,10 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { queueService, QueueEntry } from "@/services/queueService";
+import { api } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { businessService } from "@/services/businessService";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function EmployeeDashboard() {
     const { user, business, logout } = useAuth();
@@ -116,7 +118,7 @@ export default function EmployeeDashboard() {
 
         setIsSubmitting(true);
         try {
-            await providerService.addLeave(user?.id || "", leaveFormData);
+            await providerService.addLeave(profile?.id || user?.id || "", leaveFormData);
             showToast(t('employee.leave_success'));
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             fetchData();
@@ -196,6 +198,13 @@ export default function EmployeeDashboard() {
                         >
                             <LogOut className="h-5 w-5" />
                         </button>
+                    </div>
+                </div>
+
+                {/* Language Selection Bar */}
+                <div className="mt-8 flex justify-end">
+                    <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 px-4 py-2">
+                        <LanguageSwitcher />
                     </div>
                 </div>
             </div>

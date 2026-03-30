@@ -79,8 +79,8 @@ export const providerService = {
         return result.data;
     },
 
-    async updateLeaveStatus(leaveId: string, status: 'APPROVED' | 'REJECTED'): Promise<any> {
-        const result = await api.patch<any>(`/service-providers/leaves/${leaveId}/status`, { status });
+    async updateLeaveStatus(leaveId: string, status: 'APPROVED' | 'REJECTED', reason?: string): Promise<any> {
+        const result = await api.patch<any>(`/service-providers/leaves/${leaveId}/status`, { status, reason });
         return result.data;
     }
 };

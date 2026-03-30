@@ -24,8 +24,9 @@ import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { businessService } from "@/services/businessService";
-import { api } from "@/lib/api";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/context/LanguageContext";
+import { api } from "@/lib/api";
 
 export default function ProvidersPage() {
     const { business } = useAuth();
@@ -60,6 +61,7 @@ export default function ProvidersPage() {
     });
 
     const [error, setError] = useState<string | null>(null);
+    const [rejectionReason, setRejectionReason] = useState("");
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -302,8 +304,9 @@ export default function ProvidersPage() {
         if (!selectedProvider) return;
         setIsSubmitting(true);
         try {
-            await providerService.updateLeaveStatus(leaveId, status);
+            await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? rejectionReason : undefined);
             showToast(t('common.success'));
+            setRejectionReason("");
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             await fetchProviders();
         } catch (error) {
@@ -551,7 +554,21 @@ export default function ProvidersPage() {
                             {leavesData.map((leave: any) => (
                                 <div key={leave.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
                                     <div className="min-w-0 flex-1"><p className="text-[10px] font-black text-slate-900">{new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}</p><p className="text-[9px] font-bold text-slate-400 uppercase">{leave.status}</p></div>
-                                    <div className="flex gap-1">{leave.status === 'PENDING' && <button onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"><CheckCircle2 className="h-4 w-4" /></button>}<button onClick={() => handleDeleteLeave(leave.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"><Trash2 className="h-4 w-4" /></button></div>
+                                    <div className="flex gap-1">
+                                        {leave.status === 'PENDING' && (
+                                            <>
+                                                <button onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Approve"><CheckCircle2 className="h-4 w-4" /></button>
+                                                <button onClick={() => {
+                                                    const reason = window.prompt("Reason for rejection?", "Team is fully booked");
+                                                    if (reason !== null) {
+                                                        setRejectionReason(reason);
+                                                        handleUpdateLeaveStatus(leave.id, 'REJECTED');
+                                                    }
+                                                }} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Reject"><X className="h-4 w-4" /></button>
+                                            </>
+                                        )}
+                                        <button onClick={() => handleDeleteLeave(leave.id)} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"><Trash2 className="h-4 w-4" /></button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
