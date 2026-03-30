@@ -16,7 +16,8 @@ import {
     Clock,
     Trash2,
     AlertCircle,
-    MessageSquare
+    MessageSquare,
+    ShieldCheck
 } from "lucide-react";
 import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
@@ -42,7 +43,6 @@ export default function ProvidersPage() {
     const [availabilityData, setAvailabilityData] = useState<any[]>([]);
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; provider: ServiceProvider | null }>({ isOpen: false, provider: null });
 
-    // Multi-tenant Access Management States
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isResignationModalOpen, setIsResignationModalOpen] = useState(false);
@@ -50,12 +50,13 @@ export default function ProvidersPage() {
     const [resignations, setResignations] = useState<any[]>([]);
     const [leaveFormData, setLeaveFormData] = useState({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
     const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "" });
+    
     const [formData, setFormData] = useState({ 
         name: "", 
         phone: "", 
         role: "", 
         department: "",
-        translations: { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } }
+        translations: {} as Record<string, any>
     });
 
     const [error, setError] = useState<string | null>(null);
@@ -115,15 +116,13 @@ export default function ProvidersPage() {
         e.preventDefault();
         setError(null);
 
-        // Validation: No changes detected (for editing)
         if (selectedProvider) {
             const hasChanges =
                 formData.name.trim() !== selectedProvider.name.trim() ||
                 formData.phone.trim() !== (selectedProvider.phone || "").trim() ||
                 formData.role.trim() !== (selectedProvider.role || "").trim() ||
                 formData.department.trim() !== (selectedProvider.department || "").trim() ||
-                JSON.stringify(formData.translations?.hi || {}) !== JSON.stringify(selectedProvider.translations?.hi || {}) ||
-                JSON.stringify(formData.translations?.en || {}) !== JSON.stringify(selectedProvider.translations?.en || {});
+                JSON.stringify(formData.translations?.[language] || {}) !== JSON.stringify(selectedProvider.translations?.[language] || {});
 
             if (!hasChanges) {
                 showToast(t('providers.no_changes_detected'), "error");
@@ -131,17 +130,32 @@ export default function ProvidersPage() {
             }
         }
 
-        if (!validateLanguage(formData.name, language) || (formData.role && !validateLanguage(formData.role, language))) {
+        if (!validateLanguage(formData.name, language) || 
+            (formData.role && !validateLanguage(formData.role, language)) ||
+            (formData.department && !validateLanguage(formData.department, language))) {
             setError(t('common.err_invalid_chars'));
             return;
         }
+
+        const submitData = {
+            ...formData,
+            translations: {
+                ...(formData.translations || {}),
+                [language]: {
+                    name: formData.name.trim(),
+                    role: formData.role.trim(),
+                    department: formData.department.trim()
+                }
+            }
+        };
+
         setIsSubmitting(true);
         try {
             if (selectedProvider) {
-                await providerService.updateProvider(selectedProvider.id, formData);
+                await providerService.updateProvider(selectedProvider.id, submitData);
                 showToast(t('providers.success_update'));
             } else {
-                await providerService.createProvider({ ...formData, business_id: business?.id, is_active: true });
+                await providerService.createProvider({ ...submitData, business_id: business?.id, is_active: true });
                 showToast(t('providers.success_add'));
             }
             await fetchProviders();
@@ -151,7 +165,7 @@ export default function ProvidersPage() {
                 phone: "", 
                 role: "", 
                 department: "",
-                translations: { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } }
+                translations: {}
             });
             setSelectedProvider(null);
         } catch (error) {
@@ -164,12 +178,13 @@ export default function ProvidersPage() {
     const handleEdit = (provider: ServiceProvider) => {
         setError(null);
         setSelectedProvider(provider);
+        const trans = (provider.translations as any)?.[language];
         setFormData({ 
-            name: provider.name, 
+            name: (typeof trans === 'object' && trans.name) || provider.name, 
             phone: provider.phone || "", 
-            role: provider.role || "", 
-            department: provider.department || "",
-            translations: (provider.translations as any) || { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } }
+            role: (typeof trans === 'object' && trans.role) || provider.role || "", 
+            department: (typeof trans === 'object' && trans.department) || provider.department || "",
+            translations: (provider.translations as any) || {}
         });
         setIsModalOpen(true);
     };
@@ -329,7 +344,7 @@ export default function ProvidersPage() {
         }
     };
 
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const daysList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const filteredProviders = providers.filter(p => p.is_active !== false && p.name.toLowerCase().includes(search.toLowerCase()));
 
     if (loading) {
@@ -353,7 +368,7 @@ export default function ProvidersPage() {
                         <button onClick={() => setIsResignationModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"><AlertCircle className="h-4 w-4" />{t('providers.resignation_requests')} ({resignations.length})</button>
                     )}
                     <button onClick={() => { setInviteFormData({ name: "", phone: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
-                    <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "", translations: { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } } }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
+                    <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "", translations: {} }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
                 </div>
             </div>
 
@@ -409,75 +424,13 @@ export default function ProvidersPage() {
                                 <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.department')}</label><input type="text" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none" /></div>
                             </div>
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.phone_number')}</label><CountryPhoneInput value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} /></div>
-                            
-                            {/* Translations Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-[32px] border border-slate-100">
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
-                                        Hindi Translation (हिंदी)
-                                    </h4>
-                                    <div className="space-y-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Name (Hindi)"
-                                            value={formData.translations?.hi?.name || ""}
-                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, hi: { ...formData.translations.hi, name: e.target.value } } })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-indigo-300 transition-all"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Role (Hindi)"
-                                            value={formData.translations?.hi?.role || ""}
-                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, hi: { ...formData.translations.hi, role: e.target.value } } })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-indigo-300 transition-all"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Dept (Hindi)"
-                                            value={formData.translations?.hi?.department || ""}
-                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, hi: { ...formData.translations.hi, department: e.target.value } } })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-indigo-300 transition-all"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                                        English Translation (EN)
-                                    </h4>
-                                    <div className="space-y-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Name (English)"
-                                            value={formData.translations?.en?.name || ""}
-                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, en: { ...formData.translations.en, name: e.target.value } } })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-slate-300 transition-all"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Role (English)"
-                                            value={formData.translations?.en?.role || ""}
-                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, en: { ...formData.translations.en, role: e.target.value } } })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-slate-300 transition-all"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Dept (English)"
-                                            value={formData.translations?.en?.department || ""}
-                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, en: { ...formData.translations.en, department: e.target.value } } })}
-                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-slate-300 transition-all"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                         <button disabled={isSubmitting} className="w-full py-5 bg-slate-900 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}{selectedProvider ? t('providers.save_changes') : t('providers.confirm_add')}</button>
                     </form>
                 </div>
             )}
 
-            {/* Leave Management (Simplified SaaS) */}
+            {/* Leave Management */}
             {isLeaveModalOpen && selectedProvider && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-4xl rounded-[40px] shadow-2xl p-10 flex flex-col md:flex-row gap-10 animate-in zoom-in-95 duration-300">
@@ -531,7 +484,7 @@ export default function ProvidersPage() {
                     <form onSubmit={handleInviteSubmit} className="bg-white w-full max-w-lg rounded-[40px] p-10 space-y-8 shadow-2xl animate-in zoom-in-95">
                         <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase">{t('providers.invite_staff')}</h3><button type="button" onClick={() => setIsInviteModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
                         <div className="space-y-6">
-                            <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.full_name')}</label><input required type="text" value={inviteFormData.name} onChange={v => setInviteFormData({ ...inviteFormData, name: v.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black" /></div>
+                            <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.full_name')}</label><input required type="text" value={inviteFormData.name} onChange={v => setInviteFormData({ ...inviteFormData, name: v.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black focus:ring-2 focus:ring-slate-900/10 outline-none" /></div>
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.phone_number')}</label><CountryPhoneInput value={inviteFormData.phone} onChange={v => setInviteFormData({ ...inviteFormData, phone: v })} /></div>
                         </div>
                         <button disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.send_invite')}</button>
@@ -554,7 +507,7 @@ export default function ProvidersPage() {
             {toast && (
                 <div className="fixed top-8 right-8 z-[200] animate-in slide-in-from-right-8">
                     <div className={cn("px-6 py-4 rounded-2xl shadow-2xl border flex items-center gap-4 min-w-[300px] backdrop-blur-xl bg-white/95", toast.type === 'error' ? "border-rose-100 text-rose-600" : "border-emerald-100 text-emerald-600")}>
-                        {toast.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+                        {toast.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
                         <p className="text-xs font-bold text-slate-900">{toast.message}</p>
                     </div>
                 </div>

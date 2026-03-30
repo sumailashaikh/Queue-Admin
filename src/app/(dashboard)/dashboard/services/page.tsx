@@ -107,7 +107,7 @@ export default function ServicesPage() {
         description: "",
         duration_minutes: 30,
         price: 0,
-        translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
+        translations: {} as Record<string, any>
     });
 
     const fetchServices = useCallback(async () => {
@@ -123,7 +123,6 @@ export default function ServicesPage() {
 
     useEffect(() => {
         fetchServices();
-        // Auto-refresh every 30 seconds
         const interval = setInterval(fetchServices, 30000);
         return () => clearInterval(interval);
     }, [fetchServices]);
@@ -134,25 +133,21 @@ export default function ServicesPage() {
 
         const trimmedName = newService.name.trim();
 
-        // Validation: Required fields
         if (!trimmedName || !newService.description.trim() || newService.duration_minutes === undefined || newService.price === undefined) {
             setError(t('services.all_fields_required'));
             return;
         }
 
-        // Validation: Non-negative
         if (newService.duration_minutes < 0 || newService.price < 0) {
             setError(t('services.err_negative_values')); 
             return;
         }
 
-        // Validation: Language Guard
         if (!validateLanguage(trimmedName, language) || !validateLanguage(newService.description, language)) {
             setError(t('common.err_invalid_chars'));
             return;
         }
 
-        // Validation: Duplicate Name
         const isDuplicate = services.some(s => s.name.trim().toLowerCase() === trimmedName.toLowerCase());
         if (isDuplicate) {
             setError(t('services.err_duplicate'));
@@ -161,7 +156,16 @@ export default function ServicesPage() {
 
         setIsSubmitting(true);
         try {
-            await serviceService.createService({ ...newService, name: trimmedName, business_id: business?.id });
+            const serviceData = {
+                ...newService,
+                name: trimmedName,
+                business_id: business?.id,
+                translations: {
+                    ...(newService.translations || {}),
+                    [language]: { name: trimmedName, description: newService.description.trim() }
+                }
+            };
+            await serviceService.createService(serviceData);
             await fetchServices();
             setIsAddModalOpen(false);
             setNewService({
@@ -169,7 +173,7 @@ export default function ServicesPage() {
                 description: "",
                 duration_minutes: 30,
                 price: 0,
-                translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
+                translations: {}
             });
             showToast(t('services.success_add'));
         } catch (err: any) {
@@ -184,39 +188,31 @@ export default function ServicesPage() {
         if (!editingService) return;
 
         setError(null);
-
         const trimmedName = editingService.name.trim();
-
-        // Find original service to compare
         const originalService = services.find(s => s.id === editingService.id);
 
-        // Validation: Required fields
         if (!trimmedName || !editingService.description.trim() || editingService.duration_minutes === undefined || editingService.price === undefined) {
             setError(t('services.all_fields_required'));
             return;
         }
 
-        // Validation: Non-negative
         if (editingService.duration_minutes < 0 || editingService.price < 0) {
             setError(t('services.err_negative_values'));
             return;
         }
 
-        // Validation: Language Guard
         if (!validateLanguage(trimmedName, language) || !validateLanguage(editingService.description, language)) {
             setError(t('common.err_invalid_chars'));
             return;
         }
 
-        // Validation: No changes detected
         if (originalService) {
             const hasChanges = 
                 trimmedName !== originalService.name.trim() ||
                 editingService.description.trim() !== originalService.description.trim() ||
                 Number(editingService.duration_minutes) !== Number(originalService.duration_minutes) ||
                 Number(editingService.price) !== Number(originalService.price) ||
-                JSON.stringify(editingService.translations?.hi || {}) !== JSON.stringify(originalService.translations?.hi || {}) ||
-                JSON.stringify(editingService.translations?.en || {}) !== JSON.stringify(originalService.translations?.en || {});
+                JSON.stringify(editingService.translations?.[language] || {}) !== JSON.stringify(originalService.translations?.[language] || {});
             
             if (!hasChanges) {
                 showToast(t('services.no_changes_detected'), "error");
@@ -224,7 +220,6 @@ export default function ServicesPage() {
             }
         }
 
-        // Validation: Duplicate Name (excluding self)
         const isDuplicate = services.some(s => s.id !== editingService.id && s.name.trim().toLowerCase() === trimmedName.toLowerCase());
         if (isDuplicate) {
             setError(t('services.err_duplicate'));
@@ -233,7 +228,15 @@ export default function ServicesPage() {
 
         setIsSubmitting(true);
         try {
-            await serviceService.updateService(editingService.id, { ...editingService, name: trimmedName });
+            const updatedService = {
+                ...editingService,
+                name: trimmedName,
+                translations: {
+                    ...(editingService.translations || {}),
+                    [language]: { name: trimmedName, description: editingService.description.trim() }
+                }
+            };
+            await serviceService.updateService(editingService.id, updatedService);
             await fetchServices();
             setIsEditModalOpen(false);
             setEditingService(null);
@@ -291,7 +294,6 @@ export default function ServicesPage() {
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
-            {/* Custom Toast Notification */}
             {toast && (
                 <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-10 duration-500">
                     <div className={cn(
@@ -304,7 +306,6 @@ export default function ServicesPage() {
                 </div>
             )}
             
-            {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
@@ -337,7 +338,7 @@ export default function ServicesPage() {
                                 description: "",
                                 duration_minutes: 30,
                                 price: 0,
-                                translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
+                                translations: {}
                             });
                             setIsAddModalOpen(true);
                         }}
@@ -349,7 +350,6 @@ export default function ServicesPage() {
                 </div>
             </div>
 
-            {/* Grid Section */}
             {filteredServices.length === 0 ? (
                 <div className="py-32 text-center space-y-8 bg-slate-50/50 rounded-[40px] border-4 border-dashed border-slate-100">
                     <div className="h-28 w-28 bg-white rounded-[40px] flex items-center justify-center mx-auto shadow-xl border border-slate-100 relative grayscale opacity-50">
@@ -378,7 +378,12 @@ export default function ServicesPage() {
                                         <button
                                             onClick={() => {
                                                 setError(null);
-                                                setEditingService(service);
+                                                const trans = service.translations?.[language];
+                                                setEditingService({
+                                                    ...service,
+                                                    name: (typeof trans === 'object' && trans.name) || service.name,
+                                                    description: (typeof trans === 'object' && trans.description) || service.description || ""
+                                                });
                                                 setIsEditModalOpen(true);
                                             }}
                                             className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"
@@ -400,7 +405,6 @@ export default function ServicesPage() {
                                     <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight uppercase tracking-tight group-hover:text-blue-600 transition-colors">
                                         {getDisplayName(service)}
                                     </h3>
-                                    {/* Removed translation subtitle */}
                                     <p className="text-xs font-semibold text-slate-500/70 leading-relaxed line-clamp-2 min-h-[2.5rem]">
                                         {service.description || t('services.default_desc')}
                                     </p>
@@ -422,7 +426,6 @@ export default function ServicesPage() {
                 </div>
             )}
 
-            {/* Modals */}
             <DeleteDialog
                 isOpen={deleteModal.isOpen}
                 onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
@@ -432,7 +435,6 @@ export default function ServicesPage() {
                 error={deleteModal.error}
             />
 
-            {/* Edit Service Modal */}
             {isEditModalOpen && editingService && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-visible animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
@@ -503,66 +505,19 @@ export default function ServicesPage() {
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm resize-none"
                                     />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50/30 rounded-[32px] border border-blue-100/50">
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                                            Hindi Translation (हिंदी)
-                                        </h4>
-                                        <div className="space-y-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Service Name (Hindi)"
-                                                value={editingService.translations?.hi?.name || ""}
-                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, hi: { ...editingService.translations?.hi, name: e.target.value } } })}
-                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-sm font-bold outline-none focus:border-blue-400 transition-all"
-                                            />
-                                            <textarea
-                                                rows={2}
-                                                placeholder="Description (Hindi)"
-                                                value={editingService.translations?.hi?.description || ""}
-                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, hi: { ...editingService.translations?.hi, description: e.target.value } } })}
-                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-xs font-bold outline-none focus:border-blue-400 transition-all resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                                            English Translation (EN)
-                                        </h4>
-                                        <div className="space-y-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Service Name (English)"
-                                                value={editingService.translations?.en?.name || ""}
-                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, en: { ...editingService.translations?.en, name: e.target.value } } })}
-                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-slate-400 transition-all"
-                                            />
-                                            <textarea
-                                                rows={2}
-                                                placeholder="Description (English)"
-                                                value={editingService.translations?.en?.description || ""}
-                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, en: { ...editingService.translations?.en, description: e.target.value } } })}
-                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:border-slate-400 transition-all resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
-                            <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-4 bg-slate-100 text-slate-500 border-2 border-slate-100 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-300 rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all active:scale-95">{t('common.cancel')}</button>
-                                <button disabled={isSubmitting} onClick={handleEditService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
-                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
-                                    {t('services.save_changes')}
-                                </button>
-                            </div>
+                        </div>
+                        <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4 px-8">
+                            <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-8 py-4 bg-slate-100 text-slate-500 border-2 border-slate-100 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-300 rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all active:scale-95">{t('common.cancel')}</button>
+                            <button disabled={isSubmitting} onClick={handleEditService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
+                                {t('services.save_changes')}
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Add Service Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-500">
                     <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[40px] shadow-[0_32px_96px_-12px_rgba(0,0,0,0.3)] overflow-visible animate-in zoom-in-95 duration-500 border border-white flex flex-col max-h-[90vh]">
@@ -633,60 +588,14 @@ export default function ServicesPage() {
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm resize-none"
                                     />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50/30 rounded-[32px] border border-blue-100/50">
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                                            Hindi Translation (हिंदी)
-                                        </h4>
-                                        <div className="space-y-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Service Name (Hindi)"
-                                                value={(newService as any).translations?.hi?.name || ""}
-                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), hi: { ...((newService as any).translations?.hi || {}), name: e.target.value } } } as any)}
-                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-sm font-bold outline-none focus:border-blue-400 transition-all"
-                                            />
-                                            <textarea
-                                                rows={2}
-                                                placeholder="Description (Hindi)"
-                                                value={(newService as any).translations?.hi?.description || ""}
-                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), hi: { ...((newService as any).translations?.hi || {}), description: e.target.value } } } as any)}
-                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-xs font-bold outline-none focus:border-blue-400 transition-all resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                                            English Translation (EN)
-                                        </h4>
-                                        <div className="space-y-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Service Name (English)"
-                                                value={(newService as any).translations?.en?.name || ""}
-                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), en: { ...((newService as any).translations?.en || {}), name: e.target.value } } } as any)}
-                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-slate-400 transition-all"
-                                            />
-                                            <textarea
-                                                rows={2}
-                                                placeholder="Description (English)"
-                                                value={(newService as any).translations?.en?.description || ""}
-                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), en: { ...((newService as any).translations?.en || {}), description: e.target.value } } } as any)}
-                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:border-slate-400 transition-all resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
-                            <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
-                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-8 py-4 bg-slate-100 text-slate-500 border-2 border-slate-100 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-300 rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all active:scale-95">{t('common.cancel')}</button>
-                                <button disabled={isSubmitting} onClick={handleAddService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
-                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
-                                    {t('services.create_service')}
-                                </button>
-                            </div>
+                        </div>
+                        <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4 px-8">
+                            <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-8 py-4 bg-slate-100 text-slate-500 border-2 border-slate-100 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-300 rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all active:scale-95">{t('common.cancel')}</button>
+                            <button disabled={isSubmitting} onClick={handleAddService} className="px-10 py-4 bg-slate-900 text-white rounded-[20px] text-xs font-bold uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
+                                {t('services.create_service')}
+                            </button>
                         </div>
                     </div>
                 </div>
