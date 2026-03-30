@@ -102,7 +102,10 @@ export default function ServicesPage() {
     });
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Form State
+    const [newService, setNewService] = useState({
+        name: "",
+        description: "",
+        duration_minutes: 30,
         price: 0,
         translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
     });
@@ -489,6 +492,8 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
@@ -617,6 +622,8 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
