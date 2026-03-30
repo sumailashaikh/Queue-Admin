@@ -435,6 +435,102 @@ export default function ProvidersPage() {
                 </div>
             )}
 
+            {/* Assignment Modal */}
+            {isAssignModalOpen && selectedProvider && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.assign_services')}</h3>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">{selectedProvider.name}</p>
+                            </div>
+                            <button onClick={() => setIsAssignModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button>
+                        </div>
+                        
+                        <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-3 pb-4">
+                            {services.length === 0 ? (
+                                <p className="col-span-full text-center py-10 text-xs font-bold text-slate-400 uppercase tracking-widest">{t('providers.no_services_found')}</p>
+                            ) : (
+                                services.map((service) => (
+                                    <label key={service.id} className={cn(
+                                        "flex items-center gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                                        assignedServiceIds.includes(service.id) ? "border-indigo-600 bg-indigo-50/50" : "border-slate-100 bg-slate-50/30 hover:border-slate-200"
+                                    )}>
+                                        <div className={cn(
+                                            "h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all",
+                                            assignedServiceIds.includes(service.id) ? "bg-indigo-600 border-indigo-600" : "border-slate-300 bg-white"
+                                        )}>
+                                            {assignedServiceIds.includes(service.id) && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={assignedServiceIds.includes(service.id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) setAssignedServiceIds([...assignedServiceIds, service.id]);
+                                                else setAssignedServiceIds(assignedServiceIds.filter(id => id !== service.id));
+                                            }}
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-bold text-slate-900 truncate capitalize">{service.translations?.[language]?.name || service.name}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatCurrency(service.price, 'INR', language)}</p>
+                                        </div>
+                                    </label>
+                                ))
+                            )}
+                        </div>
+
+                        <button 
+                            disabled={isSubmitting} 
+                            onClick={handleAssignServices} 
+                            className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                        >
+                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                            {t('providers.save_assignments')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Availability Modal */}
+            {isAvailabilityModalOpen && selectedProvider && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-4xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_availability')}</h3>
+                            <button onClick={() => setIsAvailabilityModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button>
+                        </div>
+                        <div className="space-y-4 max-h-[450px] overflow-y-auto pr-4 custom-scrollbar">
+                            {availabilityData.map((slot, index) => (
+                                <div key={slot.day_of_week} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-50 rounded-3xl gap-4">
+                                    <div className="flex items-center gap-4 min-w-[150px]">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={slot.is_available} 
+                                            onChange={e => setAvailabilityData(availabilityData.map((s, i) => i === index ? { ...s, is_available: e.target.checked } : s))}
+                                            className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm font-black text-slate-900 uppercase tracking-wider">{daysList[slot.day_of_week]}</span>
+                                    </div>
+                                    {slot.is_available && (
+                                        <div className="flex items-center gap-3">
+                                            <input type="time" value={slot.start_time} onChange={e => setAvailabilityData(availabilityData.map((s, i) => i === index ? { ...s, start_time: e.target.value } : s))} className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                            <span className="text-slate-400 font-bold">-</span>
+                                            <input type="time" value={slot.end_time} onChange={e => setAvailabilityData(availabilityData.map((s, i) => i === index ? { ...s, end_time: e.target.value } : s))} className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                        </div>
+                                    )}
+                                    {!slot.is_available && <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('providers.off_day')}</span>}
+                                </div>
+                            ))}
+                        </div>
+                        <button disabled={isSubmitting} onClick={handleUpdateAvailability} className="w-full py-5 bg-slate-900 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">
+                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
+                            {t('providers.save_availability')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Leave Management */}
             {isLeaveModalOpen && selectedProvider && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
