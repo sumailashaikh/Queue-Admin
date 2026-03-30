@@ -124,12 +124,12 @@ export default function ProvidersPage() {
 
         // Validation: No changes detected (for editing)
         if (selectedProvider) {
+            const trans = (selectedProvider.translations as any)?.[language];
             const hasChanges =
-                formData.name.trim() !== selectedProvider.name.trim() ||
+                formData.name.trim() !== ((typeof trans === 'object' && trans.name) || selectedProvider.name).trim() ||
                 formData.phone.trim() !== (selectedProvider.phone || "").trim() ||
-                formData.role.trim() !== (selectedProvider.role || "").trim() ||
-                formData.department.trim() !== (selectedProvider.department || "").trim() ||
-                JSON.stringify(formData.translations?.[language] || {}) !== JSON.stringify(selectedProvider.translations?.[language] || {});
+                formData.role.trim() !== ((typeof trans === 'object' && trans.role) || selectedProvider.role || "").trim() ||
+                formData.department.trim() !== ((typeof trans === 'object' && trans.department) || selectedProvider.department || "").trim();
 
             if (!hasChanges) {
                 showToast(t('providers.no_changes_detected'), "error");
@@ -416,7 +416,12 @@ export default function ProvidersPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <form onSubmit={handleSubmit} className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase">{selectedProvider ? t('providers.update_professional') : t('providers.add_new_professional')}</h3><button type="button" onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="h-6 w-6" /></button></div>
-                        {error && <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-sm font-bold"><AlertCircle className="h-5 w-5" />{error}</div>}
+                        {error && (
+                            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 text-sm font-bold animate-in slide-in-from-top-4">
+                                <AlertCircle className="h-5 w-5" />
+                                {error}
+                            </div>
+                        )}
                         <div className="space-y-6">
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.full_name')}</label><input required type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-slate-900/10" /></div>
                             <div className="grid grid-cols-2 gap-4">

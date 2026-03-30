@@ -62,10 +62,7 @@ export function formatDuration(minutes: number, t: (key: string, options?: any) 
 export function validateLanguage(text: string, language: string): boolean {
     if (!text || !text.trim()) return true;
 
-    // Normalize language (e.g., 'en-US' -> 'en')
     const baseLang = (language || 'en').split('-')[0].toLowerCase();
-
-    // Standard punctuation, numbers and symbols allowed in all languages
     const commonPattern = "0-9\\s\\.,!?'\"()&@#%*+=\\-\\/\\[\\]{}|_\\\\";
 
     const patterns: Record<string, string> = {
@@ -76,7 +73,15 @@ export function validateLanguage(text: string, language: string): boolean {
     };
 
     const pattern = patterns[baseLang] || patterns['en'];
-    const regex = new RegExp(`^[${pattern}]*$`);
     
-    return regex.test(text);
+    // Explicitly disallow English letters in Hindi/Arabic if they aren't explicitly in the pattern
+    // (Patterns above don't include a-zA-Z for hi/ar)
+    try {
+        const regex = new RegExp(`^[${pattern}]*$`, 'u');
+        return regex.test(text);
+    } catch (e) {
+        // Fallback for environments without 'u' flag support, though unlikely in modern Next.js
+        const regex = new RegExp(`^[${pattern}]*$`);
+        return regex.test(text);
+    }
 }
