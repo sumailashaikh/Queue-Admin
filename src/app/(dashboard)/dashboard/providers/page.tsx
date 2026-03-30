@@ -115,7 +115,14 @@ export default function ProvidersPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        if (!validateLanguage(formData.name, language) || 
+            (formData.role && !validateLanguage(formData.role, language)) ||
+            (formData.department && !validateLanguage(formData.department, language))) {
+            setError(t('common.err_invalid_chars'));
+            return;
+        }
 
+        // Validation: No changes detected (for editing)
         if (selectedProvider) {
             const hasChanges =
                 formData.name.trim() !== selectedProvider.name.trim() ||
@@ -128,13 +135,6 @@ export default function ProvidersPage() {
                 showToast(t('providers.no_changes_detected'), "error");
                 return;
             }
-        }
-
-        if (!validateLanguage(formData.name, language) || 
-            (formData.role && !validateLanguage(formData.role, language)) ||
-            (formData.department && !validateLanguage(formData.department, language))) {
-            setError(t('common.err_invalid_chars'));
-            return;
         }
 
         const submitData = {
