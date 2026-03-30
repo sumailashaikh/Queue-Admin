@@ -50,7 +50,13 @@ export default function ProvidersPage() {
     const [resignations, setResignations] = useState<any[]>([]);
     const [leaveFormData, setLeaveFormData] = useState({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
     const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "" });
-    const [formData, setFormData] = useState({ name: "", phone: "", role: "", department: "" });
+    const [formData, setFormData] = useState({ 
+        name: "", 
+        phone: "", 
+        role: "", 
+        department: "",
+        translations: { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } }
+    });
 
     const [error, setError] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -108,6 +114,23 @@ export default function ProvidersPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        // Validation: No changes detected (for editing)
+        if (selectedProvider) {
+            const hasChanges =
+                formData.name.trim() !== selectedProvider.name.trim() ||
+                formData.phone.trim() !== (selectedProvider.phone || "").trim() ||
+                formData.role.trim() !== (selectedProvider.role || "").trim() ||
+                formData.department.trim() !== (selectedProvider.department || "").trim() ||
+                JSON.stringify(formData.translations?.hi || {}) !== JSON.stringify(selectedProvider.translations?.hi || {}) ||
+                JSON.stringify(formData.translations?.en || {}) !== JSON.stringify(selectedProvider.translations?.en || {});
+
+            if (!hasChanges) {
+                showToast(t('providers.no_changes_detected'), "error");
+                return;
+            }
+        }
+
         if (!validateLanguage(formData.name, language) || (formData.role && !validateLanguage(formData.role, language))) {
             setError(t('common.err_invalid_chars'));
             return;
@@ -123,7 +146,13 @@ export default function ProvidersPage() {
             }
             await fetchProviders();
             setIsModalOpen(false);
-            setFormData({ name: "", phone: "", role: "", department: "" });
+            setFormData({ 
+                name: "", 
+                phone: "", 
+                role: "", 
+                department: "",
+                translations: { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } }
+            });
             setSelectedProvider(null);
         } catch (error) {
             showToast(t('providers.err_save'), "error");
@@ -135,7 +164,13 @@ export default function ProvidersPage() {
     const handleEdit = (provider: ServiceProvider) => {
         setError(null);
         setSelectedProvider(provider);
-        setFormData({ name: provider.name, phone: provider.phone || "", role: provider.role || "", department: provider.department || "" });
+        setFormData({ 
+            name: provider.name, 
+            phone: provider.phone || "", 
+            role: provider.role || "", 
+            department: provider.department || "",
+            translations: (provider.translations as any) || { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } }
+        });
         setIsModalOpen(true);
     };
 
@@ -318,7 +353,7 @@ export default function ProvidersPage() {
                         <button onClick={() => setIsResignationModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"><AlertCircle className="h-4 w-4" />{t('providers.resignation_requests')} ({resignations.length})</button>
                     )}
                     <button onClick={() => { setInviteFormData({ name: "", phone: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
-                    <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "" }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
+                    <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "", translations: { hi: { name: "", role: "", department: "" }, en: { name: "", role: "", department: "" } } }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
                 </div>
             </div>
 
@@ -336,7 +371,14 @@ export default function ProvidersPage() {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className="h-14 w-14 lg:h-16 lg:w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 capitalize">{provider.name.charAt(0)}</div>
-                                    <div className="min-w-0 flex-1"><h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight capitalize line-clamp-2">{provider.name}</h3><p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5 truncate">{provider.role || t('providers.role_placeholder')}</p></div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight capitalize line-clamp-2">
+                                            {provider.translations?.[language]?.name || provider.name}
+                                        </h3>
+                                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5 truncate">
+                                            {provider.translations?.[language]?.role || provider.role || t('providers.role_placeholder')}
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border", provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-emerald-50 text-emerald-600 border-emerald-100")}>{t(provider.leave_status === 'on_leave' ? 'providers.on_leave' : 'providers.available')}</div>
@@ -367,6 +409,68 @@ export default function ProvidersPage() {
                                 <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.department')}</label><input type="text" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none" /></div>
                             </div>
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.phone_number')}</label><CountryPhoneInput value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} /></div>
+                            
+                            {/* Translations Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                                        Hindi Translation (हिंदी)
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Name (Hindi)"
+                                            value={formData.translations?.hi?.name || ""}
+                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, hi: { ...formData.translations.hi, name: e.target.value } } })}
+                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-indigo-300 transition-all"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Role (Hindi)"
+                                            value={formData.translations?.hi?.role || ""}
+                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, hi: { ...formData.translations.hi, role: e.target.value } } })}
+                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-indigo-300 transition-all"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Dept (Hindi)"
+                                            value={formData.translations?.hi?.department || ""}
+                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, hi: { ...formData.translations.hi, department: e.target.value } } })}
+                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-indigo-300 transition-all"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                        English Translation (EN)
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <input
+                                            type="text"
+                                            placeholder="Name (English)"
+                                            value={formData.translations?.en?.name || ""}
+                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, en: { ...formData.translations.en, name: e.target.value } } })}
+                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-slate-300 transition-all"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Role (English)"
+                                            value={formData.translations?.en?.role || ""}
+                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, en: { ...formData.translations.en, role: e.target.value } } })}
+                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-slate-300 transition-all"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Dept (English)"
+                                            value={formData.translations?.en?.department || ""}
+                                            onChange={(e) => setFormData({ ...formData, translations: { ...formData.translations, en: { ...formData.translations.en, department: e.target.value } } })}
+                                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs font-bold outline-none focus:border-slate-300 transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <button disabled={isSubmitting} className="w-full py-5 bg-slate-900 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}{selectedProvider ? t('providers.save_changes') : t('providers.confirm_add')}</button>
                     </form>

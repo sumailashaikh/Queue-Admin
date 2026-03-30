@@ -13,6 +13,7 @@ export interface ServiceProvider {
     leave_until?: string | null;
     leave_starts_at?: string | null;
     services?: any[];
+    translations?: Record<string, any>;
     created_at: string;
 }
 

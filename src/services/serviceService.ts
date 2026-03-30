@@ -7,7 +7,7 @@ export interface Service {
     duration_minutes: number;
     price: number;
     business_id: string;
-    translations?: Record<string, string>;
+    translations?: Record<string, any>;
 }
 
 export const serviceService = {

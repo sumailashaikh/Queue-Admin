@@ -103,11 +103,8 @@ export default function ServicesPage() {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Form State
-    const [newService, setNewService] = useState({
-        name: "",
-        description: "",
-        duration_minutes: 30,
-        price: 0
+        price: 0,
+        translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
     });
 
     const fetchServices = useCallback(async () => {
@@ -168,7 +165,8 @@ export default function ServicesPage() {
                 name: "",
                 description: "",
                 duration_minutes: 30,
-                price: 0
+                price: 0,
+                translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
             });
             showToast(t('services.success_add'));
         } catch (err: any) {
@@ -210,10 +208,12 @@ export default function ServicesPage() {
         // Validation: No changes detected
         if (originalService) {
             const hasChanges = 
-                trimmedName !== originalService.name ||
-                editingService.description.trim() !== originalService.description ||
-                editingService.duration_minutes !== originalService.duration_minutes ||
-                editingService.price !== originalService.price;
+                trimmedName !== originalService.name.trim() ||
+                editingService.description.trim() !== originalService.description.trim() ||
+                Number(editingService.duration_minutes) !== Number(originalService.duration_minutes) ||
+                Number(editingService.price) !== Number(originalService.price) ||
+                JSON.stringify(editingService.translations?.hi || {}) !== JSON.stringify(originalService.translations?.hi || {}) ||
+                JSON.stringify(editingService.translations?.en || {}) !== JSON.stringify(originalService.translations?.en || {});
             
             if (!hasChanges) {
                 showToast(t('services.no_changes_detected'), "error");
@@ -261,6 +261,11 @@ export default function ServicesPage() {
     };
 
     const getDisplayName = (service: Service) => {
+        if (service.translations && service.translations[language]) {
+            const trans = service.translations[language] as any;
+            if (typeof trans === 'object' && trans.name) return trans.name;
+            if (typeof trans === 'string') return trans;
+        }
         return service.name;
     };
 
@@ -328,7 +333,8 @@ export default function ServicesPage() {
                                 name: "",
                                 description: "",
                                 duration_minutes: 30,
-                                price: 0
+                                price: 0,
+                                translations: { hi: { name: "", description: "" }, en: { name: "", description: "" } }
                             });
                             setIsAddModalOpen(true);
                         }}
@@ -483,8 +489,6 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
@@ -493,6 +497,52 @@ export default function ServicesPage() {
                                         onChange={(e) => setEditingService({ ...editingService, description: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm resize-none"
                                     />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50/30 rounded-[32px] border border-blue-100/50">
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                                            Hindi Translation (हिंदी)
+                                        </h4>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Service Name (Hindi)"
+                                                value={editingService.translations?.hi?.name || ""}
+                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, hi: { ...editingService.translations?.hi, name: e.target.value } } })}
+                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-sm font-bold outline-none focus:border-blue-400 transition-all"
+                                            />
+                                            <textarea
+                                                rows={2}
+                                                placeholder="Description (Hindi)"
+                                                value={editingService.translations?.hi?.description || ""}
+                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, hi: { ...editingService.translations?.hi, description: e.target.value } } })}
+                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-xs font-bold outline-none focus:border-blue-400 transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                            English Translation (EN)
+                                        </h4>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Service Name (English)"
+                                                value={editingService.translations?.en?.name || ""}
+                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, en: { ...editingService.translations?.en, name: e.target.value } } })}
+                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-slate-400 transition-all"
+                                            />
+                                            <textarea
+                                                rows={2}
+                                                placeholder="Description (English)"
+                                                value={editingService.translations?.en?.description || ""}
+                                                onChange={(e) => setEditingService({ ...editingService, translations: { ...editingService.translations, en: { ...editingService.translations?.en, description: e.target.value } } })}
+                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:border-slate-400 transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
@@ -567,8 +617,6 @@ export default function ServicesPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.desc_label')}</label>
                                     <textarea
                                         required
                                         rows={4}
@@ -577,6 +625,52 @@ export default function ServicesPage() {
                                         onChange={(e) => setNewService({ ...newService, description: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all shadow-sm resize-none"
                                     />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50/30 rounded-[32px] border border-blue-100/50">
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                                            Hindi Translation (हिंदी)
+                                        </h4>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Service Name (Hindi)"
+                                                value={(newService as any).translations?.hi?.name || ""}
+                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), hi: { ...((newService as any).translations?.hi || {}), name: e.target.value } } } as any)}
+                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-sm font-bold outline-none focus:border-blue-400 transition-all"
+                                            />
+                                            <textarea
+                                                rows={2}
+                                                placeholder="Description (Hindi)"
+                                                value={(newService as any).translations?.hi?.description || ""}
+                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), hi: { ...((newService as any).translations?.hi || {}), description: e.target.value } } } as any)}
+                                                className="w-full px-4 py-3 bg-white border border-blue-100 rounded-2xl text-xs font-bold outline-none focus:border-blue-400 transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                            English Translation (EN)
+                                        </h4>
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Service Name (English)"
+                                                value={(newService as any).translations?.en?.name || ""}
+                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), en: { ...((newService as any).translations?.en || {}), name: e.target.value } } } as any)}
+                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-slate-400 transition-all"
+                                            />
+                                            <textarea
+                                                rows={2}
+                                                placeholder="Description (English)"
+                                                value={(newService as any).translations?.en?.description || ""}
+                                                onChange={(e) => setNewService({ ...newService, translations: { ...((newService as any).translations || {}), en: { ...((newService as any).translations?.en || {}), description: e.target.value } } } as any)}
+                                                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:border-slate-400 transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="pt-6 border-t border-slate-100 flex justify-end items-center gap-4 sticky bottom-0 bg-white/95 pb-4">
