@@ -255,6 +255,11 @@
     "to": "To"
 ,
     "save_schedule": "Save Schedule",
+    "save_assignments": "Save Assignments",
+    "save_availability": "Save Availability",
+    "manage_availability": "Manage Availability",
+    "no_services_found": "No Services Found",
+    "off_day": "OFF DAY",
     "invite_staff": "Invite Employee",
     "send_invite": "Send Invite",
     "active_leaves": "Active Leaves",
