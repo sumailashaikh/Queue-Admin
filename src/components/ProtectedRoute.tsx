@@ -17,7 +17,12 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             } else if (user?.role === 'admin') {
                 // Admins are always allowed in dashboard
                 if (pathname === "/setup") {
-                    router.push("/dashboard");
+                    router.push("/dashboard/admin");
+                }
+            } else if (user?.role === 'employee' || user?.role === 'staff') {
+                // Employees/Staff don't own businesses, so they skip the /setup check
+                if (pathname === "/setup") {
+                    router.push("/dashboard/employee");
                 }
             } else if (!hasBusiness && pathname !== "/setup") {
                 router.push("/setup");
