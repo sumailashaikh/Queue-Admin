@@ -50,7 +50,7 @@ export default function ProvidersPage() {
     const [leavesData, setLeavesData] = useState<any[]>([]);
     const [resignations, setResignations] = useState<any[]>([]);
     const [leaveFormData, setLeaveFormData] = useState({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
-    const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "" });
+    const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "", custom_message: "" });
     
     const [formData, setFormData] = useState({ 
         name: "", 
@@ -117,6 +117,12 @@ export default function ProvidersPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        if (!formData.name || !formData.phone || !formData.role || !formData.department) {
+            setError(t('providers.all_fields_required'));
+            return;
+        }
+
         if (!validateLanguage(formData.name, language) || 
             (formData.role && !validateLanguage(formData.role, language)) ||
             (formData.department && !validateLanguage(formData.department, language))) {
@@ -171,8 +177,9 @@ export default function ProvidersPage() {
             });
             setSelectedProvider(null);
         } catch (error: any) {
-            const msg = error.message || t('providers.err_save');
-            showToast(msg, "error");
+            const msg = error.response?.data?.message || error.message || 'providers.err_save';
+            // If the message is a translation key (contains a dot), translate it
+            showToast(msg.includes('.') ? t(msg as any) : msg, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -325,7 +332,7 @@ export default function ProvidersPage() {
             await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
             showToast(t('admin.invite_modal.success', { phone: inviteFormData.phone }));
             setIsInviteModalOpen(false);
-            setInviteFormData({ name: "", phone: "" });
+            setInviteFormData({ name: "", phone: "", custom_message: "" });
             await fetchProviders();
         } catch (error) {
             showToast(t('admin.invite_modal.err_fail'), "error");
@@ -371,7 +378,7 @@ export default function ProvidersPage() {
                     {resignations.length > 0 && (
                         <button onClick={() => setIsResignationModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"><AlertCircle className="h-4 w-4" />{t('providers.resignation_requests')} ({resignations.length})</button>
                     )}
-                    <button onClick={() => { setInviteFormData({ name: "", phone: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
+                    <button onClick={() => { setInviteFormData({ name: "", phone: "", custom_message: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
                     <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "", translations: {} }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
                 </div>
             </div>
@@ -429,8 +436,8 @@ export default function ProvidersPage() {
                         <div className="space-y-6">
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.full_name')}</label><input required type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-slate-900/10" /></div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.role')}</label><input type="text" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none" /></div>
-                                <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.department')}</label><input type="text" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none" /></div>
+                                <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.role')}</label><input required type="text" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-slate-900/10" /></div>
+                                <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.department')}</label><input required type="text" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-slate-900/10" /></div>
                             </div>
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.phone_number')}</label><CountryPhoneInput value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} /></div>
                         </div>
@@ -605,6 +612,17 @@ export default function ProvidersPage() {
                         <div className="space-y-6">
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.full_name')}</label><input required type="text" value={inviteFormData.name} onChange={v => setInviteFormData({ ...inviteFormData, name: v.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black focus:ring-2 focus:ring-slate-900/10 outline-none" /></div>
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.phone_number')}</label><CountryPhoneInput value={inviteFormData.phone} onChange={v => setInviteFormData({ ...inviteFormData, phone: v })} /></div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.invite_msg_label')}</label>
+                                <textarea 
+                                    value={inviteFormData.custom_message} 
+                                    onChange={v => setInviteFormData({ ...inviteFormData, custom_message: v.target.value })} 
+                                    placeholder={t('providers.invite_msg_placeholder')}
+                                    className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black focus:ring-2 focus:ring-slate-900/10 outline-none"
+                                    rows={3}
+                                />
+                                <p className="text-[9px] text-slate-400 ml-1 italic">{t('providers.custom_invite_hint')}</p>
+                            </div>
                         </div>
                         <button disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.send_invite')}</button>
                     </form>

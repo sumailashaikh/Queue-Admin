@@ -242,7 +242,20 @@
     "already_exists": "इस नाम का प्रदाता पहले से मौजूद है।",
     "all_fields_required": "सभी फ़ील्ड आवश्यक हैं।",
     "no_changes_detected": "कोई बदलाव नहीं पाया गया।",
-    "no_services_assigned": "इस पेशेवर को वर्तमान में कोई सेवा नहीं सौंपी गई है。"
+    "no_services_assigned": "इस पेशेवर को वर्तमान में कोई सेवा नहीं सौंपी गई है।",
+    "err_already_exists_active": "इस नाम का प्रदाता पहले से मौजूद है और वर्तमान में सक्रिय है।",
+    "invite_msg_placeholder": "कर्मचारी के लिए एक स्वागत संदेश लिखें...",
+    "invite_msg_label": "आमंत्रण संदेश",
+    "custom_invite_hint": "यह संदेश कर्मचारी को व्हाट्सएप/एसएमएस के माध्यम से भेजा जाएगा।",
+    "leave_whatsapp_owner": "{business} के लिए {name} से नया छुट्टी का अनुरोध: {start} से {end} तक।",
+    "leave_whatsapp_approved": "{start} से {end} तक का आपका छुट्टी का अनुरोध स्वीकृत हो गया है। अपनी छुट्टी का आनंद लें!",
+    "leave_whatsapp_rejected": "{start} से {end} तक के आपके छुट्टी के अनुरोध के संबंध में: दुर्भाग्य से, इसे अस्वीकार कर दिया गया है। {reason}",
+    "resignation_requests": "इस्तीफा अनुरोध",
+    "no_resignations": "कोई लंबित इस्तीफा अनुरोध नहीं।",
+    "approve_resignation": "इस्तीफा स्वीकार करें",
+    "deny_resignation": "इस्तीफा अस्वीकार करें",
+    "err_resignation": "इस्तीफा अनुरोध जमा करने में विफल।",
+    "err_active_tasks": "निष्क्रिय नहीं किया जा सकता: कर्मचारी के पास {{count}} सक्रिय कार्य हैं।"
   },
   "dashboard": {
     "link_copied_toast": "लिंक कॉपी हो गया",
@@ -327,7 +340,7 @@
     "saving": "सहेजा जा रहा है...",
     "save_changes": "परिवर्तनों को सहेजें",
     "digital_qr": "डिजिटल एंट्री QR",
-    "public_join_url": "आपका सार्वजनिक जॉइन यूआरएल",
+    "public_join_url": "आपका सार्वजनिक Joint URL",
     "open_public_page": "सार्वजनिक पृष्ठ खोलें",
     "link_copied": "लिंक कॉपी हो गया",
     "delete_confirm": "क्या आप वाकई इस व्यवसाय को हटाना चाहते हैं?",
@@ -398,7 +411,7 @@
     "pay": "भुगतान करें",
     "payment_in_queue": "कतार में भुगतान लंबित है",
     "running_late": "{min} मिनट की देरी से चल रहा है",
-    "keep_as_is": "जैसा है वैसा रखें",
+    "keep_as_is": " जैसा है वैसा रखें",
     "reschedule": "पुनर्निर्धारित करें",
     "reschedule_appointment": "नियुक्ति पुनर्निर्धारित करें",
     "cancel_appointment": "नियुक्ति रद्द करें",
@@ -475,5 +488,30 @@
     "expired": "कालातीत",
     "scheduled": "निर्धारित",
     "in_queue": "कतार में"
+  },
+  "employee": {
+    "dashboard": "कर्मचारी डैशबोर्ड",
+    "my_work": "मेरा काम",
+    "no_tasks": "कोई सौंपा गया कार्य नहीं",
+    "no_tasks_desc": "जब ग्राहक आपको सौंपे जाएंगे, वे यहां दिखाई देंगे।",
+    "start_task": "सेवा शुरू करें",
+    "complete_task": "पूर्ण चिह्नित करें",
+    "leave_application": "छुट्टी के लिए आवेदन",
+    "applied_leaves": "मेरे छुट्टी के अनुरोध",
+    "apply_new_leave": "छुट्टी के लिए आवेदन करें",
+    "leave_success": "छुट्टी का आवेदन जमा हो गया",
+    "status_pending": "अनुमोदन लंबित",
+    "status_approved": "स्वीकृत",
+    "status_rejected": "अस्वीकृत",
+    "stats": {
+      "completed_today": "आज पूर्ण",
+      "pending_tasks": "लंबित कार्य"
+    },
+    "resign": "इस्तीफा दें",
+    "resign_desc": "व्यवसाय के मालिक को इस्तीफा अनुरोध जमा करें।",
+    "resign_reason": "इस्तीफे का कारण",
+    "last_date": "अनुरोधित अंतिम तिथि",
+    "submit_resignation": "इस्तीफा जमा करें",
+    "resignation_sent": "इस्तीफा अनुरोध सफलतापूर्वक जमा किया गया।"
   }
 }
