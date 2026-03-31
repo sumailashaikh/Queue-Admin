@@ -168,6 +168,8 @@ export default function LoginPage() {
                                     </div>
                                     <input
                                         type="tel"
+                                        name="phone"
+                                        autoComplete="tel"
                                         required
                                         maxLength={phoneLimit}
                                         value={phone}
@@ -200,6 +202,8 @@ export default function LoginPage() {
                                 <label className="text-sm font-bold text-foreground">{regionSettings ? i18n.t(regionSettings.language, 'login.verify_lbl') : 'Verification Code'}</label>
                                 <input
                                     type="text"
+                                    name="otp"
+                                    id="otp"
                                     required
                                     autoFocus
                                     maxLength={6}
@@ -237,9 +241,6 @@ export default function LoginPage() {
                     )}
                 </div>
 
-                <p className="text-center text-xs text-secondary">
-                    By logging in, you agree to our <a href="#" className="underline">Terms</a> and <a href="#" className="underline">Privacy Policy</a>.
-                </p>
             </div>
         </div>
     );
