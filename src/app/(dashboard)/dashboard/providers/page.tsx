@@ -177,9 +177,9 @@ export default function ProvidersPage() {
             });
             setSelectedProvider(null);
         } catch (error: any) {
-            const msg = error.response?.data?.message || error.message || 'providers.err_save';
-            // If the message is a translation key (contains a dot), translate it
-            showToast(msg.includes('.') ? t(msg as any) : msg, "error");
+            const msg = error.response?.data?.message || 'providers.err_save';
+            const translated = msg.includes('.') ? t(msg as any) : msg;
+            showToast(translated !== msg ? translated : t('providers.err_save'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -212,8 +212,9 @@ export default function ProvidersPage() {
             setDeleteModal({ isOpen: false, provider: null });
             await fetchProviders();
         } catch (error: any) {
-            const msg = error.response?.data?.message || t('providers.err_deactivate');
-            showToast(msg, "error");
+            const msg = error.response?.data?.message || 'providers.err_deactivate';
+            const translated = msg.includes('.') ? t(msg as any) : msg;
+            showToast(translated !== msg ? translated : t('providers.err_deactivate'), "error");
         } finally {
             setIsSubmitting(false);
         }

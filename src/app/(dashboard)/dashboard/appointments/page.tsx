@@ -435,7 +435,7 @@ export default function AppointmentsPage() {
                                                         onClick={() => handleUpdatePayment(apt.id, 'qr')}
                                                         className="px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 active:bg-blue-100 active:scale-95 rounded-xl text-xs font-black border border-blue-200 hover:border-blue-300 shadow-sm transition-all flex items-center justify-center gap-2 min-w-[80px] disabled:opacity-70"
                                                     >
-                                                        {actionLoading === `payment-${apt.id}-qr` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '📱 QR'}
+                                                        {actionLoading === `payment-${apt.id}-qr` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '📱 UPI'}
                                                     </button>
                                                 </div>
                                             ) : (
