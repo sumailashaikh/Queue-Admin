@@ -171,7 +171,7 @@ export default function ProvidersPage() {
             });
             setSelectedProvider(null);
         } catch (error: any) {
-            const msg = error.response?.data?.message || t('providers.err_save');
+            const msg = error.message || t('providers.err_save');
             showToast(msg, "error");
         } finally {
             setIsSubmitting(false);

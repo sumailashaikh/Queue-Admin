@@ -333,7 +333,7 @@ export default function AppointmentsPage() {
 
                                     {apt.is_delayed && apt.expected_start_at && (
                                         <div className="flex flex-col mt-1 space-y-0.5 animate-in fade-in zoom-in duration-300">
-                                            <span className="text-[10px] font-bold text-amber-500 uppercase">Delayed {apt.delay_minutes} min</span>
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase">{t('appointments.running_late', { min: apt.delay_minutes })}</span>
                                             <span className="text-lg font-extrabold text-amber-600">{formatDateTime(apt.expected_start_at).time}</span>
                                         </div>
                                     )}

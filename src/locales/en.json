@@ -548,7 +548,10 @@
     "skipped": "Skipped",
     "confirmed": "Confirmed",
     "checked_in": "Checked In",
-    "unpaid": "Unpaid"
+    "unpaid": "Unpaid",
+    "expired": "Expired",
+    "scheduled": "Scheduled",
+    "in_queue": "In Queue"
   },
   "employee": {
     "dashboard": "Employee Dashboard",
