@@ -22,7 +22,7 @@ import {
 const navigation = [
     { transKey: 'sidebar.overview', href: '/dashboard', icon: LayoutDashboard },
     { transKey: 'sidebar.live_queue', href: '/dashboard/queue', icon: Users },
-    { transKey: 'sidebar.providers', href: '/dashboard/providers', icon: Briefcase },
+    { transKey: 'sidebar.providers_sidebar', href: '/dashboard/providers', icon: Briefcase },
     { transKey: 'sidebar.expert_analytics', href: '/dashboard/provider-analytics', icon: TrendingUp },
     { transKey: 'sidebar.appointments', href: '/dashboard/appointments', icon: Calendar },
     { transKey: 'sidebar.services', href: '/dashboard/services', icon: Sparkles },

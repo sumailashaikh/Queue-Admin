@@ -178,7 +178,7 @@ export default function ProvidersPage() {
             setSelectedProvider(null);
         } catch (error: any) {
             const msg = error.response?.data?.message || 'providers.err_save';
-            const translated = msg.includes('.') ? t(msg as any) : msg;
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
             showToast(translated !== msg ? translated : t('providers.err_save'), "error");
         } finally {
             setIsSubmitting(false);
@@ -207,13 +207,15 @@ export default function ProvidersPage() {
         if (!deleteModal.provider) return;
         setIsSubmitting(true);
         try {
-            await businessService.deactivateEmployee(deleteModal.provider.id);
-            showToast(t('providers.success_deactivate_full'));
+            const resp = await businessService.deactivateEmployee(deleteModal.provider.id);
+            const msg = resp.message || 'providers.success_deactivate';
+            const translated = msg.includes('.') ? t(msg as any, resp) : msg;
+            showToast(translated);
             setDeleteModal({ isOpen: false, provider: null });
             await fetchProviders();
         } catch (error: any) {
             const msg = error.response?.data?.message || 'providers.err_deactivate';
-            const translated = msg.includes('.') ? t(msg as any) : msg;
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
             showToast(translated !== msg ? translated : t('providers.err_deactivate'), "error");
         } finally {
             setIsSubmitting(false);
@@ -245,8 +247,10 @@ export default function ProvidersPage() {
             showToast(t('providers.success_assign'));
             setIsAssignModalOpen(false);
             await fetchProviders();
-        } catch (error) {
-            showToast(t('providers.err_assign'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'providers.err_assign';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('providers.err_assign'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -259,8 +263,10 @@ export default function ProvidersPage() {
             await providerService.updateAvailability(selectedProvider.id, availabilityData);
             showToast(t('providers.success_availability'));
             setIsAvailabilityModalOpen(false);
-        } catch (error) {
-            showToast(t('providers.err_availability'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'providers.err_availability';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('providers.err_availability'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -287,8 +293,10 @@ export default function ProvidersPage() {
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             await fetchProviders();
-        } catch (error) {
-            showToast(t('providers.err_add_leave'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'providers.err_add_leave';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('providers.err_add_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -302,8 +310,10 @@ export default function ProvidersPage() {
             showToast(t('providers.success_leave_delete'));
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             await fetchProviders();
-        } catch (error) {
-            showToast(t('providers.err_delete_leave'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'providers.err_delete_leave';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('providers.err_delete_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -318,8 +328,10 @@ export default function ProvidersPage() {
             setRejectionReason("");
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             await fetchProviders();
-        } catch (error) {
-            showToast(t('common.error'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'common.error';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('common.error'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -330,13 +342,17 @@ export default function ProvidersPage() {
         if (!business?.id) return;
         setIsSubmitting(true);
         try {
-            await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
-            showToast(t('admin.invite_modal.success', { phone: inviteFormData.phone }));
+            const resp = await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
+            const msg = resp.message || 'providers.success_invite';
+            const translated = msg.includes('.') ? t(msg as any, { phone: inviteFormData.phone }) : msg;
+            showToast(translated);
             setIsInviteModalOpen(false);
             setInviteFormData({ name: "", phone: "", custom_message: "" });
             await fetchProviders();
-        } catch (error) {
-            showToast(t('admin.invite_modal.err_fail'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'admin.invite_modal.err_fail';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('admin.invite_modal.err_fail'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -349,8 +365,10 @@ export default function ProvidersPage() {
             showToast(status === 'APPROVED' ? t('providers.success_deactivate_full') : t('common.success'));
             await fetchResignations();
             await fetchProviders();
-        } catch (error) {
-            showToast(t('common.error'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || 'common.error';
+            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
+            showToast(translated !== msg ? translated : t('common.error'), "error");
         } finally {
             setIsSubmitting(false);
         }

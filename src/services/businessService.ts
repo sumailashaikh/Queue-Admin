@@ -60,17 +60,20 @@ export const businessService = {
         return result.data;
     },
 
-    async inviteEmployee(data: { name: string, phone: string, business_id: string, role?: string }): Promise<void> {
-        await api.post('/businesses/invite-employee', {
+    async inviteEmployee(data: { name: string, phone: string, business_id: string, role?: string, custom_message?: string }): Promise<any> {
+        const result = await api.post('/businesses/invite-employee', {
             phone: data.phone,
             full_name: data.name,
             business_id: data.business_id,
-            role: data.role || 'employee'
+            role: data.role || 'employee',
+            custom_message: data.custom_message
         });
+        return result.data;
     },
 
-    async deactivateEmployee(employeeId: string): Promise<void> {
-        await api.post(`/businesses/deactivate-employee/${employeeId}`);
+    async deactivateEmployee(employeeId: string): Promise<any> {
+        const result = await api.post(`/businesses/deactivate-employee/${employeeId}`);
+        return result.data;
     },
 
     async submitResignation(data: { reason?: string, requested_last_date?: string }): Promise<void> {
