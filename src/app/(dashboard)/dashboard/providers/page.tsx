@@ -170,8 +170,9 @@ export default function ProvidersPage() {
                 translations: {}
             });
             setSelectedProvider(null);
-        } catch (error) {
-            showToast(t('providers.err_save'), "error");
+        } catch (error: any) {
+            const msg = error.response?.data?.message || t('providers.err_save');
+            showToast(msg, "error");
         } finally {
             setIsSubmitting(false);
         }
