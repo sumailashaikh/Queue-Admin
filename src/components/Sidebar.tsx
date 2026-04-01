@@ -35,7 +35,14 @@ export default function Sidebar({ onClose, isCollapsed = false, forceLanguage }:
     const { t: baseT } = useLanguage();
     const t = (key: string, params?: any) => baseT(key, params, forceLanguage);
 
+    const isEmployee = user?.role === 'employee';
+    const isOwner = user?.role === 'owner' || user?.role === 'admin' || !user?.role;
     const isVerified = user?.status === 'active';
+
+    const mainNavigation = isEmployee ? [
+        { transKey: 'sidebar.dashboard', href: '/dashboard/employee', icon: LayoutDashboard },
+        { transKey: 'sidebar.leaves', href: '/dashboard/employee?tab=leave', icon: Calendar },
+    ] : navigation;
 
     return (
         <div className={cn(
@@ -78,19 +85,20 @@ export default function Sidebar({ onClose, isCollapsed = false, forceLanguage }:
             </div>
 
             <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-                {/* Business Section */}
-                {business && user?.role !== 'admin' && (
+                {/* Section Header */}
+                {business && (
                     <div>
                         {!isCollapsed && (
                             <div className="px-4 mb-3 mt-2">
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                                    {t('sidebar.business_center')}
+                                    {isEmployee ? t('sidebar.staff_portal') : t('sidebar.business_center')}
                                 </span>
                             </div>
                         )}
                         <div className="space-y-1">
-                            {navigation.map((item) => {
-                                const isActive = pathname === item.href;
+                            {mainNavigation.map((item) => {
+                                // For employee, match active tab or path
+                                const isActive = pathname === item.href || (isEmployee && pathname.startsWith(item.href) && !item.href.includes('tab=leave'));
                                 return (
                                     <Link
                                         key={item.href}

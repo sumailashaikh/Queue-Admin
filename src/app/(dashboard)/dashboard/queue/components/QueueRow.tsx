@@ -63,6 +63,21 @@ export const QueueRow: React.FC<QueueRowProps> = ({
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = useState(false);
     const [showNoShowModal, setShowNoShowModal] = useState(false);
     const [showSkipModal, setShowSkipModal] = useState(false);
+    const [wasAutoOpened, setWasAutoOpened] = useState(false);
+
+    const s = (item.status || "").toLowerCase().trim();
+    const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
+    const isPendingPayment = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
+
+    // Auto-open payment menu when last task is completed
+    useEffect(() => {
+        if (isPendingPayment && !wasAutoOpened) {
+            setIsPaymentMenuOpen(true);
+            setWasAutoOpened(true);
+        } else if (!isPendingPayment) {
+            setWasAutoOpened(false);
+        }
+    }, [isPendingPayment, wasAutoOpened]);
 
     // Delay computations
     const apptStartTime = item.appointments?.start_time ? new Date(item.appointments.start_time).getTime() : null;
@@ -89,10 +104,6 @@ export const QueueRow: React.FC<QueueRowProps> = ({
         const interval = setInterval(() => setNow(Date.now()), 60000);
         return () => clearInterval(interval);
     }, []);
-
-    const s = (item.status || "").toLowerCase().trim();
-    const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
-    const isPendingPayment = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
 
     return (
         <div className={cn(

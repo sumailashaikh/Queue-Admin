@@ -27,16 +27,31 @@ import { useLanguage } from "@/context/LanguageContext";
 import { businessService } from "@/services/businessService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-export default function EmployeeDashboard() {
+import { useSearchParams } from "next/navigation";
+
+import { Suspense } from "react";
+
+function EmployeeDashboardContent() {
     const { user, business, logout } = useAuth();
     const { t, language } = useLanguage();
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get('tab');
     
     const [profile, setProfile] = useState<ServiceProvider | null>(null);
     const [tasks, setTasks] = useState<QueueEntry[]>([]);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [activeTab, setActiveTab] = useState<'work' | 'leave'>('work');
+    const [activeTab, setActiveTab] = useState<'work' | 'leave'>(tabParam === 'leave' ? 'leave' : 'work');
+
+    // Update activeTab if URL parameter changes
+    useEffect(() => {
+        if (tabParam === 'leave') {
+            setActiveTab('leave');
+        } else {
+            setActiveTab('work');
+        }
+    }, [tabParam]);
     
     // Leave Form State
     const [leaveFormData, setLeaveFormData] = useState({
@@ -560,5 +575,20 @@ export default function EmployeeDashboard() {
                 </button>
             </div>
         </div>
+    );
+}
+
+export default function EmployeeDashboard() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+                <div className="h-10 w-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">
+                    Loading Portal...
+                </p>
+            </div>
+        }>
+            <EmployeeDashboardContent />
+        </Suspense>
     );
 }
