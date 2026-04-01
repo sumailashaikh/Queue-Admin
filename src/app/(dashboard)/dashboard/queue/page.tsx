@@ -357,6 +357,9 @@ export default function LiveQueuePage() {
             await queueService.restoreEntry(id);
             showToast(t('queue.success_restore'));
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            
+            // "Redirect" to Live Queue tab automatically upon restoration
+            setViewMode('active');
         } catch (error: any) {
             console.error("Failed to restore customer:", error);
             showToast(t('queue.err_restore'), "error");
@@ -455,16 +458,21 @@ export default function LiveQueuePage() {
     };
 
     const filteredEntries = entries.filter(item => {
-        const matchesSearch = item.customer_name.toLowerCase().includes(search.toLowerCase()) ||
+        const matchesSearch = (item.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
             (item.phone && item.phone.includes(search));
 
         const matchesService = selectedServiceId === "all" ||
             item.queue_entry_services?.some(s => s.services?.id === selectedServiceId) ||
             (item.service_name && item.service_name.includes(services.find(s => s.id === selectedServiceId)?.name));
 
+        // Robust normalization of status to avoid string mismatch bugs
+        const s = (item.status || "").toLowerCase().trim();
+
+        // Active Queue: strictly show only those waiting/being served
+        // No-Shows/Completed: strictly hidden from the active list
         const matchesViewMode = viewMode === 'active'
-            ? item.status !== 'no_show'
-            : item.status === 'no_show';
+            ? (s === 'waiting' || s === 'serving' || s === 'skipped')
+            : (s === 'no_show');
 
         return matchesSearch && matchesService && matchesViewMode;
     });
@@ -624,7 +632,10 @@ export default function LiveQueuePage() {
                                 : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        {t('queue.active_queue')} ({entries.filter(e => e.status !== 'no_show').length})
+                        {t('queue.active_queue')} ({entries.filter(e => {
+                            const s = (e.status || "").toLowerCase().trim();
+                            return s === 'waiting' || s === 'serving' || s === 'skipped';
+                        }).length})
                     </button>
                     <button
                         onClick={() => setViewMode('noshow')}
@@ -635,7 +646,7 @@ export default function LiveQueuePage() {
                                 : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        {t('queue.no_shows')} ({entries.filter(e => e.status === 'no_show').length})
+                        {t('queue.no_shows')} ({entries.filter(e => (e.status || "").toLowerCase().trim() === 'no_show').length})
                     </button>
                 </div>
 

@@ -89,21 +89,22 @@ export const QueueRow: React.FC<QueueRowProps> = ({
         return () => clearInterval(interval);
     }, []);
 
-    const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(item.status);
-    const isPendingPayment = item.status === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
+    const s = (item.status || "").toLowerCase().trim();
+    const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
+    const isPendingPayment = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
 
     return (
         <div className={cn(
             "group relative bg-white rounded-[24px] border border-slate-100 shadow-sm transition-all duration-300 hover:shadow-md overflow-hidden",
-            item.status === 'no_show' && "opacity-75 grayscale-[0.3]"
+            s === 'no_show' && "opacity-75 grayscale-[0.3]"
         )}>
             {/* Side Status Indicator */}
             <div className={cn(
                 "absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-500",
-                item.status === 'serving' ? "bg-blue-600" :
-                    item.status === 'waiting' ? "bg-amber-500" :
-                        item.status === 'completed' ? "bg-emerald-500" :
-                            item.status === 'no_show' ? "bg-rose-600" : "bg-slate-300"
+                s === 'serving' ? "bg-blue-600" :
+                    s === 'waiting' ? "bg-amber-500" :
+                        s === 'completed' ? "bg-emerald-500" :
+                            s === 'no_show' ? "bg-rose-600" : "bg-slate-300"
             )} />
 
             <div className="pl-4 p-4">
@@ -222,7 +223,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                     <UserMinus className="h-3.5 w-3.5" />
                                 </button>
                             )}
-                            {(item.status === 'skipped' || item.status === 'no_show') && (
+                            {(s === 'skipped' || s === 'no_show') && (
                                 <button onClick={() => onRestore?.(item.id)} className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all" title={t('queue.restore_to_queue')}>
                                     <RefreshCcw className="h-3.5 w-3.5" />
                                 </button>
