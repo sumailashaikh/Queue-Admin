@@ -142,6 +142,10 @@
     "mark_paid": "Mark Paid",
     "cash": "Cash",
     "qr_upi": "UPI",
+    "payment": {
+      "offline": "Cash Payment",
+      "digital": "UPI / Online"
+    },
     "restore_to_queue": "Restore to Queue",
     "customer_missing": "Customer Missing?",
     "marking": "Marking",
@@ -183,6 +187,8 @@
     "success_initialized": "Task Execution Area Ready",
     "err_initialize": "Failed to Prepare Execution Area",
     "waiting_to_start": "Select Expert to Start",
+    "starting": "Starting...",
+    "preparing": "Preparing Service Area...",
     "skip": "Skip",
     "no_show": "No Show"
   },

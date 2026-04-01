@@ -292,8 +292,16 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             <div className="flex flex-col items-end gap-2 w-full animate-in slide-in-from-right-5 duration-300">
                                 <div className="relative w-full sm:w-auto">
                                     <button
-                                        onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
-                                        className="h-10 px-6 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center justify-center gap-2 hover:bg-slate-800 active:scale-95 transition-all w-full sm:w-auto"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsPaymentMenuOpen(!isPaymentMenuOpen);
+                                        }}
+                                        className={cn(
+                                            "h-10 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto border",
+                                            isPaymentMenuOpen 
+                                                ? "bg-white border-slate-200 text-slate-900 shadow-slate-100" 
+                                                : "bg-slate-900 border-transparent text-white shadow-slate-200 hover:bg-slate-800"
+                                        )}
                                     >
                                         <Wallet className="h-4 w-4" />
                                         {t('queue.mark_paid') || 'Mark Paid'}
@@ -301,28 +309,28 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                     </button>
 
                                     {isPaymentMenuOpen && (
-                                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5 animate-in slide-in-from-bottom-2 duration-200">
-                                            <div className="px-2 py-1 border-b border-slate-50 mb-1">
-                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('queue.select_method') || 'Select Method'}</p>
+                                        <div className="absolute bottom-full right-0 mb-3 w-56 bg-white/95 backdrop-blur-xl rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100/50 p-2 z-[100] flex flex-col gap-1 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+                                            <div className="px-3 py-2 border-b border-slate-50 mb-1">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('queue.select_method') || 'Select Method'}</p>
                                             </div>
                                             <button
                                                 onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}
-                                                className="px-3 py-2.5 text-left text-xs font-black hover:bg-emerald-50 hover:text-emerald-700 active:bg-emerald-100 rounded-xl text-slate-700 transition-all flex items-center gap-3 border border-transparent hover:border-emerald-200/50"
+                                                className="group px-3 py-3 text-left hover:bg-emerald-50 rounded-2xl transition-all flex items-center gap-3"
                                             >
-                                                <span className="h-6 w-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">💵</span>
+                                                <div className="h-9 w-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">💵</div>
                                                 <div className="flex flex-col">
-                                                    <span className="leading-tight">{t('queue.cash')}</span>
-                                                    <span className="text-[8px] opacity-40 uppercase">{t('payment.offline') || 'Physical Cash'}</span>
+                                                    <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.cash')}</span>
+                                                    <span className="text-[9px] font-bold text-emerald-600/70 uppercase tracking-tighter opacity-80">{t('payment.offline')}</span>
                                                 </div>
                                             </button>
                                             <button
                                                 onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }}
-                                                className="px-3 py-2.5 text-left text-xs font-black hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 rounded-xl text-slate-700 transition-all flex items-center gap-3 border border-transparent hover:border-blue-200/50"
+                                                className="group px-3 py-3 text-left hover:bg-blue-50 rounded-2xl transition-all flex items-center gap-3"
                                             >
-                                                <span className="h-6 w-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs">📱</span>
+                                                <div className="h-9 w-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">📱</div>
                                                 <div className="flex flex-col">
-                                                    <span className="leading-tight">{t('queue.qr_upi')}</span>
-                                                    <span className="text-[8px] opacity-40 uppercase">{t('payment.digital') || 'Digital UPI'}</span>
+                                                    <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.qr_upi')}</span>
+                                                    <span className="text-[9px] font-bold text-blue-600/70 uppercase tracking-tighter opacity-80">{t('payment.digital')}</span>
                                                 </div>
                                             </button>
                                         </div>
