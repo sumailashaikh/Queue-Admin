@@ -129,10 +129,56 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     </div>
                     {/* Status badges top right */}
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                        <StatusBadge status={item.payment_method === 'unpaid' || !item.payment_method ? 'unpaid' : 'paid'} />
+                        <button 
+                            onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
+                            className="transition-transform active:scale-95 group/payment"
+                        >
+                            <StatusBadge 
+                                status={item.payment_method === 'unpaid' || !item.payment_method ? 'unpaid' : 'paid'} 
+                            />
+                        </button>
                         <StatusBadge status={item.status} />
                     </div>
                 </div>
+
+                {/* SHARED PAYMENT MENU - Can be opened from badge or end-of-service button */}
+                <div className="relative">
+                    {isPaymentMenuOpen && (
+                        <div className="absolute top-0 right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5 animate-in slide-in-from-top-2 duration-200">
+                            <div className="flex items-center justify-between px-2 pt-1">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Select Method'}</p>
+                                <button onClick={() => setIsPaymentMenuOpen(false)} className="text-slate-300 hover:text-slate-500">
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}
+                                className="px-3 py-2.5 text-left text-xs font-black hover:bg-emerald-50 hover:text-emerald-700 active:bg-emerald-100 rounded-xl text-slate-700 transition-all flex items-center gap-2 border border-transparent hover:border-emerald-200"
+                            >
+                                <span className="h-5 w-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px]">💵</span>
+                                {t('queue.cash')}
+                                {item.payment_method === 'cash' && <CheckCheck className="h-3 w-3 ml-auto text-emerald-500" />}
+                            </button>
+                            <button
+                                onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }}
+                                className="px-3 py-2.5 text-left text-xs font-black hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 rounded-xl text-slate-700 transition-all flex items-center gap-2 border border-transparent hover:border-blue-200"
+                            >
+                                <span className="h-5 w-5 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">📱</span>
+                                {t('queue.qr_upi')}
+                                {item.payment_method === 'qr' && <CheckCheck className="h-3 w-3 ml-auto text-blue-500" />}
+                            </button>
+                            {(item.payment_method && item.payment_method !== 'unpaid') && (
+                                <button
+                                    onClick={() => { onUpdatePayment(item.id, 'unpaid'); setIsPaymentMenuOpen(false); }}
+                                    className="px-3 py-2.5 text-left text-[10px] font-bold text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                >
+                                    {t('queue.reset_to_unpaid') || 'Reset to Unpaid'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
 
                 {/* SERVICE + TIMING ROW */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 pl-1">
@@ -234,35 +280,13 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     {/* Primary Action */}
                     <div className="flex-1 min-w-[140px] w-full mt-2 sm:mt-0 ml-auto justify-end">
                         {isPendingPayment ? (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
-                                    className="w-full h-9 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 flex items-center justify-center gap-1"
-                                >
-                                    <Wallet className="h-3 w-3" />
-                                    {t('queue.mark_paid')}
-                                </button>
-                                {isPaymentMenuOpen && (
-                                    <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 pt-1">{t('queue.select_method') || 'Select Method'}</p>
-                                        <button
-                                            onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}
-                                            className="px-3 py-2.5 text-left text-xs font-black hover:bg-emerald-50 hover:text-emerald-700 active:bg-emerald-100 rounded-xl text-slate-700 transition-all flex items-center gap-2 border border-transparent hover:border-emerald-200"
-                                        >
-                                            <span className="h-5 w-5 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px]">💵</span>
-                                            {t('queue.cash')}
-                                        </button>
-                                        <button
-                                            onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }}
-                                            className="px-3 py-2.5 text-left text-xs font-black hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 rounded-xl text-slate-700 transition-all flex items-center gap-2 border border-transparent hover:border-blue-200"
-                                        >
-                                            <span className="h-5 w-5 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-[10px]">📱</span>
-                                            {t('queue.qr_upi')}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
+                            <button
+                                onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
+                                className="w-full h-9 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                            >
+                                <Wallet className="h-3 w-3" />
+                                {t('queue.mark_paid')}
+                            </button>
                         ) : (
                             <ServiceExecutionStrip
                                 services={item.queue_entry_services || []}
@@ -276,6 +300,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             />
                         )}
                     </div>
+
                 </div>
             </div>
 
