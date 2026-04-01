@@ -214,9 +214,11 @@ export default function ProvidersPage() {
             setDeleteModal({ isOpen: false, provider: null });
             await fetchProviders();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'providers.err_deactivate';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('providers.err_deactivate'), "error");
+            const data = error.response?.data;
+            const msg = data?.message || 'providers.err_deactivate';
+            // If message is a key, translate it with the data (carrying 'count' for err_active_tasks)
+            const translated = msg.includes('.') ? t(msg as any, data) : msg;
+            showToast(translated, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -344,15 +346,16 @@ export default function ProvidersPage() {
         try {
             const resp = await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
             const msg = resp.message || 'providers.success_invite';
-            const translated = msg.includes('.') ? t(msg as any, { phone: inviteFormData.phone }) : msg;
+            const translated = msg.includes('.') ? t(msg as any, { ...resp, phone: inviteFormData.phone }) : msg;
             showToast(translated);
             setIsInviteModalOpen(false);
             setInviteFormData({ name: "", phone: "", custom_message: "" });
             await fetchProviders();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'admin.invite_modal.err_fail';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('admin.invite_modal.err_fail'), "error");
+            const data = error.response?.data;
+            const msg = data?.message || 'admin.invite_modal.err_fail';
+            const translated = msg.includes('.') ? t(msg as any, data) : msg;
+            showToast(translated, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -654,7 +657,12 @@ export default function ProvidersPage() {
                     <div className="bg-white w-full max-w-sm rounded-[32px] p-8 text-center space-y-6 shadow-2xl animate-in zoom-in-95">
                         <div className="h-16 w-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto"><AlertCircle className="h-8 w-8" /></div>
                         <div><h3 className="text-lg font-bold text-slate-900">{t('providers.deactivate_expert')}</h3><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{t('providers.deactivate_confirm')}</p></div>
-                        <div className="flex flex-col gap-2"><button onClick={confirmDelete} className="w-full py-4 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100">{t('providers.deactivate')}</button><button onClick={() => setDeleteModal({ isOpen: false, provider: null })} className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest">Cancel</button></div>
+                        <div className="flex flex-col gap-2">
+                            <button onClick={confirmDelete} className="w-full py-4 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100">{t('providers.deactivate')}</button>
+                            <button onClick={() => setDeleteModal({ isOpen: false, provider: null })} className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                                {t('common.cancel')}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
