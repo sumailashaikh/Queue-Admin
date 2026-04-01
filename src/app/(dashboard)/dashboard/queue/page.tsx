@@ -469,9 +469,11 @@ export default function LiveQueuePage() {
         const s = (item.status || "").toLowerCase().trim();
 
         // Active Queue: strictly show only those waiting/being served
-        // No-Shows/Completed/Done: strictly hidden from the active list
+        // Completed entries that are UNPAID are also included so payment can be selected
+        const isUnpaidCompleted = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
+        
         const matchesViewMode = viewMode === 'active'
-            ? (['waiting', 'serving', 'skipped'].includes(s))
+            ? (['waiting', 'serving', 'skipped'].includes(s) || isUnpaidCompleted)
             : (s === 'no_show');
 
         // Extra safety: If there's no service filter, don't check for service matching
