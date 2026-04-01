@@ -45,12 +45,22 @@ export const api = {
 
         // Global 401 Handling
         if (response.status === 401) {
-            if (typeof window !== 'undefined') {
+            // Skip auto-redirect for login/verify routes so we can show validation errors
+            const isAuthRoute = endpoint.includes('/auth/verify') || endpoint.includes('/auth/otp');
+            
+            if (typeof window !== 'undefined' && !isAuthRoute) {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('auth_user');
                 // Use window.location for a hard redirect to clear all states
                 window.location.href = '/login';
             }
+            
+            // For auth routes, we throw the error but don't redirect
+            if (isAuthRoute) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Unauthorized');
+            }
+            
             throw new Error('Unauthorized');
         }
 
