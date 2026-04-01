@@ -469,12 +469,15 @@ export default function LiveQueuePage() {
         const s = (item.status || "").toLowerCase().trim();
 
         // Active Queue: strictly show only those waiting/being served
-        // No-Shows/Completed: strictly hidden from the active list
+        // No-Shows/Completed/Done: strictly hidden from the active list
         const matchesViewMode = viewMode === 'active'
-            ? (s === 'waiting' || s === 'serving' || s === 'skipped')
+            ? (['waiting', 'serving', 'skipped'].includes(s))
             : (s === 'no_show');
 
-        return matchesSearch && matchesService && matchesViewMode;
+        // Extra safety: If there's no service filter, don't check for service matching
+        const finalMatches = matchesSearch && matchesViewMode && (selectedServiceId === 'all' ? true : matchesService);
+
+        return finalMatches;
     });
 
     const getWaitTimeDisplay = (timeString: string) => {
