@@ -75,7 +75,10 @@ export const api = {
         }
 
         if (!response.ok) {
-            throw new Error(result.message || `API Error: ${response.status}`);
+            const error: any = new Error(result.message || `API Error: ${response.status}`);
+            error.status = response.status;
+            error.response = { data: result }; // Attach the body to error.response.data (Axios-like)
+            throw error;
         }
 
         return result;

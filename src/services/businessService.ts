@@ -68,12 +68,12 @@ export const businessService = {
             role: data.role || 'employee',
             custom_message: data.custom_message
         });
-        return result.data;
+        return result;
     },
 
     async deactivateEmployee(employeeId: string): Promise<any> {
         const result = await api.post(`/businesses/deactivate-employee/${employeeId}`);
-        return result.data;
+        return result;
     },
 
     async submitResignation(data: { reason?: string, requested_last_date?: string }): Promise<void> {

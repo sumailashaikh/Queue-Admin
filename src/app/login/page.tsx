@@ -71,10 +71,27 @@ export default function LoginPage() {
             setStep(2);
             setResendTimer(60); // Start 60s countdown
         } catch (err: any) {
-            setError(err.message || "Failed to send OTP. Please try again.");
+            setError(maskTechnicalError(err.message) || "Failed to send OTP. Please try again.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const maskTechnicalError = (message: string) => {
+        if (!message) return null;
+        const technicalKeywords = [
+            'schema', 'column', 'database', 'supabase', 'postgrest', 
+            'cache', 'relation', 'table', 'trigger', 'procedure',
+            '500', 'internal server error', 'undefined'
+        ];
+        
+        const isTechnical = technicalKeywords.some(kw => message.toLowerCase().includes(kw));
+        
+        if (isTechnical) {
+            return "Service configuration error. Please try again later or contact support.";
+        }
+        
+        return message;
     };
 
     const handleVerifyOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent) => {
@@ -105,7 +122,7 @@ export default function LoginPage() {
                 throw new Error("Invalid session data received");
             }
         } catch (err: any) {
-            setError(err.message || "Invalid OTP. Please check and try again.");
+            setError(maskTechnicalError(err.message) || "Invalid OTP. Please check and try again.");
         } finally {
             setLoading(false);
         }

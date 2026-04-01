@@ -163,7 +163,13 @@ export default function ProvidersPage() {
                 await providerService.updateProvider(selectedProvider.id, submitData);
                 showToast(t('providers.success_update'));
             } else {
-                await providerService.createProvider({ ...submitData, business_id: business?.id, is_active: true });
+                const resp = await providerService.createProvider({ ...submitData, business_id: business?.id, is_active: true });
+                const status = resp.status || 'success';
+                if (status === 'error') {
+                    const msg = resp.message || 'providers.err_save';
+                    showToast(msg.includes('.') ? t(msg as any, resp) : msg, "error");
+                    return;
+                }
                 showToast(t('providers.success_add'));
             }
             await fetchProviders();
@@ -177,9 +183,9 @@ export default function ProvidersPage() {
             });
             setSelectedProvider(null);
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'providers.err_save';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('providers.err_save'), "error");
+            const data = error.response?.data;
+            const msg = data?.message || 'providers.err_save';
+            showToast(msg.includes('.') ? t(msg as any, data) : msg, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -216,7 +222,6 @@ export default function ProvidersPage() {
         } catch (error: any) {
             const data = error.response?.data;
             const msg = data?.message || 'providers.err_deactivate';
-            // If message is a key, translate it with the data (carrying 'count' for err_active_tasks)
             const translated = msg.includes('.') ? t(msg as any, data) : msg;
             showToast(translated, "error");
         } finally {
@@ -250,9 +255,9 @@ export default function ProvidersPage() {
             setIsAssignModalOpen(false);
             await fetchProviders();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'providers.err_assign';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('providers.err_assign'), "error");
+            const data = error.response?.data;
+            const msg = data?.message || 'providers.err_assign';
+            showToast(msg.includes('.') ? t(msg as any, data) : msg, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -266,9 +271,9 @@ export default function ProvidersPage() {
             showToast(t('providers.success_availability'));
             setIsAvailabilityModalOpen(false);
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'providers.err_availability';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('providers.err_availability'), "error");
+            const data = error.response?.data;
+            const msg = data?.message || 'providers.err_availability';
+            showToast(msg.includes('.') ? t(msg as any, data) : msg, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -290,15 +295,20 @@ export default function ProvidersPage() {
         if (!selectedProvider) return;
         setIsSubmitting(true);
         try {
-            await providerService.addLeave(selectedProvider.id, leaveFormData);
+            const resp = await providerService.addLeave(selectedProvider.id, leaveFormData);
+            if (resp.status === 'error') {
+                const msg = resp.message || 'providers.err_add_leave';
+                showToast(msg.includes('.') ? t(msg as any, resp) : msg, "error");
+                return;
+            }
             showToast(t('providers.success_leave_add'));
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             await fetchProviders();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'providers.err_add_leave';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('providers.err_add_leave'), "error");
+            const data = error.response?.data;
+            const msg = data?.message || 'providers.err_add_leave';
+            showToast(msg.includes('.') ? t(msg as any, data) : msg, "error");
         } finally {
             setIsSubmitting(false);
         }

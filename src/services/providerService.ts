@@ -30,14 +30,14 @@ export const providerService = {
         return result.data || [];
     },
 
-    async createProvider(data: Partial<ServiceProvider>): Promise<ServiceProvider> {
+    async createProvider(data: Partial<ServiceProvider>): Promise<any> {
         const result = await api.post<ServiceProvider>('/service-providers', data);
-        return result.data;
+        return result;
     },
 
-    async updateProvider(id: string, data: Partial<ServiceProvider>): Promise<ServiceProvider> {
+    async updateProvider(id: string, data: Partial<ServiceProvider>): Promise<any> {
         const result = await api.patch<ServiceProvider>(`/service-providers/${id}`, data);
-        return result.data;
+        return result;
     },
 
     async deleteProvider(id: string): Promise<void> {
@@ -67,7 +67,7 @@ export const providerService = {
 
     async addLeave(providerId: string, data: { start_date: string, end_date: string, leave_type: string, note?: string }): Promise<any> {
         const result = await api.post<any>(`/service-providers/${providerId}/leaves`, data);
-        return result.data;
+        return result;
     },
 
     async deleteLeave(leaveId: string): Promise<void> {
@@ -81,6 +81,6 @@ export const providerService = {
 
     async updateLeaveStatus(leaveId: string, status: 'APPROVED' | 'REJECTED', reason?: string): Promise<any> {
         const result = await api.patch<any>(`/service-providers/leaves/${leaveId}/status`, { status, reason });
-        return result.data;
-    }
+        return result;
+    },
 };
