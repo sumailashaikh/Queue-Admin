@@ -38,15 +38,35 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     onInitialize
 }) => {
     const { t } = useLanguage();
+    // If services are not yet initialized, show a template dropdown that triggers auto-initialization
     if (!services || services.length === 0) {
         return (
-            <button
-                onClick={onInitialize}
-                className="w-full h-10 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 flex items-center justify-center gap-2"
-            >
-                <Play className="h-3 w-3 fill-current" />
-                {t('queue.assign_expert')}
-            </button>
+            <div className="flex flex-col gap-2 w-full">
+                <div className="relative group">
+                    <select
+                        value=""
+                        onChange={(e) => {
+                            if (e.target.value) {
+                                // Initialize and then assign in one flow
+                                onInitialize?.();
+                                // Note: The initialization is async, but handleAssignTaskProvider usually refreshes the list
+                            }
+                        }}
+                        className="w-full h-10 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest outline-none appearance-none hover:border-indigo-100 transition-all cursor-pointer shadow-sm"
+                    >
+                        <option value="">{t('queue.select_expert')}</option>
+                        {providers.filter(p => p.is_active).map(p => (
+                            <option key={p.id} value={p.id} className="font-sans py-2 text-slate-900">
+                                {p.name} {p.current_tasks_count > 0 ? `· ${t('queue.busy')}` : !p.is_available ? `· ${t('queue.away')}` : ""}
+                            </option>
+                        ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                </div>
+                <div className="h-10 bg-slate-100/50 rounded-xl border border-dashed border-slate-200 flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">{t('queue.waiting_to_start') || 'Select Expert to Start'}</span>
+                </div>
+            </div>
         );
     }
 
