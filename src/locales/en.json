@@ -182,6 +182,7 @@
     "assign_expert": "Assign Expert",
     "success_initialized": "Task Execution Area Ready",
     "err_initialize": "Failed to Prepare Execution Area",
+    "waiting_to_start": "Select Expert to Start",
     "skip": "Skip",
     "no_show": "No Show"
   },

@@ -23,7 +23,7 @@ interface ServiceExecutionStripProps {
     onAssignProvider: (taskId: string, providerId: string) => void;
     onStartTask: (taskId: string) => void;
     onCompleteTask: (taskId: string) => void;
-    onInitialize?: () => void;
+    onInitialize?: (providerId?: string) => void;
 }
 
 export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
@@ -48,8 +48,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                         onChange={(e) => {
                             if (e.target.value) {
                                 // Initialize and then assign in one flow
-                                onInitialize?.();
-                                // Note: The initialization is async, but handleAssignTaskProvider usually refreshes the list
+                                onInitialize?.(e.target.value);
                             }
                         }}
                         className="w-full h-10 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest outline-none appearance-none hover:border-indigo-100 transition-all cursor-pointer shadow-sm"

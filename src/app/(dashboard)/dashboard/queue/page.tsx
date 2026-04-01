@@ -229,9 +229,9 @@ export default function LiveQueuePage() {
         }
     };
 
-    const handleInitializeTasks = async (entryId: string) => {
+    const handleInitializeTasks = async (entryId: string, providerId?: string) => {
         try {
-            await queueService.initializeEntryTasks(entryId);
+            await queueService.initializeEntryTasks(entryId, providerId);
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
             showToast(t('queue.success_initialized'));
         } catch (error: any) {

@@ -67,7 +67,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
     const s = (item.status || "").toLowerCase().trim();
     const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
-    const isPendingPayment = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
+    const isPendingPayment = (s === 'completed' || s === 'serving') && (item.payment_method === 'unpaid' || !item.payment_method);
 
     // Auto-open payment menu when last task is completed
     useEffect(() => {

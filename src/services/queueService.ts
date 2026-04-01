@@ -159,8 +159,8 @@ export const queueService = {
         return result.data || [];
     },
 
-    async initializeEntryTasks(entryId: string): Promise<{ status: string }> {
-        const result = await api.post<{ status: string }>(`/queues/entries/${entryId}/initialize-tasks`, {});
+    async initializeEntryTasks(entryId: string, providerId?: string): Promise<{ status: string }> {
+        const result = await api.post<{ status: string }>(`/queues/entries/${entryId}/initialize-tasks`, { provider_id: providerId });
         return result.data;
     }
 }
