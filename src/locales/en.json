@@ -321,7 +321,7 @@
     "success_add": "Professional added successfully.",
     "success_update": "Professional updated successfully.",
     "success_invite": "Employee invited successfully via WhatsApp/SMS!",
-    "success_invite_mock": "Employee added successfully (Notification system in mock mode).",
+    "success_invite_mock": "Employee added successfully.",
     "invite_msg_placeholder": "Write a custom welcome message for the employee...",
     "invite_msg_label": "Invitation Message",
     "custom_invite_hint": "This message will be sent via WhatsApp/SMS to the employee.",
