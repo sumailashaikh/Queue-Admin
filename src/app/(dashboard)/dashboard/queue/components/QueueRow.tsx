@@ -20,7 +20,8 @@ import {
     UserMinus,
     MessageCircle,
     Megaphone,
-    Wallet
+    Wallet,
+    X
 } from "lucide-react";
 import { ServiceExecutionStrip } from "./ServiceExecutionStrip";
 import { StatusBadge, UI_TOKENS } from "@/components/dashboard/DashboardUI";
@@ -129,14 +130,11 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     </div>
                     {/* Status badges top right */}
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                        <button 
-                            onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
-                            className="transition-transform active:scale-95 group/payment"
-                        >
+                        <div className="transition-transform group/payment">
                             <StatusBadge 
                                 status={item.payment_method === 'unpaid' || !item.payment_method ? 'unpaid' : 'paid'} 
                             />
-                        </button>
+                        </div>
                         <StatusBadge status={item.status} />
                     </div>
                 </div>
@@ -188,7 +186,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     {isDelayed && item.status === 'waiting' && (
                         <div className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[9px] font-black uppercase tracking-tight flex items-center gap-1">
                             <Timer className="h-3 w-3" />
-                            {t('queue.late')} {delayMins}{t('queue.min')}
+                            {t('status.late')} {delayMins}{t('queue.min')}
                         </div>
                     )}
                     <div className="flex items-center gap-1 text-xs font-bold text-slate-400 flex-wrap">
@@ -280,13 +278,22 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     {/* Primary Action */}
                     <div className="flex-1 min-w-[140px] w-full mt-2 sm:mt-0 ml-auto justify-end">
                         {isPendingPayment ? (
-                            <button
-                                onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
-                                className="w-full h-9 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 flex items-center justify-center gap-1 active:scale-95 transition-all"
-                            >
-                                <Wallet className="h-3 w-3" />
-                                {t('queue.mark_paid')}
-                            </button>
+                            <div className="flex items-center gap-2 w-full animate-in slide-in-from-right-5 duration-300">
+                                <button
+                                    onClick={() => onUpdatePayment(item.id, 'cash')}
+                                    className="flex-1 h-9 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                                >
+                                    <Wallet className="h-3.5 w-3.5" />
+                                    {t('queue.cash')}
+                                </button>
+                                <button
+                                    onClick={() => onUpdatePayment(item.id, 'qr')}
+                                    className="flex-1 h-9 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                                >
+                                    <QrCode className="h-3.5 w-3.5" />
+                                    {t('queue.qr_upi')}
+                                </button>
+                            </div>
                         ) : (
                             <ServiceExecutionStrip
                                 services={item.queue_entry_services || []}

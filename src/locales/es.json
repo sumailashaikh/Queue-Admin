@@ -496,6 +496,7 @@
     "skipped": "Omitido",
     "confirmed": "Confirmado",
     "checked_in": "Registrado",
-    "unpaid": "No Pagado"
+    "unpaid": "No Pagado",
+    "late": "Con retraso"
   }
 }

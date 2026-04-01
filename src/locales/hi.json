@@ -491,7 +491,8 @@
     "unpaid": "अवैतनिक",
     "expired": "कालातीत",
     "scheduled": "निर्धारित",
-    "in_queue": "कतार में"
+    "in_queue": "कतार में",
+    "late": "देर से"
   },
   "employee": {
     "dashboard": "कर्मचारी डैशबोर्ड",

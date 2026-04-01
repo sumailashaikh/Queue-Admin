@@ -563,7 +563,8 @@
     "unpaid": "Unpaid",
     "expired": "Expired",
     "scheduled": "Scheduled",
-    "in_queue": "In Queue"
+    "in_queue": "In Queue",
+    "late": "Running Late"
   },
   "employee": {
     "dashboard": "Employee Dashboard",

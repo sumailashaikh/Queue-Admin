@@ -28,7 +28,8 @@ interface StatusBadgeProps {
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
     const { t } = useLanguage();
-    const s = status.toLowerCase();
+    const raw = status.toLowerCase();
+    const s = raw.startsWith('status.') ? raw.split('.')[1] : raw;
 
     const config: Record<string, { bg: string, text: string, label: string }> = {
         waiting: { bg: 'bg-slate-100', text: 'text-slate-500', label: t('status.waiting') || 'Waiting' },
