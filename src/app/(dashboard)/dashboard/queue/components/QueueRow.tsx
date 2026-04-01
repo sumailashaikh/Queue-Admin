@@ -262,7 +262,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                     <ArrowRightToLine className="h-3.5 w-3.5" />
                                 </button>
                             )}
-                            {!isServingOrCompleted && (
+                            {item.status !== 'completed' && !isServingOrCompleted && (
                                 <button onClick={() => setShowNoShowModal(true)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title={t('queue.no_show')}>
                                     <UserMinus className="h-3.5 w-3.5" />
                                 </button>
@@ -278,21 +278,39 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                     {/* Primary Action */}
                     <div className="flex-1 min-w-[140px] w-full mt-2 sm:mt-0 ml-auto justify-end">
                         {isPendingPayment ? (
-                            <div className="flex items-center gap-2 w-full animate-in slide-in-from-right-5 duration-300">
-                                <button
-                                    onClick={() => onUpdatePayment(item.id, 'cash')}
-                                    className="flex-1 h-9 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-all"
-                                >
-                                    <Wallet className="h-3.5 w-3.5" />
-                                    {t('queue.cash')}
-                                </button>
-                                <button
-                                    onClick={() => onUpdatePayment(item.id, 'qr')}
-                                    className="flex-1 h-9 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-all"
-                                >
-                                    <QrCode className="h-3.5 w-3.5" />
-                                    {t('queue.qr_upi')}
-                                </button>
+                            <div className="flex items-center justify-end gap-2 w-full animate-in slide-in-from-right-5 duration-300">
+                                {!isPaymentMenuOpen ? (
+                                    <button
+                                        onClick={() => setIsPaymentMenuOpen(true)}
+                                        className="h-10 px-6 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 flex items-center justify-center gap-2 hover:bg-slate-800 active:scale-95 transition-all"
+                                    >
+                                        <Wallet className="h-4 w-4" />
+                                        {t('queue.mark_paid') || 'Mark Paid'}
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-2 w-full">
+                                        <button
+                                            onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}
+                                            className="flex-1 h-10 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                                        >
+                                            <Wallet className="h-3.5 w-3.5" />
+                                            {t('queue.cash')}
+                                        </button>
+                                        <button
+                                            onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }}
+                                            className="flex-1 h-10 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-all"
+                                        >
+                                            <QrCode className="h-3.5 w-3.5" />
+                                            {t('queue.qr_upi')}
+                                        </button>
+                                        <button
+                                            onClick={() => setIsPaymentMenuOpen(false)}
+                                            className="h-10 w-10 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center hover:bg-slate-200 active:scale-95 transition-all"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <ServiceExecutionStrip
