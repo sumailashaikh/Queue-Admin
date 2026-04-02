@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { QueueEntryService } from "@/services/queueService";
 import {
@@ -40,10 +41,37 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     const { t } = useLanguage();
     const [isInitializing, setIsInitializing] = React.useState(false);
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
+    const paymentButtonRef = React.useRef<HTMLButtonElement | null>(null);
+    const [paymentMenuPos, setPaymentMenuPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
+
+    const updatePaymentMenuPos = React.useCallback(() => {
+        const btn = paymentButtonRef.current;
+        if (!btn) return;
+        const rect = btn.getBoundingClientRect();
+        setPaymentMenuPos({
+            top: rect.bottom + 2,
+            left: rect.left + rect.width / 2,
+            width: rect.width
+        });
+    }, []);
+
+    React.useLayoutEffect(() => {
+        if (!isPaymentMenuOpen) return;
+        updatePaymentMenuPos();
+        const onAnyScroll = () => requestAnimationFrame(updatePaymentMenuPos);
+        const onResize = () => requestAnimationFrame(updatePaymentMenuPos);
+        window.addEventListener("scroll", onAnyScroll, true);
+        window.addEventListener("resize", onResize);
+        return () => {
+            window.removeEventListener("scroll", onAnyScroll, true);
+            window.removeEventListener("resize", onResize);
+        };
+    }, [isPaymentMenuOpen, updatePaymentMenuPos]);
 
     const renderPaymentAction = () => (
         <div className="relative w-full flex flex-col items-center mt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-400">
             <button
+                ref={paymentButtonRef}
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsPaymentMenuOpen(!isPaymentMenuOpen);
@@ -64,57 +92,66 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                 {isPaymentMenuOpen && (
                     <>
                         <div 
-                            className="fixed inset-0 z-[90]" 
+                            className="fixed inset-0 z-90" 
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPaymentMenuOpen(false);
                             }} 
                         />
-                        <motion.div
-                            initial={{ opacity: 0, y: -4, scale: 0.98, x: '-50%' }}
-                            animate={{ opacity: 1, y: 4, scale: 1, x: '-50%' }}
-                            exit={{ opacity: 0, y: -4, scale: 0.98, x: '-50%' }}
-                            className="absolute top-full left-1/2 -translate-x-1/2 z-[100] mt-1 w-44 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 overflow-hidden"
-                            style={{ left: '50%', transform: 'translateX(-50%)' }}
-                        >
-                            <div className="px-3 py-1 border-b border-slate-50 mb-1 flex items-center justify-between">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Pay'}</p>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); setIsPaymentMenuOpen(false); }}
-                                    className="p-1 hover:bg-slate-50 rounded-full transition-colors"
+                        {typeof document !== "undefined" && paymentMenuPos
+                            ? createPortal(
+                                <motion.div
+                                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    className="fixed z-200 w-56 bg-white rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.16)] border border-slate-100 p-1.5"
+                                    style={{
+                                        top: paymentMenuPos.top,
+                                        left: paymentMenuPos.left,
+                                        transform: "translateX(-50%)"
+                                    }}
                                 >
-                                    <X className="h-3 w-3 text-slate-300" />
-                                </button>
-                            </div>
-                            
-                            <div className="flex flex-col gap-1">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('cash'); setIsPaymentMenuOpen(false); }}
-                                    className="group w-full px-3 py-2 text-left hover:bg-emerald-50 rounded-xl transition-all flex items-center justify-between active:bg-emerald-100"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform text-base">
-                                            💵
-                                        </div>
-                                        <span className="text-[11px] font-bold text-slate-800 tracking-tight">{t('queue.cash')}</span>
+                                    <div className="px-3 py-1 border-b border-slate-50 mb-1 flex items-center justify-between">
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Pay'}</p>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setIsPaymentMenuOpen(false); }}
+                                            className="p-1 hover:bg-slate-50 rounded-full transition-colors"
+                                        >
+                                            <X className="h-3 w-3 text-slate-300" />
+                                        </button>
                                     </div>
-                                    <div className="h-1 w-1 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </button>
 
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('qr'); setIsPaymentMenuOpen(false); }}
-                                    className="group w-full px-3 py-2 text-left hover:bg-blue-50 rounded-xl transition-all flex items-center justify-between active:bg-blue-100"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform text-base">
-                                            📱
-                                        </div>
-                                        <span className="text-[11px] font-bold text-slate-800 tracking-tight">{t('queue.qr_upi') || 'UPI'}</span>
+                                    <div className="flex flex-col gap-1">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('cash'); setIsPaymentMenuOpen(false); }}
+                                            className="group w-full px-3 py-2 text-left hover:bg-emerald-50 rounded-xl transition-all flex items-center justify-between active:bg-emerald-100"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform text-base">
+                                                    💵
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-800 tracking-tight">{t('queue.cash')}</span>
+                                            </div>
+                                            <div className="h-1 w-1 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </button>
+
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('qr'); setIsPaymentMenuOpen(false); }}
+                                            className="group w-full px-3 py-2 text-left hover:bg-blue-50 rounded-xl transition-all flex items-center justify-between active:bg-blue-100"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform text-base">
+                                                    📱
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-800 tracking-tight">{t('queue.qr_upi') || 'UPI'}</span>
+                                            </div>
+                                            <div className="h-1 w-1 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </button>
                                     </div>
-                                    <div className="h-1 w-1 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </button>
-                            </div>
-                        </motion.div>
+                                </motion.div>,
+                                document.body
+                              )
+                            : null}
                     </>
                 )}
             </AnimatePresence>
