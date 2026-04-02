@@ -100,12 +100,12 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
     return (
         <div className={cn(
-            "group relative bg-white rounded-[24px] border border-slate-100 shadow-sm transition-all duration-300 hover:shadow-md overflow-hidden",
+            "group relative bg-white rounded-[24px] border border-slate-100 shadow-sm transition-all duration-300 hover:shadow-md",
             s === 'no_show' && "opacity-75 grayscale-[0.3]"
         )}>
             {/* Side Status Indicator */}
             <div className={cn(
-                "absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-500",
+                "absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-500 rounded-l-[24px]",
                 s === 'serving' ? "bg-blue-600" :
                     s === 'waiting' ? "bg-amber-500" :
                         s === 'completed' ? "bg-emerald-500" :
