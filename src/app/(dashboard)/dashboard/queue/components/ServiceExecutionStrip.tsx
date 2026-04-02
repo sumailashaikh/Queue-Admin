@@ -5,16 +5,10 @@ import { cn } from "@/lib/utils";
 import { QueueEntryService } from "@/services/queueService";
 import {
     CheckCircle2,
-    Circle,
     Play,
-    UserCheck,
     ChevronDown,
-    Clock,
-    Info,
     Wallet,
-    X,
-    QrCode,
-    Banknote
+    X
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,9 +30,6 @@ interface ServiceExecutionStripProps {
 export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     services,
     providers,
-    entryJoinedAt,
-    expectedStartTime,
-    now,
     onAssignProvider,
     onStartTask,
     onCompleteTask,
@@ -50,7 +41,91 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     const [isInitializing, setIsInitializing] = React.useState(false);
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
 
-    // If services are not yet initialized, show a template dropdown that triggers auto-initialization
+    const renderPaymentAction = () => (
+        <div className="relative w-full mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPaymentMenuOpen(!isPaymentMenuOpen);
+                }}
+                className={cn(
+                    "w-full h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] border",
+                    isPaymentMenuOpen 
+                        ? "bg-white border-slate-200 text-slate-900 shadow-slate-100" 
+                        : "bg-slate-900 border-transparent text-white shadow-slate-300 hover:bg-slate-800"
+                )}
+            >
+                <Wallet className={cn("h-4 w-4 transition-transform", isPaymentMenuOpen && "scale-110")} />
+                {t('queue.mark_paid') || 'Mark Paid'}
+            </button>
+
+            <AnimatePresence mode="wait">
+                {isPaymentMenuOpen && (
+                    <>
+                        <div 
+                            className="fixed inset-0 z-[90]" 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsPaymentMenuOpen(false);
+                            }} 
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: -8, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute bottom-full left-0 right-0 z-[100] mb-2 bg-white/95 backdrop-blur-xl rounded-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-slate-100 p-2 overflow-hidden"
+                        >
+                            <div className="px-5 py-4 border-b border-slate-100/50 mb-1 flex items-center justify-between">
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Select Payment Method'}</p>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setIsPaymentMenuOpen(false); }}
+                                    className="p-1 hover:bg-slate-50 rounded-full transition-colors"
+                                >
+                                    <X className="h-4 w-4 text-slate-300" />
+                                </button>
+                            </div>
+                            
+                            <div className="flex flex-col gap-1.5 p-1">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('cash'); setIsPaymentMenuOpen(false); }}
+                                    className="group w-full px-4 py-4 text-left hover:bg-emerald-50 rounded-2xl transition-all flex items-center justify-between active:bg-emerald-100"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-emerald-200/50 text-2xl">
+                                            💵
+                                        </div>
+                                        <div className="flex flex-col text-left">
+                                            <span className="text-[13px] font-black text-slate-900 leading-tight">{t('queue.cash')}</span>
+                                            <span className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-tighter">{t('payment.offline')}</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-2 w-2 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </button>
+
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('qr'); setIsPaymentMenuOpen(false); }}
+                                    className="group w-full px-4 py-4 text-left hover:bg-blue-50 rounded-2xl transition-all flex items-center justify-between active:bg-blue-100"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-12 w-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-blue-200/50 text-2xl">
+                                            📱
+                                        </div>
+                                        <div className="flex flex-col text-left">
+                                            <span className="text-[13px] font-black text-slate-900 leading-tight">{t('queue.qr_upi') || 'UPI / QR'}</span>
+                                            <span className="text-[10px] font-bold text-blue-600/70 uppercase tracking-tighter">{t('payment.digital')}</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-2 w-2 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+
+    // Case: No services yet (Waiting state)
     if (!services || services.length === 0) {
         return (
             <div className="flex flex-col gap-2 w-full animate-in fade-in duration-500">
@@ -83,19 +158,19 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                     )}
                 </div>
                 <div className="h-10 bg-slate-50 rounded-xl border border-dashed border-slate-200 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
-                        {isInitializing ? (t('queue.preparing') || 'Preparing Service Area...') : (t('queue.waiting_to_start') || 'Select Expert to Start')}
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic text-center px-4">
+                        {isInitializing ? t('queue.preparing') : t('queue.waiting_to_start')}
                     </span>
                 </div>
+                {isPendingPayment && renderPaymentAction()}
             </div>
         );
     }
 
-    // For simplicity, we'll focus on the first service if multiple exist, 
-    // or we could map them. The mockup shows one main service area per row.
+    // Case: Active Service (Serving or Completed)
     return (
         <div className="flex flex-col gap-2 w-full">
-            {services.map((s, idx) => {
+            {services.map((s) => {
                 const status = s.task_status || 'pending';
                 const isDone = status === 'done';
                 const isInProgress = status === 'in_progress';
@@ -154,79 +229,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                     </div>
                 );
             })}
-
-            {/* Post-Service Payment Action */}
-            {isPendingPayment && (
-                <div className="relative w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <button
-                        onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
-                        className={cn(
-                            "w-full h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]",
-                            isPaymentMenuOpen 
-                                ? "bg-white border-2 border-slate-200 text-slate-900 shadow-slate-100" 
-                                : "bg-slate-900 text-white shadow-slate-300 hover:bg-slate-800"
-                        )}
-                    >
-                        <Wallet className={cn("h-4 w-4 transition-transform", isPaymentMenuOpen && "scale-110")} />
-                        {t('queue.mark_paid') || 'Mark Paid'}
-                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", isPaymentMenuOpen && "rotate-180")} />
-                    </button>
-
-                    <AnimatePresence>
-                        {isPaymentMenuOpen && (
-                            <>
-                                {/* Backdrop to close on click outside */}
-                                <div 
-                                    className="fixed inset-0 z-[90]" 
-                                    onClick={() => setIsPaymentMenuOpen(false)} 
-                                />
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: -8, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute bottom-full left-0 right-0 z-[100] mb-2 bg-white/90 backdrop-blur-xl rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/20 p-2 overflow-hidden"
-                                >
-                                    <div className="px-4 py-3 border-b border-slate-100/50 mb-1 flex items-center justify-between">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Select Payment'}</p>
-                                        <X 
-                                            className="h-3 w-3 text-slate-300 hover:text-slate-500 cursor-pointer transition-colors" 
-                                            onClick={() => setIsPaymentMenuOpen(false)} 
-                                        />
-                                    </div>
-                                    
-                                    <div className="flex flex-col gap-1">
-                                        <button
-                                            onClick={() => { onUpdatePayment?.('cash'); setIsPaymentMenuOpen(false); }}
-                                            className="group w-full px-4 py-3.5 text-left hover:bg-emerald-50 rounded-2xl transition-all flex items-center gap-4 active:bg-emerald-100"
-                                        >
-                                            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                                                <Banknote className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.cash')}</span>
-                                                <span className="text-[9px] font-bold text-emerald-600/70 uppercase tracking-tighter">{t('payment.offline')}</span>
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            onClick={() => { onUpdatePayment?.('qr'); setIsPaymentMenuOpen(false); }}
-                                            className="group w-full px-4 py-3.5 text-left hover:bg-blue-50 rounded-2xl transition-all flex items-center gap-4 active:bg-blue-100"
-                                        >
-                                            <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                                                <QrCode className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.qr_upi') || 'UPI / QR'}</span>
-                                                <span className="text-[9px] font-bold text-blue-600/70 uppercase tracking-tighter">{t('payment.digital')}</span>
-                                            </div>
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
-                </div>
-            )}
+            {isPendingPayment && renderPaymentAction()}
         </div>
     );
 };

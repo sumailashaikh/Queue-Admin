@@ -67,17 +67,10 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
     const s = (item.status || "").toLowerCase().trim();
     const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
-    const isPendingPayment = (s === 'completed' || s === 'serving') && (item.payment_method === 'unpaid' || !item.payment_method);
+    const isPendingPayment = (s === 'completed' || s === 'serving' || s === 'waiting') && (item.payment_method === 'unpaid' || !item.payment_method);
 
-    // Auto-open payment menu when last task is completed
-    useEffect(() => {
-        if (isPendingPayment && !wasAutoOpened) {
-            setIsPaymentMenuOpen(true);
-            setWasAutoOpened(true);
-        } else if (!isPendingPayment) {
-            setWasAutoOpened(false);
-        }
-    }, [isPendingPayment, wasAutoOpened]);
+    // The user prefers manual opening of the payment menu via the button.
+    // Removed the auto-open useEffect to prevent unexpected UI popping.
 
     // Delay computations
     const apptStartTime = item.appointments?.start_time ? new Date(item.appointments.start_time).getTime() : null;
