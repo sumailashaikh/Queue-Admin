@@ -18,7 +18,7 @@ import {
     X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { queueService, QueueEntry } from "@/services/queueService";
@@ -130,6 +130,10 @@ function EmployeeDashboardContent() {
         e.preventDefault();
         if (!leaveFormData.start_date || !leaveFormData.end_date || !leaveFormData.note) {
             showToast(t('providers.all_fields_required'), "error");
+            return;
+        }
+        if (!validateLanguage(leaveFormData.note, language)) {
+            showToast(t('common.err_invalid_chars'), "error");
             return;
         }
 
