@@ -44,12 +44,19 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     const paymentButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [paymentMenuPos, setPaymentMenuPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
 
+    // Keep the menu fully visible without forcing page scroll.
+    // Approx height for header + 2 items + padding.
+    const PAYMENT_MENU_HEIGHT_PX = 168;
+
     const updatePaymentMenuPos = React.useCallback(() => {
         const btn = paymentButtonRef.current;
         if (!btn) return;
         const rect = btn.getBoundingClientRect();
+        const preferredTop = rect.bottom + 2;
+        const viewportPadding = 8;
+        const maxTop = (typeof window !== "undefined" ? window.innerHeight : 0) - PAYMENT_MENU_HEIGHT_PX - viewportPadding;
         setPaymentMenuPos({
-            top: rect.bottom + 2,
+            top: Math.max(viewportPadding, Math.min(preferredTop, maxTop || preferredTop)),
             left: rect.left + rect.width / 2,
             width: rect.width
         });
