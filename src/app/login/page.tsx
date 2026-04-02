@@ -18,7 +18,7 @@ const REGIONS = [
 
 export default function LoginPage() {
     const { login, isAuthenticated, loading: authLoading } = useAuth();
-    const { setLanguage, t, language } = useLanguage();
+    const { setLanguage } = useLanguage();
     const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState("");
     const [step, setStep] = useState(1); // 1: Phone, 2: OTP
@@ -47,14 +47,17 @@ export default function LoginPage() {
                 const matched = REGIONS.find(r => r.code === parsed.code);
                 if (matched) currentRegion = matched;
             }
+
+            const lastPhone = localStorage.getItem('last_login_phone');
+            if (lastPhone) setPhone(lastPhone);
         } catch (e) { }
 
         setRegionSettings(currentRegion);
         if (currentRegion) {
             localStorage.setItem('app_region_settings', JSON.stringify(currentRegion));
-            // Language consistency: keep UI language in sync with selected region on login screen.
-            setLanguage(currentRegion.lang, true).catch(() => { });
         }
+        // Login page should stay English-only.
+        setLanguage('en', true).catch(() => { });
     }, []);
 
     const handleSendOTP = async (e?: React.FormEvent | React.MouseEvent | React.KeyboardEvent, isResend = false) => {
@@ -71,6 +74,7 @@ export default function LoginPage() {
             await authService.sendOTP(formattedPhone);
             setStep(2);
             setResendTimer(60); // Start 60s countdown
+            localStorage.setItem('last_login_phone', phone);
         } catch (err: any) {
             setError(maskTechnicalError(err.message) || "Failed to send OTP. Please try again.");
         } finally {
@@ -112,13 +116,9 @@ export default function LoginPage() {
                 const userObj = response.data.user;
                 const isNewUser = response.data.is_new_user;
 
-                if (regionSettings?.language) {
-                    userObj.ui_language = regionSettings.language;
-                }
+                userObj.ui_language = 'en';
                 await login(userObj, response.data.session.access_token, isNewUser);
-                if (regionSettings?.language) {
-                    await setLanguage(regionSettings.language, true);
-                }
+                await setLanguage('en', true);
             } else {
                 throw new Error("Invalid session data received");
             }
@@ -139,9 +139,9 @@ export default function LoginPage() {
                     <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center shadow-xl shadow-primary/20 mb-2">
                         <span className="text-white font-bold text-xl">Q</span>
                     </div>
-                    <h1 className="text-3xl font-extrabold tracking-tight">{t('login.title')}</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight">Business Login</h1>
                     <p className="text-secondary text-sm px-8">
-                        {t('login.subtitle')}
+                        Manage your live queue and appointments. Enter your phone number to continue.
                     </p>
                 </div>
 
@@ -159,7 +159,7 @@ export default function LoginPage() {
                             onKeyDown={(e) => { if (e.key === 'Enter' && isPhoneValid) handleSendOTP(e); }}
                         >
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-foreground">{t('login.phone_lbl')}</label>
+                                <label className="text-sm font-bold text-foreground">Phone Number</label>
                                 <div className="flex bg-slate-50 rounded-2xl items-center focus-within:ring-2 focus-within:ring-primary/20 transition-all border border-transparent">
                                     <div className="relative border-r border-slate-200">
                                         <select
@@ -170,7 +170,6 @@ export default function LoginPage() {
                                                     setRegionSettings(region);
                                                     setPhone(""); // Clear phone on region change to enforce limits
                                                     localStorage.setItem('app_region_settings', JSON.stringify(region));
-                                                    setLanguage(region.lang, true).catch(() => { });
                                                 }
                                             }}
                                             className="appearance-none bg-transparent pl-4 pr-8 py-4 text-lg font-bold text-slate-700 outline-none cursor-pointer"
@@ -189,6 +188,7 @@ export default function LoginPage() {
                                         type="tel"
                                         name="phone"
                                         autoComplete="tel"
+                                        autoFocus={step === 1}
                                         required
                                         maxLength={phoneLimit}
                                         value={phone}
@@ -208,7 +208,7 @@ export default function LoginPage() {
                                 className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all disabled:opacity-50 active:scale-[0.98]"
                             >
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
-                                    <>{t('login.send_otp')} <ArrowRight className="ml-2 h-5 w-5" /></>
+                                    <>Send OTP <ArrowRight className="ml-2 h-5 w-5" /></>
                                 )}
                             </button>
                         </div>
@@ -218,7 +218,7 @@ export default function LoginPage() {
                             onKeyDown={(e) => { if (e.key === 'Enter' && otp.length === 6) handleVerifyOTP(e); }}
                         >
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-foreground">{t('login.verify_lbl')}</label>
+                                <label className="text-sm font-bold text-foreground">Verification Code</label>
                                 <input
                                     type="text"
                                     name="otp"
@@ -235,9 +235,9 @@ export default function LoginPage() {
                                 />
                                 <div className="flex flex-col items-center gap-4 pt-2">
                                     <p className="text-center text-xs text-secondary">
-                                        {t('login.code_sent')} {regionSettings?.dial_code || "+91"} {phone}.{" "}
+                                        Code sent to {regionSettings?.dial_code || "+91"} {phone}.{" "}
                                         <button type="button" onClick={() => setStep(1)} className="text-primary font-bold">
-                                            {t('common.edit')}
+                                            Edit
                                         </button>
                                     </p>
                                     
@@ -247,7 +247,7 @@ export default function LoginPage() {
                                         onClick={(e) => handleSendOTP(e, true)}
                                         className="text-[11px] font-black uppercase tracking-widest text-primary disabled:opacity-40"
                                     >
-                                        {resendTimer > 0 ? t('login.resend_in', { s: resendTimer }) : t('login.resend_otp')}
+                                        {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
                                     </button>
                                 </div>
                             </div>
@@ -257,7 +257,7 @@ export default function LoginPage() {
                                 disabled={loading || otp.length < 6}
                                 className="w-full inline-flex items-center justify-center rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all disabled:opacity-50 active:scale-[0.98]"
                             >
-                                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : t('login.verify_btn')}
+                                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify & Login"}
                             </button>
                         </div>
                     )}
