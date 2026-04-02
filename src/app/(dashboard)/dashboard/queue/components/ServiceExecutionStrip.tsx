@@ -43,11 +43,13 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
     const paymentButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [paymentMenuPos, setPaymentMenuPos] = React.useState<{ top: number; left: number; width: number; placement: 'top' | 'bottom' } | null>(null);
+    const paymentMenuRef = React.useRef<HTMLDivElement | null>(null);
+    const [paymentMenuSize, setPaymentMenuSize] = React.useState<{ w: number; h: number } | null>(null);
 
     // Keep the menu fully visible without forcing page scroll.
-    // Approx height for header + 2 items + padding.
-    const PAYMENT_MENU_HEIGHT_PX = 168;
-    const PAYMENT_MENU_WIDTH_PX = 224; // Tailwind w-56
+    // Fallback size until first measurement (header + 2 items + padding).
+    const FALLBACK_MENU_H = 168;
+    const FALLBACK_MENU_W = 224; // Tailwind w-56
 
     const updatePaymentMenuPos = React.useCallback(() => {
         const btn = paymentButtonRef.current;
@@ -56,33 +58,43 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
         const viewportPadding = 8;
         const vw = typeof window !== "undefined" ? window.innerWidth : 0;
         const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+        const menuW = paymentMenuSize?.w || FALLBACK_MENU_W;
+        const menuH = paymentMenuSize?.h || FALLBACK_MENU_H;
 
         // Horizontal clamp so the popover never goes off-screen on mobile.
-        const preferredLeft = rect.left + rect.width / 2;
-        const halfW = PAYMENT_MENU_WIDTH_PX / 2;
-        const minLeft = viewportPadding + halfW;
-        const maxLeft = Math.max(minLeft, vw - viewportPadding - halfW);
-        const clampedLeft = Math.min(Math.max(preferredLeft, minLeft), maxLeft);
+        // We clamp the LEFT EDGE (not center) to avoid translate issues on tiny screens.
+        const preferredLeftEdge = rect.left + rect.width / 2 - (menuW / 2);
+        const minLeftEdge = viewportPadding;
+        const maxLeftEdge = Math.max(minLeftEdge, vw - viewportPadding - menuW);
+        const clampedLeftEdge = Math.min(Math.max(preferredLeftEdge, minLeftEdge), maxLeftEdge);
 
         // Vertical: prefer below, but flip above if not enough space.
         const belowTop = rect.bottom + 2;
-        const aboveTop = rect.top - PAYMENT_MENU_HEIGHT_PX - 2;
-        const fitsBelow = belowTop + PAYMENT_MENU_HEIGHT_PX <= (vh - viewportPadding);
+        const aboveTop = rect.top - menuH - 2;
+        const fitsBelow = belowTop + menuH <= (vh - viewportPadding);
         const fitsAbove = aboveTop >= viewportPadding;
         const placement: 'top' | 'bottom' = fitsBelow || !fitsAbove ? 'bottom' : 'top';
         const chosenTop = placement === 'bottom' ? belowTop : aboveTop;
 
         setPaymentMenuPos({
-            top: Math.max(viewportPadding, Math.min(chosenTop, vh - PAYMENT_MENU_HEIGHT_PX - viewportPadding || chosenTop)),
-            left: clampedLeft,
+            top: Math.max(viewportPadding, Math.min(chosenTop, vh - menuH - viewportPadding || chosenTop)),
+            left: clampedLeftEdge,
             width: rect.width,
             placement
         });
-    }, []);
+    }, [paymentMenuSize]);
 
     React.useLayoutEffect(() => {
         if (!isPaymentMenuOpen) return;
         updatePaymentMenuPos();
+        // Measure actual rendered menu size (fonts / zoom can change it on mobile)
+        const measure = () => {
+            const el = paymentMenuRef.current;
+            if (!el) return;
+            const r = el.getBoundingClientRect();
+            if (r.width && r.height) setPaymentMenuSize({ w: Math.ceil(r.width), h: Math.ceil(r.height) });
+        };
+        requestAnimationFrame(measure);
         const onAnyScroll = () => requestAnimationFrame(updatePaymentMenuPos);
         const onResize = () => requestAnimationFrame(updatePaymentMenuPos);
         window.addEventListener("scroll", onAnyScroll, true);
@@ -126,6 +138,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                         {typeof document !== "undefined" && paymentMenuPos
                             ? createPortal(
                                 <motion.div
+                                    ref={paymentMenuRef}
                                     initial={{ opacity: 0, y: paymentMenuPos.placement === 'bottom' ? -6 : 6, scale: 0.98 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: paymentMenuPos.placement === 'bottom' ? -6 : 6, scale: 0.98 }}
@@ -133,7 +146,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                                     style={{
                                         top: paymentMenuPos.top,
                                         left: paymentMenuPos.left,
-                                        transform: "translateX(-50%)"
+                                        maxWidth: "calc(100vw - 16px)"
                                     }}
                                 >
                                     <div className="px-3 py-1 border-b border-slate-50 mb-1 flex items-center justify-between">
