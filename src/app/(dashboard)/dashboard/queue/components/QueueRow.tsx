@@ -67,7 +67,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
     const s = (item.status || "").toLowerCase().trim();
     const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
-    const isPendingPayment = (s === 'completed' || s === 'serving') && (item.payment_method === 'unpaid' || !item.payment_method);
+    const isPendingPayment = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
 
     // Auto-open payment menu when last task is completed
     useEffect(() => {
@@ -288,67 +288,19 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
                     {/* Primary Action */}
                     <div className="flex-1 min-w-[140px] w-full mt-2 sm:mt-0 ml-auto justify-end">
-                        {isPendingPayment ? (
-                            <div className="flex flex-col items-end gap-2 w-full animate-in slide-in-from-right-5 duration-300">
-                                <div className="relative w-full sm:w-auto">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsPaymentMenuOpen(!isPaymentMenuOpen);
-                                        }}
-                                        className={cn(
-                                            "h-10 px-6 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto border",
-                                            isPaymentMenuOpen 
-                                                ? "bg-white border-slate-200 text-slate-900 shadow-slate-100" 
-                                                : "bg-slate-900 border-transparent text-white shadow-slate-200 hover:bg-slate-800"
-                                        )}
-                                    >
-                                        <Wallet className="h-4 w-4" />
-                                        {t('queue.mark_paid') || 'Mark Paid'}
-                                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", isPaymentMenuOpen && "rotate-180")} />
-                                    </button>
-
-                                    {isPaymentMenuOpen && (
-                                        <div className="absolute bottom-full right-0 mb-3 w-56 bg-white/95 backdrop-blur-xl rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100/50 p-2 z-[100] flex flex-col gap-1 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-                                            <div className="px-3 py-2 border-b border-slate-50 mb-1">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('queue.select_method') || 'Select Method'}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => { onUpdatePayment(item.id, 'cash'); setIsPaymentMenuOpen(false); }}
-                                                className="group px-3 py-3 text-left hover:bg-emerald-50 rounded-2xl transition-all flex items-center gap-3"
-                                            >
-                                                <div className="h-9 w-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">💵</div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.cash')}</span>
-                                                    <span className="text-[9px] font-bold text-emerald-600/70 uppercase tracking-tighter opacity-80">{t('payment.offline')}</span>
-                                                </div>
-                                            </button>
-                                            <button
-                                                onClick={() => { onUpdatePayment(item.id, 'qr'); setIsPaymentMenuOpen(false); }}
-                                                className="group px-3 py-3 text-left hover:bg-blue-50 rounded-2xl transition-all flex items-center gap-3"
-                                            >
-                                                <div className="h-9 w-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">📱</div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.qr_upi')}</span>
-                                                    <span className="text-[9px] font-bold text-blue-600/70 uppercase tracking-tighter opacity-80">{t('payment.digital')}</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <ServiceExecutionStrip
-                                services={item.queue_entry_services || []}
-                                providers={providers}
-                                entryJoinedAt={item.joined_at}
-                                now={now}
-                                onAssignProvider={onAssignTaskProvider}
-                                onStartTask={onStartTask}
-                                onCompleteTask={onCompleteTask}
-                                onInitialize={onInitializeTasks}
-                            />
-                        )}
+                        <ServiceExecutionStrip
+                            services={item.queue_entry_services || []}
+                            providers={providers}
+                            entryJoinedAt={item.joined_at}
+                            now={now}
+                            onAssignProvider={onAssignTaskProvider}
+                            onStartTask={onStartTask}
+                            onCompleteTask={onCompleteTask}
+                            onInitialize={onInitializeTasks}
+                            // Pass payment props down to the strip
+                            isPendingPayment={isPendingPayment}
+                            onUpdatePayment={(method: 'cash' | 'qr' | 'card' | 'unpaid') => onUpdatePayment(item.id, method)}
+                        />
                     </div>
 
                 </div>

@@ -10,9 +10,14 @@ import {
     UserCheck,
     ChevronDown,
     Clock,
-    Info
+    Info,
+    Wallet,
+    X,
+    QrCode,
+    Banknote
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ServiceExecutionStripProps {
     services: QueueEntryService[];
@@ -24,6 +29,8 @@ interface ServiceExecutionStripProps {
     onStartTask: (taskId: string) => void;
     onCompleteTask: (taskId: string) => void;
     onInitialize?: (providerId?: string) => void;
+    isPendingPayment?: boolean;
+    onUpdatePayment?: (method: 'cash' | 'qr' | 'card' | 'unpaid') => void;
 }
 
 export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
@@ -35,10 +42,13 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     onAssignProvider,
     onStartTask,
     onCompleteTask,
-    onInitialize
+    onInitialize,
+    isPendingPayment,
+    onUpdatePayment
 }) => {
     const { t } = useLanguage();
     const [isInitializing, setIsInitializing] = React.useState(false);
+    const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
 
     // If services are not yet initialized, show a template dropdown that triggers auto-initialization
     if (!services || services.length === 0) {
@@ -144,6 +154,79 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                     </div>
                 );
             })}
+
+            {/* Post-Service Payment Action */}
+            {isPendingPayment && (
+                <div className="relative w-full animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <button
+                        onClick={() => setIsPaymentMenuOpen(!isPaymentMenuOpen)}
+                        className={cn(
+                            "w-full h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]",
+                            isPaymentMenuOpen 
+                                ? "bg-white border-2 border-slate-200 text-slate-900 shadow-slate-100" 
+                                : "bg-slate-900 text-white shadow-slate-300 hover:bg-slate-800"
+                        )}
+                    >
+                        <Wallet className={cn("h-4 w-4 transition-transform", isPaymentMenuOpen && "scale-110")} />
+                        {t('queue.mark_paid') || 'Mark Paid'}
+                        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", isPaymentMenuOpen && "rotate-180")} />
+                    </button>
+
+                    <AnimatePresence>
+                        {isPaymentMenuOpen && (
+                            <>
+                                {/* Backdrop to close on click outside */}
+                                <div 
+                                    className="fixed inset-0 z-[90]" 
+                                    onClick={() => setIsPaymentMenuOpen(false)} 
+                                />
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: -8, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute bottom-full left-0 right-0 z-[100] mb-2 bg-white/90 backdrop-blur-xl rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/20 p-2 overflow-hidden"
+                                >
+                                    <div className="px-4 py-3 border-b border-slate-100/50 mb-1 flex items-center justify-between">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Select Payment'}</p>
+                                        <X 
+                                            className="h-3 w-3 text-slate-300 hover:text-slate-500 cursor-pointer transition-colors" 
+                                            onClick={() => setIsPaymentMenuOpen(false)} 
+                                        />
+                                    </div>
+                                    
+                                    <div className="flex flex-col gap-1">
+                                        <button
+                                            onClick={() => { onUpdatePayment?.('cash'); setIsPaymentMenuOpen(false); }}
+                                            className="group w-full px-4 py-3.5 text-left hover:bg-emerald-50 rounded-2xl transition-all flex items-center gap-4 active:bg-emerald-100"
+                                        >
+                                            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                                                <Banknote className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.cash')}</span>
+                                                <span className="text-[9px] font-bold text-emerald-600/70 uppercase tracking-tighter">{t('payment.offline')}</span>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={() => { onUpdatePayment?.('qr'); setIsPaymentMenuOpen(false); }}
+                                            className="group w-full px-4 py-3.5 text-left hover:bg-blue-50 rounded-2xl transition-all flex items-center gap-4 active:bg-blue-100"
+                                        >
+                                            <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                                                <QrCode className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-slate-900 leading-tight">{t('queue.qr_upi') || 'UPI / QR'}</span>
+                                                <span className="text-[9px] font-bold text-blue-600/70 uppercase tracking-tighter">{t('payment.digital')}</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
         </div>
     );
 };
