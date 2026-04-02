@@ -6,12 +6,15 @@ export const authService = {
     },
 
     async verifyOTP(phone: string, otp: string) {
-        const result = await api.post<any>('/auth/verify', { phone, otp });
+        const invite_token = typeof window !== 'undefined' ? localStorage.getItem('pending_invite_token') : null;
+        const result = await api.post<any>('/auth/verify', { phone, otp, invite_token });
 
         // Store token and user data
         if (result.data?.session?.access_token) {
             localStorage.setItem('auth_token', result.data.session.access_token);
             localStorage.setItem('auth_user', JSON.stringify(result.data.user));
+            // One-time use on client side as well
+            if (invite_token) localStorage.removeItem('pending_invite_token');
         }
 
         return result;

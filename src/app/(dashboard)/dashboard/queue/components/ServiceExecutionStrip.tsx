@@ -42,23 +42,41 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     const [isInitializing, setIsInitializing] = React.useState(false);
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
     const paymentButtonRef = React.useRef<HTMLButtonElement | null>(null);
-    const [paymentMenuPos, setPaymentMenuPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
+    const [paymentMenuPos, setPaymentMenuPos] = React.useState<{ top: number; left: number; width: number; placement: 'top' | 'bottom' } | null>(null);
 
     // Keep the menu fully visible without forcing page scroll.
     // Approx height for header + 2 items + padding.
     const PAYMENT_MENU_HEIGHT_PX = 168;
+    const PAYMENT_MENU_WIDTH_PX = 224; // Tailwind w-56
 
     const updatePaymentMenuPos = React.useCallback(() => {
         const btn = paymentButtonRef.current;
         if (!btn) return;
         const rect = btn.getBoundingClientRect();
-        const preferredTop = rect.bottom + 2;
         const viewportPadding = 8;
-        const maxTop = (typeof window !== "undefined" ? window.innerHeight : 0) - PAYMENT_MENU_HEIGHT_PX - viewportPadding;
+        const vw = typeof window !== "undefined" ? window.innerWidth : 0;
+        const vh = typeof window !== "undefined" ? window.innerHeight : 0;
+
+        // Horizontal clamp so the popover never goes off-screen on mobile.
+        const preferredLeft = rect.left + rect.width / 2;
+        const halfW = PAYMENT_MENU_WIDTH_PX / 2;
+        const minLeft = viewportPadding + halfW;
+        const maxLeft = Math.max(minLeft, vw - viewportPadding - halfW);
+        const clampedLeft = Math.min(Math.max(preferredLeft, minLeft), maxLeft);
+
+        // Vertical: prefer below, but flip above if not enough space.
+        const belowTop = rect.bottom + 2;
+        const aboveTop = rect.top - PAYMENT_MENU_HEIGHT_PX - 2;
+        const fitsBelow = belowTop + PAYMENT_MENU_HEIGHT_PX <= (vh - viewportPadding);
+        const fitsAbove = aboveTop >= viewportPadding;
+        const placement: 'top' | 'bottom' = fitsBelow || !fitsAbove ? 'bottom' : 'top';
+        const chosenTop = placement === 'bottom' ? belowTop : aboveTop;
+
         setPaymentMenuPos({
-            top: Math.max(viewportPadding, Math.min(preferredTop, maxTop || preferredTop)),
-            left: rect.left + rect.width / 2,
-            width: rect.width
+            top: Math.max(viewportPadding, Math.min(chosenTop, vh - PAYMENT_MENU_HEIGHT_PX - viewportPadding || chosenTop)),
+            left: clampedLeft,
+            width: rect.width,
+            placement
         });
     }, []);
 
@@ -108,9 +126,9 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                         {typeof document !== "undefined" && paymentMenuPos
                             ? createPortal(
                                 <motion.div
-                                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    initial={{ opacity: 0, y: paymentMenuPos.placement === 'bottom' ? -6 : 6, scale: 0.98 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    exit={{ opacity: 0, y: paymentMenuPos.placement === 'bottom' ? -6 : 6, scale: 0.98 }}
                                     className="fixed z-200 w-56 bg-white rounded-2xl shadow-[0_18px_60px_rgba(0,0,0,0.16)] border border-slate-100 p-1.5"
                                     style={{
                                         top: paymentMenuPos.top,
