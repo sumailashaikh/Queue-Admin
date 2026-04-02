@@ -77,11 +77,13 @@ function EmployeeDashboardContent() {
 
     const fetchData = useCallback(async () => {
         try {
-            const [profileData, tasksData, leavesData] = await Promise.all([
+            const [profileData, tasksData] = await Promise.all([
                 providerService.getMyProfile(),
-                queueService.getMyTasks(),
-                providerService.getLeaves(user?.id || "") // Backend will handle scoping
+                queueService.getMyTasks()
             ]);
+            const leavesData = profileData?.id
+                ? await providerService.getLeaves(profileData.id)
+                : [];
             setProfile(profileData);
             setTasks(tasksData);
             setLeaves(leavesData);
@@ -133,7 +135,11 @@ function EmployeeDashboardContent() {
 
         setIsSubmitting(true);
         try {
-            await providerService.addLeave(profile?.id || user?.id || "", leaveFormData);
+            if (!profile?.id) {
+                showToast(t('providers.err_add_leave'), "error");
+                return;
+            }
+            await providerService.addLeave(profile.id, leaveFormData);
             showToast(t('employee.leave_success'));
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             fetchData();
@@ -489,7 +495,7 @@ function EmployeeDashboardContent() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         className={cn(
-                            "fixed bottom-24 left-6 right-6 z-[100] p-4 rounded-2xl shadow-xl border flex items-center gap-3 md:left-auto md:right-8 md:bottom-8 md:w-80",
+                            "fixed bottom-24 left-6 right-6 z-100 p-4 rounded-2xl shadow-xl border flex items-center gap-3 md:left-auto md:right-8 md:bottom-8 md:w-80",
                             toast.type === 'success' ? "bg-emerald-600 border-emerald-500 text-white" : "bg-rose-600 border-rose-500 text-white"
                         )}
                     >
@@ -501,7 +507,7 @@ function EmployeeDashboardContent() {
 
             {/* Resignation Modal */}
             {isResignationModalOpen && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <form onSubmit={handleResignationSubmit} className="p-10 space-y-8">
                             <div className="flex items-center justify-between">
