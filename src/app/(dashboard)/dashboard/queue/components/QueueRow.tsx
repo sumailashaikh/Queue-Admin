@@ -120,7 +120,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             #{item.position}
                         </div>
                         <div className="min-w-0">
-                            <h3 className="text-base font-black text-slate-900 tracking-tight capitalize break-words leading-tight">
+                            <h3 className="text-base font-black text-slate-900 tracking-tight capitalize wrap-break-word leading-tight">
                                 {item.customer_name || t('queue.guest')}
                             </h3>
                             <p className="text-xs font-bold text-slate-500 tabular-nums">{item.phone || t('queue.no_phone')}</p>
@@ -138,6 +138,15 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             <StatusBadge 
                                 status={item.payment_method === 'unpaid' || !item.payment_method ? 'unpaid' : 'paid'} 
                             />
+                            {item.payment_method && item.payment_method !== 'unpaid' && (
+                                <div className="mt-0.5 text-[9px] font-black uppercase tracking-widest text-slate-400 text-right">
+                                    {item.payment_method === 'cash'
+                                        ? (t('queue.cash') || 'Cash')
+                                        : item.payment_method === 'qr'
+                                            ? (t('queue.qr_upi') || 'UPI')
+                                            : item.payment_method}
+                                </div>
+                            )}
                         </div>
                         <StatusBadge status={item.status} />
                     </div>
@@ -146,7 +155,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 {/* SHARED PAYMENT MENU - Can be opened from badge or end-of-service button */}
                 <div className="relative">
                     {isPaymentMenuOpen && (
-                        <div className="absolute top-0 right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[100] flex flex-col gap-1.5 animate-in slide-in-from-top-2 duration-200">
+                        <div className="absolute top-0 right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-100 flex flex-col gap-1.5 animate-in slide-in-from-top-2 duration-200">
                             <div className="flex items-center justify-between px-2 pt-1">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Select Method'}</p>
                                 <button onClick={() => setIsPaymentMenuOpen(false)} className="text-slate-300 hover:text-slate-500">
@@ -301,7 +310,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
             {/* No-Show Modal */}
             {showNoShowModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                     <div className="bg-white rounded-[32px] shadow-2xl p-8 max-w-sm w-full animate-in zoom-in-95 duration-200">
                         <div className="h-16 w-16 rounded-full bg-rose-50 flex items-center justify-center mb-6 mx-auto">
                             <UserMinus className="h-8 w-8 text-rose-600" />
@@ -320,7 +329,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
             {/* Skip Modal */}
             {showSkipModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                     <div className="bg-white rounded-[32px] shadow-2xl p-8 max-w-sm w-full animate-in zoom-in-95 duration-200">
                         <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center mb-6 mx-auto">
                             <ArrowRightToLine className="h-8 w-8 text-amber-600" />
