@@ -67,7 +67,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
     const s = (item.status || "").toLowerCase().trim();
     const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
-    const isPendingPayment = s === 'completed' && (item.payment_method === 'unpaid' || !item.payment_method);
+    const isPendingPayment = (s === 'completed' || s === 'serving') && (item.payment_method === 'unpaid' || !item.payment_method);
 
     // Auto-open payment menu when last task is completed
     useEffect(() => {
@@ -214,7 +214,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-50">
                     <div className="flex items-center gap-2 flex-wrap">
                         {/* WhatsApp quick actions */}
-                        {item.status !== 'completed' && item.status !== 'no_show' && (
+                        {item.status === 'waiting' && (
                             <div className="flex items-center gap-1.5 border-r border-slate-100 pr-2">
                                 <button
                                     onClick={() => {
