@@ -307,6 +307,7 @@
   },
   "sidebar": {
     "dashboard": "डैशबोर्ड",
+    "leaves": "छुट्टियां",
     "overview": "अवलोकन",
     "live_queue": "लाइव कतार",
     "appointments": "नियुक्तियाँ",
@@ -319,6 +320,7 @@
     "logout": "सुरक्षित रूप से लॉग आउट",
     "verified": "सत्यापित खाता",
     "reviewing": "प्रोफ़ाइल की समीक्षा",
+    "staff_portal": "स्टाफ पोर्टल",
     "business_center": "व्यापार केंद्र"
   },
   "settings": {

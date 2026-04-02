@@ -384,6 +384,7 @@
   },
   "sidebar": {
     "dashboard": "Dashboard",
+    "leaves": "Leaves",
     "overview": "Overview",
     "live_queue": "Live Queue",
     "appointments": "Appointments",
@@ -396,6 +397,7 @@
     "logout": "Secure Logout",
     "verified": "Verified Account",
     "reviewing": "Reviewing Profile",
+    "staff_portal": "Staff Portal",
     "business_center": "Business Center",
     "oversight": "Platform Oversight",
     "control_center": "Control Center"

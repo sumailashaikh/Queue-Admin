@@ -311,6 +311,7 @@
   },
   "sidebar": {
     "dashboard": "لوحة التحكم",
+    "leaves": "الإجازات",
     "overview": "نظرة عامة",
     "live_queue": "الطابور المباشر",
     "appointments": "المواعيد",
@@ -323,6 +324,7 @@
     "logout": "تسجيل خروج آمن",
     "verified": "حساب موثق",
     "reviewing": "التحقق من الملف",
+    "staff_portal": "بوابة الموظفين",
     "business_center": "مركز الأعمال"
   },
   "settings": {

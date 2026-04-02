@@ -316,6 +316,7 @@
   },
   "sidebar": {
     "dashboard": "Tablero",
+    "leaves": "Permisos",
     "overview": "Resumen",
     "live_queue": "Cola en Vivo",
     "appointments": "Citas",
@@ -328,6 +329,7 @@
     "logout": "Cierre de sesión seguro",
     "verified": "Cuenta Verificada",
     "reviewing": "Revisando Perfil",
+    "staff_portal": "Portal del Personal",
     "business_center": "Centro de Negocios"
   },
   "settings": {
