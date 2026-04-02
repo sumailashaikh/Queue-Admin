@@ -42,20 +42,20 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
 
     const renderPaymentAction = () => (
-        <div className="relative w-full mt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-400">
+        <div className="relative w-full flex flex-col items-center mt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-400">
             <button
                 onClick={(e) => {
                     e.stopPropagation();
                     setIsPaymentMenuOpen(!isPaymentMenuOpen);
                 }}
                 className={cn(
-                    "w-full h-9 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] border",
+                    "w-fit min-w-[140px] px-5 h-8 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] border border-slate-100",
                     isPaymentMenuOpen 
-                        ? "bg-white border-slate-200 text-slate-900 shadow-slate-100" 
-                        : "bg-slate-900 border-transparent text-white shadow-slate-300 hover:bg-slate-800"
+                        ? "bg-white text-slate-900 border-slate-200" 
+                        : "bg-slate-900 text-white border-transparent hover:bg-slate-800"
                 )}
             >
-                <Wallet className={cn("h-3.5 w-3.5 transition-transform", isPaymentMenuOpen && "scale-110")} />
+                <Wallet className={cn("h-3 w-3 transition-transform", isPaymentMenuOpen && "scale-110")} />
                 {t('queue.mark_paid') || 'Mark Paid'}
                 <ChevronDown className={cn("h-3 w-3 transition-transform duration-300", isPaymentMenuOpen && "rotate-180")} />
             </button>
@@ -71,13 +71,14 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                             }} 
                         />
                         <motion.div
-                            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 4, scale: 1 }}
-                            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                            className="absolute top-full left-0 right-0 z-[100] mt-1 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 overflow-hidden"
+                            initial={{ opacity: 0, y: -4, scale: 0.98, x: '-50%' }}
+                            animate={{ opacity: 1, y: 4, scale: 1, x: '-50%' }}
+                            exit={{ opacity: 0, y: -4, scale: 0.98, x: '-50%' }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 z-[100] mt-1 w-44 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5 overflow-hidden"
+                            style={{ left: '50%', transform: 'translateX(-50%)' }}
                         >
-                            <div className="px-3 py-1.5 border-b border-slate-50 mb-1 flex items-center justify-between">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Select'}</p>
+                            <div className="px-3 py-1 border-b border-slate-50 mb-1 flex items-center justify-between">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{t('queue.select_method') || 'Pay'}</p>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setIsPaymentMenuOpen(false); }}
                                     className="p-1 hover:bg-slate-50 rounded-full transition-colors"
@@ -89,28 +90,28 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                             <div className="flex flex-col gap-1">
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('cash'); setIsPaymentMenuOpen(false); }}
-                                    className="group w-full px-3 py-2.5 text-left hover:bg-emerald-50 rounded-xl transition-all flex items-center justify-between active:bg-emerald-100"
+                                    className="group w-full px-3 py-2 text-left hover:bg-emerald-50 rounded-xl transition-all flex items-center justify-between active:bg-emerald-100"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-emerald-200/30 text-lg">
+                                        <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform text-base">
                                             💵
                                         </div>
-                                        <span className="text-[12px] font-bold text-slate-800 leading-tight">{t('queue.cash')}</span>
+                                        <span className="text-[11px] font-bold text-slate-800 tracking-tight">{t('queue.cash')}</span>
                                     </div>
-                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="h-1 w-1 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </button>
 
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onUpdatePayment?.('qr'); setIsPaymentMenuOpen(false); }}
-                                    className="group w-full px-3 py-2.5 text-left hover:bg-blue-50 rounded-xl transition-all flex items-center justify-between active:bg-blue-100"
+                                    className="group w-full px-3 py-2 text-left hover:bg-blue-50 rounded-xl transition-all flex items-center justify-between active:bg-blue-100"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm border border-blue-200/30 text-lg">
+                                        <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform text-base">
                                             📱
                                         </div>
-                                        <span className="text-[12px] font-bold text-slate-800 leading-tight">{t('queue.qr_upi') || 'UPI'}</span>
+                                        <span className="text-[11px] font-bold text-slate-800 tracking-tight">{t('queue.qr_upi') || 'UPI'}</span>
                                     </div>
-                                    <div className="h-1.5 w-1.5 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="h-1 w-1 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </button>
                             </div>
                         </motion.div>
