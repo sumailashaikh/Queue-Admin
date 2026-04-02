@@ -444,6 +444,17 @@
     "phone": "Phone Number",
     "address": "Address"
   },
+  "login": {
+    "title": "Business Login",
+    "subtitle": "Manage your live queue and appointments. Enter your phone number to continue.",
+    "phone_lbl": "Phone Number",
+    "send_otp": "Send OTP",
+    "verify_lbl": "Verification Code",
+    "code_sent": "Code sent to",
+    "resend_otp": "Resend OTP",
+    "resend_in": "Resend OTP in {{s}}s",
+    "verify_btn": "Verify & Login"
+  },
   "common": {
     "save": "Save",
     "cancel": "Close",

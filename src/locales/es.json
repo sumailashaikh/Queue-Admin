@@ -499,5 +499,16 @@
     "checked_in": "Registrado",
     "unpaid": "No Pagado",
     "late": "Con retraso"
+  },
+  "login": {
+    "title": "Acceso de Negocio",
+    "subtitle": "Gestiona tu cola en vivo y tus citas. Ingresa tu número de teléfono para continuar.",
+    "phone_lbl": "Número de teléfono",
+    "send_otp": "Enviar OTP",
+    "verify_lbl": "Código de verificación",
+    "code_sent": "Código enviado a",
+    "resend_otp": "Reenviar OTP",
+    "resend_in": "Reenviar OTP en {{s}}s",
+    "verify_btn": "Verificar e iniciar sesión"
   }
 }
