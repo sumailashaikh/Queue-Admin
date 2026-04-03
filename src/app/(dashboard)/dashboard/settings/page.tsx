@@ -16,7 +16,8 @@ import {
     Download,
     Share2,
     ExternalLink,
-    X
+    X,
+    Clock
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { businessService, Business } from "@/services/businessService";
@@ -264,25 +265,38 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.operating_hours')}</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-slate-700 dark:text-slate-100 shrink-0" strokeWidth={2.25} aria-hidden />
+                                {t('settings.operating_hours')}
+                            </label>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.open_at')}</label>
-                                    <input
-                                        type="time"
-                                        value={formData.open_time}
-                                        onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
-                                        className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all min-w-[120px]"
-                                    />
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300 shrink-0" strokeWidth={2.25} />
+                                        {t('settings.open_at')}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            value={formData.open_time}
+                                            onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
+                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] [color-scheme:light] dark:[color-scheme:dark]"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.close_at')}</label>
-                                    <input
-                                        type="time"
-                                        value={formData.close_time}
-                                        onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
-                                        className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all min-w-[120px]"
-                                    />
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300 shrink-0" strokeWidth={2.25} />
+                                        {t('settings.close_at')}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            value={formData.close_time}
+                                            onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
+                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] [color-scheme:light] dark:[color-scheme:dark]"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1">{t('settings.current_status')}</label>

@@ -69,7 +69,11 @@ const dictionaries: Record<string, Dictionary> = {
             opening_doors: "Opening Doors...",
             digital_management: "Digital Appointment Management",
             select_time: "Select Time",
-            check_in_unavailable: "Check-in Unavailable"
+            check_in_unavailable: "Check-in Unavailable",
+            no_services_title: "No services available yet",
+            no_services_hint: "This business has not listed any services on its booking page. Please contact the salon directly or check back later.",
+            closed_suggest_appointment: "Walk-in queue may be closed right now, but you can request an appointment for another day (for example tomorrow).",
+            book_appointment_next_open: "Book an appointment"
         },
         status: {
             access_denied: "Access Denied",
@@ -238,7 +242,11 @@ const dictionaries: Record<string, Dictionary> = {
             opening_doors: "Abriendo Puertas...",
             digital_management: "Gestión Digital de Citas",
             select_time: "Seleccionar Hora",
-            check_in_unavailable: "Check-in no disponible"
+            check_in_unavailable: "Check-in no disponible",
+            no_services_title: "Aún no hay servicios",
+            no_services_hint: "Este negocio no ha publicado servicios en su página. Contacte al salón directamente o vuelva más tarde.",
+            closed_suggest_appointment: "La fila puede estar cerrada ahora, pero puede solicitar una cita para otro día (por ejemplo mañana).",
+            book_appointment_next_open: "Reservar una cita"
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -339,7 +347,11 @@ const dictionaries: Record<string, Dictionary> = {
             opening_doors: "दरवाजे खुल रहे हैं...",
             digital_management: "डिजिटल अपॉइंटमेंट प्रबंधन",
             select_time: "समय चुनें",
-            check_in_unavailable: "चेक-इन अनुपलब्ध"
+            check_in_unavailable: "चेक-इन अनुपलब्ध",
+            no_services_title: "अभी कोई सेवा सूचीबद्ध नहीं है",
+            no_services_hint: "इस व्यवसाय ने अपनी सार्वजनिक पृष्ठ पर कोई सेवा नहीं जोड़ी है। कृपया सैलून से संपर्क करें या बाद में देखें।",
+            closed_suggest_appointment: "लाइव कतार अभी बंद हो सकती है, लेकिन आप दूसरे दिन (जैसे कल) के लिए अपॉइंटमेंट का अनुरोध कर सकते हैं।",
+            book_appointment_next_open: "अपॉइंटमेंट बुक करें"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -508,7 +520,11 @@ const dictionaries: Record<string, Dictionary> = {
             opening_doors: "جاري فتح الأبواب...",
             digital_management: "إدارة المواعيد الرقمية",
             select_time: "اختر الوقت",
-            check_in_unavailable: "تسجيل الدخول غير متاح"
+            check_in_unavailable: "تسجيل الدخول غير متاح",
+            no_services_title: "لا توجد خدمات متاحة بعد",
+            no_services_hint: "لم يضف هذا العمل أي خدمات على صفحة الحجز. يُرجى التواصل مباشرةً أو المحاولة لاحقاً.",
+            closed_suggest_appointment: "قد يكون الطابور المباشر مغلقاً الآن، لكن يمكنك طلب موعد ليوم آخر (مثلاً غداً).",
+            book_appointment_next_open: "احجز موعداً"
         },
         status: {
             access_denied: "تم رفض الوصول",

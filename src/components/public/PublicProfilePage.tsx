@@ -409,15 +409,38 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             )}
 
                             {!isOpen && (
-                                <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
-                                    <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-bold text-amber-900 uppercase tracking-widest">{i18n.t(lang, 'public.business_closed')}</p>
-                                        <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                                <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
+                                    <div className="shrink-0 rounded-xl bg-amber-100 border border-amber-200/80 p-2.5">
+                                        <Clock className="h-6 w-6 text-amber-900" strokeWidth={2.5} aria-hidden />
+                                    </div>
+                                    <div className="space-y-2 min-w-0 flex-1">
+                                        <p className="text-xs font-bold text-amber-950 uppercase tracking-widest">{i18n.t(lang, 'public.business_closed')}</p>
+                                        <p className="text-[11px] font-bold text-amber-900 leading-relaxed">
                                             {i18n.t(lang, 'public.closed_desc')}
                                             <br />
-                                            {i18n.t(lang, 'public.our_hours')} <span className="text-amber-900">{formatTime12(business.open_time)} - {formatTime12(business.close_time)}</span>
+                                            <span className="text-amber-950">{i18n.t(lang, 'public.our_hours')}</span>{' '}
+                                            <span className="text-amber-950 font-extrabold">{formatTime12(business.open_time)} – {formatTime12(business.close_time)}</span>
                                         </p>
+                                        <p className="text-[11px] font-semibold text-amber-900/95 leading-relaxed border-t border-amber-200/80 pt-2">
+                                            {i18n.t(lang, 'public.closed_suggest_appointment')}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const tz = business.timezone || 'UTC';
+                                                const tomorrow = new Date();
+                                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                                setActiveView('appointment');
+                                                setStep(1);
+                                                setBookingDate(tomorrow.toLocaleDateString('en-CA', { timeZone: tz }));
+                                                setBookingTime('');
+                                                setError(null);
+                                            }}
+                                            className="w-full sm:w-auto mt-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B1B3F] text-white text-[10px] font-bold uppercase tracking-wider shadow-md hover:bg-[#142A5A] transition-colors active:scale-[0.98]"
+                                        >
+                                            <Calendar className="h-4 w-4 shrink-0" />
+                                            {i18n.t(lang, 'public.book_appointment_next_open')}
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -438,7 +461,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             </div>
 
                             <div className="space-y-3">
-                                {business.services?.map((s: any) => {
+                                {business.services && business.services.length > 0 ? (
+                                    business.services.map((s: any) => {
                                     const isSelected = selectedServices.some(item => item.id === s.id);
                                     return (
                                         <button
@@ -455,9 +479,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         >
                                             <div className={cn(
                                                 "h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                isSelected ? "bg-white/10" : "bg-slate-50 text-slate-300 group-hover:bg-slate-100"
+                                                isSelected ? "bg-white/10" : "bg-slate-50 text-slate-500 group-hover:bg-slate-100 group-hover:text-primary/80"
                                             )}>
-                                                {isSelected ? <CheckCircle2 className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+                                                {isSelected ? <CheckCircle2 className="h-6 w-6" /> : <Sparkles className="h-6 w-6 stroke-[2.25]" />}
                                             </div>
                                             <div className="flex-1 relative z-10">
                                                 <h3 className={cn("font-bold text-sm tracking-tight", isSelected ? "text-white" : "text-slate-800")}>{s.name}</h3>
@@ -469,7 +493,18 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             </div>
                                         </button>
                                     );
-                                })}
+                                    })
+                                ) : (
+                                    <div className="p-8 rounded-[28px] border-2 border-dashed border-slate-200 bg-slate-50/80 text-center space-y-2">
+                                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200/80 text-slate-600">
+                                            <Sparkles className="h-6 w-6 stroke-[2.25]" />
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-800">{i18n.t(lang, 'public.no_services_title')}</p>
+                                        <p className="text-[11px] font-semibold text-slate-600 leading-relaxed max-w-sm mx-auto">
+                                            {i18n.t(lang, 'public.no_services_hint')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {activeView === 'appointment' && (

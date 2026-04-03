@@ -254,6 +254,17 @@
     "invite_msg_label": "आमंत्रण संदेश",
     "custom_invite_hint": "यह संदेश कर्मचारी को व्हाट्सएप/एसएमएस के माध्यम से भेजा जाएगा।",
     "invite_phone_country_hint": "ऊपर देश कोड चुनें ताकि नंबर पूर्ण अंतर्राष्ट्रीय प्रारूप में जाए (SMS/व्हाट्सएप के लिए आवश्यक)।",
+    "leave_tooltip_approve": "स्वीकृत करें",
+    "leave_tooltip_reject": "अस्वीकार करें",
+    "leave_tooltip_delete": "छुट्टी हटाएं",
+    "leave_reject_modal_title": "छुट्टी का अनुरोध अस्वीकार करें",
+    "leave_reject_reason_label": "कर्मचारी के लिए संदेश (आवश्यक)",
+    "leave_reject_reason_placeholder": "संक्षेप में बताएं कि यह अनुरोध क्यों स्वीकार नहीं किया जा सकता (जैसे स्टाफ या तारीखें)। यह SMS/व्हाट्सएप पर भेजा जाएगा।",
+    "leave_reject_reason_required": "अस्वीकार करने से पहले कर्मचारी के लिए एक संदेश लिखें।",
+    "manager_note_label": "आपके प्रबंधक का संदेश",
+    "rejection": {
+      "reason": "आपके प्रबंधक का संदेश"
+    },
     "leave_whatsapp_owner": "{business} के लिए {name} से नया छुट्टी का अनुरोध: {start} से {end} तक।",
     "leave_whatsapp_approved": "{start} से {end} तक का आपका छुट्टी का अनुरोध स्वीकृत हो गया है। अपनी छुट्टी का आनंद लें!",
     "leave_whatsapp_rejected": "{start} से {end} तक के आपके छुट्टी के अनुरोध के संबंध में: दुर्भाग्य से, इसे अस्वीकार कर दिया गया है। {reason}",
@@ -523,7 +534,8 @@
     "resign_reason": "इस्तीफे का कारण",
     "last_date": "अनुरोधित अंतिम तिथि",
     "submit_resignation": "इस्तीफा जमा करें",
-    "resignation_sent": "इस्तीफा अनुरोध सफलतापूर्वक जमा किया गया।"
+    "resignation_sent": "इस्तीफा अनुरोध सफलतापूर्वक जमा किया गया।",
+    "rejection_feedback_label": "आपके प्रबंधक का संदेश"
   }
   ,
   "login": {

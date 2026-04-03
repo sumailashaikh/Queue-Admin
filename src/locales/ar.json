@@ -257,6 +257,17 @@
     "invite_msg_label": "رسالة الدعوة",
     "custom_invite_hint": "سيتم إرسال هذه الرسالة عبر واتساب/رسالة قصيرة للموظف.",
     "invite_phone_country_hint": "اختر رمز الدولة أعلاه حتى يُرسل الرقم بالصيغة الدولية الكاملة (مطلوب لرسالة SMS/واتساب).",
+    "leave_tooltip_approve": "موافقة",
+    "leave_tooltip_reject": "رفض",
+    "leave_tooltip_delete": "حذف الإجازة",
+    "leave_reject_modal_title": "رفض طلب الإجازة",
+    "leave_reject_reason_label": "رسالة للموظف (مطلوبة)",
+    "leave_reject_reason_placeholder": "اشرح بإيجاز لماذا لا يمكن الموافقة (مثلاً: نقص فريق العمل). تُرسل للموظف عبر الرسائل أو واتساب.",
+    "leave_reject_reason_required": "يرجى إدخال رسالة للموظف قبل الرفض.",
+    "manager_note_label": "ملاحظة من المدير",
+    "rejection": {
+      "reason": "رسالة من المشرف"
+    },
     "leave_whatsapp_owner": "طلب إجازة جديد من {name} لـ {business} من {start} إلى {end}.",
     "leave_whatsapp_approved": "تمت الموافقة على طلب إجازتك من {start} إلى {end}. استمتع بوقتك!",
     "leave_whatsapp_rejected": "بخصوص طلب إجازتك من {start} إلى {end}: للأسف تم رفضه. {reason}",
@@ -499,6 +510,9 @@
     "checked_in": "تم تسجيل الوصول",
     "unpaid": "غير مدفوع",
     "late": "متأخر"
+  },
+  "employee": {
+    "rejection_feedback_label": "رسالة من المشرف"
   },
   "login": {
     "title": "تسجيل دخول النشاط",

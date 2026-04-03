@@ -335,6 +335,17 @@
     "invite_msg_label": "Invitation Message",
     "custom_invite_hint": "This message will be sent via WhatsApp/SMS to the employee.",
     "invite_phone_country_hint": "Choose the country code above so the number is sent in full international format (required for SMS/WhatsApp).",
+    "leave_tooltip_approve": "Approve",
+    "leave_tooltip_reject": "Decline",
+    "leave_tooltip_delete": "Delete leave",
+    "leave_reject_modal_title": "Decline leave request",
+    "leave_reject_reason_label": "Message to the employee (required)",
+    "leave_reject_reason_placeholder": "Briefly explain why this request cannot be approved (for example staffing or blackout dates). This text is sent to the employee by SMS/WhatsApp.",
+    "leave_reject_reason_required": "Please enter a message for the employee before declining.",
+    "manager_note_label": "Note from your manager",
+    "rejection": {
+      "reason": "Message from your manager"
+    },
     "leave_whatsapp_owner": "New leave request from {name} for {business} from {start} to {end}.",
     "leave_whatsapp_approved": "Your leave request from {start} to {end} has been approved. Enjoy your time off!",
     "leave_whatsapp_rejected": "Regarding your leave request from {start} to {end}: Unfortunately, it has been declined. {reason}"
@@ -613,6 +624,7 @@
     "resign_reason": "Reason for resignation",
     "last_date": "Requested last date",
     "submit_resignation": "Submit Resignation",
-    "resignation_sent": "Resignation request submitted successfully."
+    "resignation_sent": "Resignation request submitted successfully.",
+    "rejection_feedback_label": "Message from your manager"
   }
 }

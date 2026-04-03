@@ -85,3 +85,35 @@ export function validateLanguage(text: string, language: string): boolean {
         return regex.test(text);
     }
 }
+
+/** BCP-47 locale for calendar formatting from app language code. */
+export function localeForLanguage(language: string): string {
+    const base = (language || "en").split("-")[0].toLowerCase();
+    const map: Record<string, string> = { en: "en-US", es: "es-ES", hi: "hi-IN", ar: "ar-SA" };
+    return map[base] || "en-US";
+}
+
+/**
+ * Format a date-only (YYYY-MM-DD) or ISO string for leave UI.
+ * Uses midday local parse to avoid calendar-day shifts for date-only values.
+ */
+export function formatLeaveDate(dateStr: string, language: string): string {
+    const raw = String(dateStr || "").trim();
+    if (!raw) return "";
+    const iso = raw.length <= 10 && !raw.includes("T") ? `${raw}T12:00:00` : raw;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString(localeForLanguage(language), {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+    });
+}
+
+export function formatLeaveDateRange(start: string, end: string, language: string): string {
+    const a = formatLeaveDate(start, language);
+    const b = formatLeaveDate(end, language);
+    if (!a) return b;
+    if (!b || a === b) return a;
+    return `${a} – ${b}`;
+}

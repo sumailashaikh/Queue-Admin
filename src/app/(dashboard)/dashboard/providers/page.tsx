@@ -19,7 +19,7 @@ import {
     MessageSquare,
     ShieldCheck
 } from "lucide-react";
-import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
+import { cn, formatCurrency, validateLanguage, formatLeaveDateRange } from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
@@ -138,43 +138,19 @@ export default function ProvidersPage() {
         return `Invite created, but SMS/WhatsApp could not be delivered. Share this link manually:${urlText}`;
     };
 
-    const leaveUiText = (() => {
-        const lang = String(language || 'en').toLowerCase();
-        if (lang.startsWith('hi')) {
-            return {
-                approve: 'स्वीकृत करें',
-                reject: 'अस्वीकृत करें',
-                deleteLeave: 'छुट्टी हटाएं',
-                rejectTitle: 'छुट्टी अनुरोध अस्वीकार करें',
-                rejectionReason: 'अस्वीकृति का कारण',
-                reasonOptional: 'कारण लिखें',
-                close: 'बंद करें',
-                reasonRequired: 'रिजेक्ट करने के लिए कारण लिखना जरूरी है।'
-            };
-        }
-        if (lang.startsWith('ar')) {
-            return {
-                approve: 'قبول',
-                reject: 'رفض',
-                deleteLeave: 'حذف الإجازة',
-                rejectTitle: 'رفض طلب الإجازة',
-                rejectionReason: 'سبب الرفض',
-                reasonOptional: 'اكتب السبب',
-                close: 'إغلاق',
-                reasonRequired: 'سبب الرفض مطلوب.'
-            };
-        }
-        return {
-            approve: 'Approve',
-            reject: 'Reject',
-            deleteLeave: 'Delete leave',
-            rejectTitle: 'Reject Leave Request',
-            rejectionReason: 'Rejection Reason',
-            reasonOptional: 'Reason',
-            close: 'Close',
-            reasonRequired: 'Rejection reason is required.'
-        };
-    })();
+    const leaveUiText = useMemo(
+        () => ({
+            approve: t("providers.leave_tooltip_approve"),
+            reject: t("providers.leave_tooltip_reject"),
+            deleteLeave: t("providers.leave_tooltip_delete"),
+            rejectTitle: t("providers.leave_reject_modal_title"),
+            rejectionReason: t("providers.leave_reject_reason_label"),
+            reasonPlaceholder: t("providers.leave_reject_reason_placeholder"),
+            close: t("providers.cancel"),
+            reasonRequired: t("providers.leave_reject_reason_required")
+        }),
+        [t, language]
+    );
 
     const fetchProviders = useCallback(async () => {
         if (!business?.id) return;
@@ -761,7 +737,7 @@ export default function ProvidersPage() {
                                 <div key={leave.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1 space-y-1">
                                         <p className="text-[10px] font-black text-slate-900">
-                                            {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                                            {formatLeaveDateRange(leave.start_date, leave.end_date, language)}
                                         </p>
                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                                             {localizeLeaveType(leave.leave_type)} • {t(`employee.status_${statusKey}`)}
@@ -772,8 +748,11 @@ export default function ProvidersPage() {
                                             </p>
                                         )}
                                         {isRejected && leave.rejection_reason && (
-                                            <p className="text-[9px] text-rose-500">
-                                                {t('providers.rejection_reason')}: {leave.rejection_reason}
+                                            <p className="text-[9px] text-rose-600 leading-relaxed">
+                                                <span className="font-black uppercase tracking-widest text-rose-500 block mb-0.5">
+                                                    {t("employee.rejection_feedback_label")}
+                                                </span>
+                                                {leave.rejection_reason}
                                             </p>
                                         )}
                                     </div>
@@ -905,10 +884,11 @@ export default function ProvidersPage() {
                                 {leaveUiText.rejectionReason}
                             </label>
                             <textarea
-                                rows={3}
+                                required
+                                rows={4}
                                 value={rejectModal.reason}
                                 onChange={(e) => setRejectModal((prev) => ({ ...prev, reason: e.target.value }))}
-                                placeholder={leaveUiText.reasonOptional}
+                                placeholder={leaveUiText.reasonPlaceholder}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-rose-300"
                             />
                         </div>

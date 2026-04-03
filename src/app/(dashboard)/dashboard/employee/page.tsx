@@ -18,7 +18,7 @@ import {
     X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
+import { cn, formatCurrency, validateLanguage, formatLeaveDateRange } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { queueService, QueueEntry } from "@/services/queueService";
@@ -90,6 +90,15 @@ function EmployeeDashboardContent() {
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
+    };
+
+    const leaveTypeLabel = (leaveType?: string) => {
+        const v = String(leaveType || "").toLowerCase();
+        if (v === "holiday") return t("providers.holiday");
+        if (v === "sick") return t("providers.sick");
+        if (v === "emergency") return t("providers.emergency");
+        if (v === "other") return t("providers.other");
+        return leaveType || t("providers.other");
     };
 
     const fetchData = useCallback(async () => {
@@ -498,33 +507,50 @@ function EmployeeDashboardContent() {
                                             const leaveStatus = String(leave?.status || "PENDING").toUpperCase();
                                             const leaveStatusKey = leaveStatus.toLowerCase();
                                             return (
-                                            <div key={leave.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={cn(
-                                                        "h-12 w-12 rounded-2xl flex items-center justify-center",
-                                                        leaveStatus === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
-                                                        leaveStatus === 'REJECTED' ? "bg-rose-50 text-rose-600" :
-                                                        "bg-amber-50 text-amber-600"
-                                                    )}>
-                                                        <CalendarOff className="h-6 w-6" />
+                                            <div key={leave.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex flex-col gap-3">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-4 min-w-0">
+                                                        <div className={cn(
+                                                            "h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center",
+                                                            leaveStatus === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
+                                                            leaveStatus === 'REJECTED' ? "bg-rose-50 text-rose-600" :
+                                                            "bg-amber-50 text-amber-600"
+                                                        )}>
+                                                            <CalendarOff className="h-6 w-6" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-bold text-slate-900 tracking-tight">
+                                                                {formatLeaveDateRange(leave.start_date, leave.end_date, language)}
+                                                            </p>
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex flex-wrap items-center gap-1.5">
+                                                                {leaveTypeLabel(leave.leave_type)}
+                                                                <span className="text-slate-200">•</span>
+                                                                <span className={cn(
+                                                                    "font-black",
+                                                                    leaveStatus === 'APPROVED' ? "text-emerald-500" :
+                                                                    leaveStatus === 'REJECTED' ? "text-rose-500" :
+                                                                    "text-amber-500"
+                                                                )}>{t(`employee.status_${leaveStatusKey}`)}</span>
+                                                            </p>
+                                                            {leave.note && (
+                                                                <p className="text-[10px] text-slate-500 mt-1.5 font-medium normal-case tracking-normal line-clamp-2">
+                                                                    {leave.note}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-900 uppercase tracking-tight">
-                                                            {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
-                                                        </p>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                            {leave.leave_type} 
-                                                            <span className="text-slate-200">•</span>
-                                                            <span className={cn(
-                                                                "font-black",
-                                                                leaveStatus === 'APPROVED' ? "text-emerald-500" :
-                                                                leaveStatus === 'REJECTED' ? "text-rose-500" :
-                                                                "text-amber-500"
-                                                            )}>{t(`employee.status_${leaveStatusKey}`)}</span>
-                                                        </p>
-                                                    </div>
+                                                    <ChevronRight className="h-5 w-5 text-slate-300 shrink-0 hidden sm:block" />
                                                 </div>
-                                                <ChevronRight className="h-5 w-5 text-slate-300" />
+                                                {leaveStatus === 'REJECTED' && leave.rejection_reason && (
+                                                    <div className="rounded-2xl border border-rose-100 bg-rose-50/80 px-4 py-3">
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-rose-600 mb-1">
+                                                            {t("employee.rejection_feedback_label")}
+                                                        </p>
+                                                        <p className="text-sm font-medium text-slate-800 leading-snug">
+                                                            {leave.rejection_reason}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         )})
                                     )}
