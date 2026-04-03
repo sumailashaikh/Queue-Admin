@@ -262,6 +262,7 @@
     "invite_msg_placeholder": "Escribe un mensaje de bienvenida personalizado...",
     "invite_msg_label": "Mensaje de Invitación",
     "custom_invite_hint": "Este mensaje se enviará al empleado por WhatsApp/SMS.",
+    "invite_phone_country_hint": "Elige el código de país de arriba para que el número se envíe en formato internacional completo (necesario para SMS/WhatsApp).",
     "leave_whatsapp_owner": "Nueva solicitud de permiso de {name} para {business}: del {start} al {end}.",
     "leave_whatsapp_approved": "Su solicitud de permiso del {start} al {end} ha sido aprobada. ¡Disfrute su tiempo libre!",
     "leave_whatsapp_rejected": "Sobre su solicitud de permiso del {start} al {end}: lamentablemente ha sido rechazada. {reason}",

@@ -42,19 +42,24 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
     const [isOpen, setIsOpen] = useState(false);
     const { t } = useLanguage();
 
-    // Parse initial value
+    // Keep local UI in sync when parent value changes (modal reset, edit load, etc.)
     useEffect(() => {
-        if (value) {
-            // Find which country dial code matches the start of the value
-            const matchingCountry = COUNTRIES.find(c => value.startsWith(c.dialCode));
-            if (matchingCountry) {
-                setSelectedCountry(matchingCountry);
-                setLocalNumber(value.replace(matchingCountry.dialCode, ""));
-            } else if (value.startsWith("+")) {
-               // Fallback or generic logic if needed
-            }
+        const v = String(value || "").trim();
+        if (!v) {
+            setLocalNumber("");
+            return;
         }
-    }, []); // Only on mount to avoid loops
+        const matchingCountry = COUNTRIES.find((c) => v.startsWith(c.dialCode));
+        if (matchingCountry) {
+            setSelectedCountry(matchingCountry);
+            setLocalNumber(
+                v
+                    .replace(matchingCountry.dialCode, "")
+                    .replace(/\D/g, "")
+                    .slice(0, matchingCountry.digits)
+            );
+        }
+    }, [value]);
 
     const handleCountrySelect = (country: Country) => {
         setSelectedCountry(country);

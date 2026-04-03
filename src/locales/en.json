@@ -334,6 +334,7 @@
     "invite_msg_placeholder": "Write a custom welcome message for the employee...",
     "invite_msg_label": "Invitation Message",
     "custom_invite_hint": "This message will be sent via WhatsApp/SMS to the employee.",
+    "invite_phone_country_hint": "Choose the country code above so the number is sent in full international format (required for SMS/WhatsApp).",
     "leave_whatsapp_owner": "New leave request from {name} for {business} from {start} to {end}.",
     "leave_whatsapp_approved": "Your leave request from {start} to {end} has been approved. Enjoy your time off!",
     "leave_whatsapp_rejected": "Regarding your leave request from {start} to {end}: Unfortunately, it has been declined. {reason}"

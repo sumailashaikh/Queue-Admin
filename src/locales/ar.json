@@ -256,6 +256,7 @@
     "invite_msg_placeholder": "اكتب رسالة ترحيب مخصصة للموظف...",
     "invite_msg_label": "رسالة الدعوة",
     "custom_invite_hint": "سيتم إرسال هذه الرسالة عبر واتساب/رسالة قصيرة للموظف.",
+    "invite_phone_country_hint": "اختر رمز الدولة أعلاه حتى يُرسل الرقم بالصيغة الدولية الكاملة (مطلوب لرسالة SMS/واتساب).",
     "leave_whatsapp_owner": "طلب إجازة جديد من {name} لـ {business} من {start} إلى {end}.",
     "leave_whatsapp_approved": "تمت الموافقة على طلب إجازتك من {start} إلى {end}. استمتع بوقتك!",
     "leave_whatsapp_rejected": "بخصوص طلب إجازتك من {start} إلى {end}: للأسف تم رفضه. {reason}",

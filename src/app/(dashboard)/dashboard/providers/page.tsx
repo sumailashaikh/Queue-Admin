@@ -469,12 +469,29 @@ export default function ProvidersPage() {
         }
     };
 
+    /** Ensure invite SMS uses E.164 (+country + national digits). */
+    const normalizeInvitePhone = (phone: string) => {
+        const digits = String(phone || "").replace(/\D/g, "");
+        if (!digits) return "";
+        if (digits.length === 10) return `+91${digits}`;
+        return `+${digits}`;
+    };
+
     const handleInviteSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!business?.id) return;
+        const phoneE164 = normalizeInvitePhone(inviteFormData.phone);
+        if (!phoneE164 || phoneE164.replace(/\D/g, "").length < 10) {
+            showToast(t("providers.all_fields_required"), "error");
+            return;
+        }
         setIsSubmitting(true);
         try {
-            const resp = await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
+            const resp = await businessService.inviteEmployee({
+                ...inviteFormData,
+                phone: phoneE164,
+                business_id: business.id
+            });
             if (resp?.notified === false || resp?.message === 'providers.err_notify_fail') {
                 showToast(getInviteNotifyFailMessage(resp?.invite_url, resp?.notify_hint), "error");
             } else {
@@ -816,7 +833,15 @@ export default function ProvidersPage() {
                         <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase">{t('providers.invite_staff')}</h3><button type="button" onClick={() => setIsInviteModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
                         <div className="space-y-6">
                             <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.full_name')}</label><input required type="text" value={inviteFormData.name} onChange={v => setInviteFormData({ ...inviteFormData, name: v.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black focus:ring-2 focus:ring-slate-900/10 outline-none" /></div>
-                            <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.phone_number')}</label><CountryPhoneInput value={inviteFormData.phone} onChange={v => setInviteFormData({ ...inviteFormData, phone: v })} /></div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.phone_number')}</label>
+                                <CountryPhoneInput
+                                    required
+                                    value={inviteFormData.phone}
+                                    onChange={(v) => setInviteFormData({ ...inviteFormData, phone: v })}
+                                />
+                                <p className="text-[9px] font-semibold text-slate-500 ml-1">{t('providers.invite_phone_country_hint')}</p>
+                            </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.invite_msg_label')}</label>
                                 <textarea 
