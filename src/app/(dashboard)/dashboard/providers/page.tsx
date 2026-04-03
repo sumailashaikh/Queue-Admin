@@ -102,6 +102,18 @@ export default function ProvidersPage() {
         return leaveType || tt('providers.other', 'Other');
     };
 
+    const getInviteNotifyFailMessage = (inviteUrl?: string) => {
+        const lang = String(language || 'en').toLowerCase();
+        const urlText = inviteUrl ? ` ${inviteUrl}` : '';
+        if (lang.startsWith('hi')) {
+            return `निमंत्रण बन गया है, लेकिन SMS/WhatsApp नहीं भेजा जा सका। लिंक मैन्युअल भेजें:${urlText}`;
+        }
+        if (lang.startsWith('ar')) {
+            return `تم إنشاء الدعوة ولكن تعذر إرسال SMS/WhatsApp. أرسل الرابط يدويًا:${urlText}`;
+        }
+        return `Invite created, but SMS/WhatsApp could not be delivered. Share this link manually:${urlText}`;
+    };
+
     const leaveUiText = (() => {
         const lang = String(language || 'en').toLowerCase();
         if (lang.startsWith('hi')) {
@@ -445,9 +457,13 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             const resp = await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
-            const msg = resp.message || 'providers.success_invite';
-            const translated = msg.includes('.') ? t(msg as any, { ...resp, phone: inviteFormData.phone }) : msg;
-            showToast(translated);
+            if (resp?.notified === false || resp?.message === 'providers.err_notify_fail') {
+                showToast(getInviteNotifyFailMessage(resp?.invite_url), "error");
+            } else {
+                const msg = resp.message || 'providers.success_invite';
+                const translated = msg.includes('.') ? t(msg as any, { ...resp, phone: inviteFormData.phone }) : msg;
+                showToast(translated);
+            }
             setIsInviteModalOpen(false);
             setInviteFormData({ name: "", phone: "", custom_message: "" });
             await fetchProviders();
