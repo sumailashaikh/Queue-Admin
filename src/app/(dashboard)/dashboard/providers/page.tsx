@@ -88,6 +88,20 @@ export default function ProvidersPage() {
         return fallback === fallbackKey ? fallbackText : fallback;
     };
 
+    const tt = (key: string, fallback: string) => {
+        const translated = t(key as any);
+        return translated === key ? fallback : translated;
+    };
+
+    const localizeLeaveType = (leaveType?: string) => {
+        const v = String(leaveType || '').toLowerCase();
+        if (v === 'holiday') return tt('providers.holiday', 'Holiday');
+        if (v === 'sick') return tt('providers.sick', 'Sick');
+        if (v === 'emergency') return tt('providers.emergency', 'Emergency');
+        if (v === 'other') return tt('providers.other', 'Other');
+        return leaveType || tt('providers.other', 'Other');
+    };
+
     const fetchProviders = useCallback(async () => {
         if (!business?.id) return;
         try {
@@ -625,7 +639,7 @@ export default function ProvidersPage() {
                                 </h4>
                                 {leavesData.length > 0 && (
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                        {t('providers.total') === 'providers.total' ? 'Total' : t('providers.total')}: {leavesData.length}
+                                        {tt('providers.total', 'Total')}: {leavesData.length}
                                     </span>
                                 )}
                             </div>
@@ -642,7 +656,7 @@ export default function ProvidersPage() {
                                             {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
                                         </p>
                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                            {leave.leave_type} • {t(`employee.status_${statusKey}`)}
+                                            {localizeLeaveType(leave.leave_type)} • {t(`employee.status_${statusKey}`)}
                                         </p>
                                         {leave.note && (
                                             <p className="text-[9px] text-slate-500 line-clamp-2">
@@ -661,7 +675,7 @@ export default function ProvidersPage() {
                                                 <button
                                                     onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')}
                                                     className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title="Approve"
+                                                    title={tt('common.approve', 'Approve')}
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
                                                 </button>
@@ -672,7 +686,7 @@ export default function ProvidersPage() {
                                                         reason: ""
                                                     })}
                                                     className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                                                    title="Reject"
+                                                    title={tt('providers.reject', 'Reject')}
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </button>
@@ -761,7 +775,7 @@ export default function ProvidersPage() {
                     <div className="bg-white w-full max-w-md rounded-[28px] p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                                {t('providers.reject_leave_title') === 'providers.reject_leave_title' ? 'Reject Leave Request' : t('providers.reject_leave_title')}
+                                {tt('providers.reject_leave_title', 'Reject Leave Request')}
                             </h3>
                             <button
                                 onClick={() => setRejectModal({ isOpen: false, leaveId: "", reason: "" })}
@@ -778,7 +792,7 @@ export default function ProvidersPage() {
                                 rows={3}
                                 value={rejectModal.reason}
                                 onChange={(e) => setRejectModal((prev) => ({ ...prev, reason: e.target.value }))}
-                                placeholder={t('providers.rejection_reason_placeholder') === 'providers.rejection_reason_placeholder' ? 'Reason (optional)' : t('providers.rejection_reason_placeholder')}
+                                placeholder={tt('providers.rejection_reason_placeholder', 'Reason (optional)')}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-rose-300"
                             />
                         </div>
@@ -794,7 +808,7 @@ export default function ProvidersPage() {
                                 onClick={() => handleUpdateLeaveStatus(rejectModal.leaveId, 'REJECTED', rejectModal.reason.trim() || undefined)}
                                 className="flex-1 py-3 bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider disabled:opacity-50"
                             >
-                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : (t('providers.reject') === 'providers.reject' ? 'Reject' : t('providers.reject'))}
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : tt('providers.reject', 'Reject')}
                             </button>
                         </div>
                     </div>
