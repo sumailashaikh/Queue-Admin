@@ -102,6 +102,12 @@ export default function ProvidersPage() {
         return leaveType || tt('providers.other', 'Other');
     };
 
+    const formatInviteTwilioErrors = (ne?: { sms?: string | null; whatsapp?: string | null }) => {
+        const parts = [ne?.sms, ne?.whatsapp].filter((x) => Boolean(x && String(x).trim()));
+        if (!parts.length) return "";
+        return ` (${parts.join(" · ")})`;
+    };
+
     const getInviteNotifyFailMessage = (inviteUrl?: string, hint?: string | null) => {
         const lang = String(language || 'en').toLowerCase();
         const urlText = inviteUrl ? ` ${inviteUrl}` : '';
@@ -493,7 +499,11 @@ export default function ProvidersPage() {
                 business_id: business.id
             });
             if (resp?.notified === false || resp?.message === 'providers.err_notify_fail') {
-                showToast(getInviteNotifyFailMessage(resp?.invite_url, resp?.notify_hint), "error");
+                showToast(
+                    getInviteNotifyFailMessage(resp?.invite_url, resp?.notify_hint) +
+                        formatInviteTwilioErrors(resp?.notify_errors),
+                    "error"
+                );
             } else {
                 const msg = resp.message || 'providers.success_invite';
                 const translated = msg.includes('.') ? t(msg as any, { ...resp, phone: inviteFormData.phone }) : msg;
