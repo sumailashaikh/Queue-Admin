@@ -323,7 +323,7 @@
     "approve_resignation": "Approve Resignation",
     "deny_resignation": "Deny Resignation",
     "err_resignation": "Failed to submit resignation request.",
-    "err_active_tasks": "Cannot deactivate: Employee has {{count}} active tasks.",
+    "err_active_tasks": "Cannot deactivate: They still have {{count}} open step(s) on today's live queue (waiting or in service). Finish or reassign those guests first.",
     "err_unauthorized_add": "Unauthorized to add providers to this business.",
     "err_not_found": "Service provider not found or unauthorized.",
     "success_reactivate": "Existing provider reactivated successfully.",
