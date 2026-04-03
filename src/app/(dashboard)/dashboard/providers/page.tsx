@@ -62,12 +62,30 @@ export default function ProvidersPage() {
     });
 
     const [error, setError] = useState<string | null>(null);
-    const [rejectionReason, setRejectionReason] = useState("");
+    const [rejectModal, setRejectModal] = useState<{ isOpen: boolean; leaveId: string; reason: string }>({
+        isOpen: false,
+        leaveId: "",
+        reason: ""
+    });
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
+    };
+
+    const parseApiMessage = (error: any, fallbackKey: string, fallbackText: string) => {
+        const data = error?.response?.data;
+        const raw = String(data?.message || error?.message || "").trim();
+        if (!raw) {
+            const fallback = t(fallbackKey as any);
+            return fallback === fallbackKey ? fallbackText : fallback;
+        }
+        if (/\s/.test(raw)) return raw; // Human readable server sentence
+        const translated = t(raw as any, data);
+        if (translated !== raw) return translated;
+        const fallback = t(fallbackKey as any);
+        return fallback === fallbackKey ? fallbackText : fallback;
     };
 
     const fetchProviders = useCallback(async () => {
@@ -344,19 +362,17 @@ export default function ProvidersPage() {
         }
     };
 
-    const handleUpdateLeaveStatus = async (leaveId: string, status: 'APPROVED' | 'REJECTED') => {
+    const handleUpdateLeaveStatus = async (leaveId: string, status: 'APPROVED' | 'REJECTED', reason?: string) => {
         if (!selectedProvider) return;
         setIsSubmitting(true);
         try {
-            await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? rejectionReason : undefined);
+            await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
             showToast(t('common.success'));
-            setRejectionReason("");
+            setRejectModal({ isOpen: false, leaveId: "", reason: "" });
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             await fetchProviders();
         } catch (error: any) {
-            const msg = error.response?.data?.message || 'common.error';
-            const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
-            showToast(translated !== msg ? translated : t('common.error'), "error");
+            showToast(parseApiMessage(error, 'providers.err_update_leave_status', 'Failed to update leave status'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -609,7 +625,7 @@ export default function ProvidersPage() {
                                 </h4>
                                 {leavesData.length > 0 && (
                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                        {t('common.total')}: {leavesData.length}
+                                        {t('providers.total') === 'providers.total' ? 'Total' : t('providers.total')}: {leavesData.length}
                                     </span>
                                 )}
                             </div>
@@ -650,13 +666,11 @@ export default function ProvidersPage() {
                                                     <CheckCircle2 className="h-4 w-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        const reason = window.prompt("Reason for rejection?", "Team is fully booked");
-                                                        if (reason !== null) {
-                                                            setRejectionReason(reason);
-                                                            handleUpdateLeaveStatus(leave.id, 'REJECTED');
-                                                        }
-                                                    }}
+                                                    onClick={() => setRejectModal({
+                                                        isOpen: true,
+                                                        leaveId: leave.id,
+                                                        reason: ""
+                                                    })}
                                                     className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                                                     title="Reject"
                                                 >
@@ -735,6 +749,52 @@ export default function ProvidersPage() {
                             <button onClick={confirmDelete} className="w-full py-4 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100">{t('providers.deactivate')}</button>
                             <button onClick={() => setDeleteModal({ isOpen: false, provider: null })} className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest">
                                 {t('common.cancel')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reject Leave Modal */}
+            {rejectModal.isOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-md rounded-[28px] p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                                {t('providers.reject_leave_title') === 'providers.reject_leave_title' ? 'Reject Leave Request' : t('providers.reject_leave_title')}
+                            </h3>
+                            <button
+                                onClick={() => setRejectModal({ isOpen: false, leaveId: "", reason: "" })}
+                                className="p-1.5 text-slate-400 hover:text-rose-500"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                {t('providers.rejection_reason')}
+                            </label>
+                            <textarea
+                                rows={3}
+                                value={rejectModal.reason}
+                                onChange={(e) => setRejectModal((prev) => ({ ...prev, reason: e.target.value }))}
+                                placeholder={t('providers.rejection_reason_placeholder') === 'providers.rejection_reason_placeholder' ? 'Reason (optional)' : t('providers.rejection_reason_placeholder')}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-rose-300"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setRejectModal({ isOpen: false, leaveId: "", reason: "" })}
+                                className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider"
+                            >
+                                {t('common.cancel')}
+                            </button>
+                            <button
+                                disabled={isSubmitting}
+                                onClick={() => handleUpdateLeaveStatus(rejectModal.leaveId, 'REJECTED', rejectModal.reason.trim() || undefined)}
+                                className="flex-1 py-3 bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+                            >
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : (t('providers.reject') === 'providers.reject' ? 'Reject' : t('providers.reject'))}
                             </button>
                         </div>
                     </div>
