@@ -102,9 +102,27 @@ export default function ProvidersPage() {
         return leaveType || tt('providers.other', 'Other');
     };
 
-    const getInviteNotifyFailMessage = (inviteUrl?: string) => {
+    const getInviteNotifyFailMessage = (inviteUrl?: string, hint?: string | null) => {
         const lang = String(language || 'en').toLowerCase();
         const urlText = inviteUrl ? ` ${inviteUrl}` : '';
+        if (hint === 'twilio_trial_destination_not_verified') {
+            if (lang.startsWith('hi')) {
+                return `Twilio ट्रायल खाता सिर्फ Verified नंबरों पर SMS भेज सकता है। Twilio कंसोल में इस नंबर को Verified Caller IDs में जोड़ें या अपग्रेड करें। मैन्युअल लिंक:${urlText}`;
+            }
+            if (lang.startsWith('ar')) {
+                return `حساب Twilio التجريبي يرسل الرسائل فقط إلى الأرقام الموثّقة. أضف رقم الموظف في Twilio ← Verified Caller IDs أو قم بالترقية. الرابط:${urlText}`;
+            }
+            return `Twilio Trial can only SMS verified numbers. Add this employee's phone under Twilio → Phone Numbers → Verified Caller IDs (or upgrade). Manual link:${urlText}`;
+        }
+        if (hint === 'twilio_auth_mismatch') {
+            if (lang.startsWith('hi')) {
+                return `Twilio क्रेडेंशियल गलत या पुराने हैं। सर्वर/ Supabase में नया Account SID, Auth Token और Messaging Service (MG…) सेट कर रीडिप्लॉय करें। लिंक:${urlText}`;
+            }
+            if (lang.startsWith('ar')) {
+                return `بيانات Twilio غير صحيحة أو قديمة. حدّث Account SID وAuth Token وMessaging Service في الخادم وSupabase وأعد النشر. الرابط:${urlText}`;
+            }
+            return `Twilio credentials mismatch. Set the new Account SID, Auth Token, and TWILIO_MESSAGING_SERVICE_SID on your API host (and Supabase SMS), then redeploy. Manual link:${urlText}`;
+        }
         if (lang.startsWith('hi')) {
             return `निमंत्रण बन गया है, लेकिन SMS/WhatsApp नहीं भेजा जा सका। लिंक मैन्युअल भेजें:${urlText}`;
         }
@@ -458,7 +476,7 @@ export default function ProvidersPage() {
         try {
             const resp = await businessService.inviteEmployee({ ...inviteFormData, business_id: business.id });
             if (resp?.notified === false || resp?.message === 'providers.err_notify_fail') {
-                showToast(getInviteNotifyFailMessage(resp?.invite_url), "error");
+                showToast(getInviteNotifyFailMessage(resp?.invite_url, resp?.notify_hint), "error");
             } else {
                 const msg = resp.message || 'providers.success_invite';
                 const translated = msg.includes('.') ? t(msg as any, { ...resp, phone: inviteFormData.phone }) : msg;
