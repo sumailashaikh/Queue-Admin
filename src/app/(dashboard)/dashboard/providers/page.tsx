@@ -102,6 +102,44 @@ export default function ProvidersPage() {
         return leaveType || tt('providers.other', 'Other');
     };
 
+    const leaveUiText = (() => {
+        const lang = String(language || 'en').toLowerCase();
+        if (lang.startsWith('hi')) {
+            return {
+                approve: 'स्वीकृत करें',
+                reject: 'अस्वीकृत करें',
+                deleteLeave: 'छुट्टी हटाएं',
+                rejectTitle: 'छुट्टी अनुरोध अस्वीकार करें',
+                rejectionReason: 'अस्वीकृति का कारण',
+                reasonOptional: 'कारण लिखें',
+                close: 'बंद करें',
+                reasonRequired: 'रिजेक्ट करने के लिए कारण लिखना जरूरी है।'
+            };
+        }
+        if (lang.startsWith('ar')) {
+            return {
+                approve: 'قبول',
+                reject: 'رفض',
+                deleteLeave: 'حذف الإجازة',
+                rejectTitle: 'رفض طلب الإجازة',
+                rejectionReason: 'سبب الرفض',
+                reasonOptional: 'اكتب السبب',
+                close: 'إغلاق',
+                reasonRequired: 'سبب الرفض مطلوب.'
+            };
+        }
+        return {
+            approve: 'Approve',
+            reject: 'Reject',
+            deleteLeave: 'Delete leave',
+            rejectTitle: 'Reject Leave Request',
+            rejectionReason: 'Rejection Reason',
+            reasonOptional: 'Reason',
+            close: 'Close',
+            reasonRequired: 'Rejection reason is required.'
+        };
+    })();
+
     const fetchProviders = useCallback(async () => {
         if (!business?.id) return;
         try {
@@ -378,6 +416,10 @@ export default function ProvidersPage() {
 
     const handleUpdateLeaveStatus = async (leaveId: string, status: 'APPROVED' | 'REJECTED', reason?: string) => {
         if (!selectedProvider) return;
+        if (status === 'REJECTED' && !String(reason || '').trim()) {
+            showToast(leaveUiText.reasonRequired, "error");
+            return;
+        }
         setIsSubmitting(true);
         try {
             await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
@@ -386,7 +428,12 @@ export default function ProvidersPage() {
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             await fetchProviders();
         } catch (error: any) {
-            showToast(parseApiMessage(error, 'providers.err_update_leave_status', 'Failed to update leave status'), "error");
+            const raw = String(error?.response?.data?.message || '').toLowerCase();
+            if (raw.includes('provider_leaves') && raw.includes('status')) {
+                showToast(tt('providers.err_leave_status_column_missing', 'Leave approval/rejection requires database update (missing status column).'), "error");
+            } else {
+                showToast(parseApiMessage(error, 'providers.err_update_leave_status', 'Failed to update leave status'), "error");
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -675,7 +722,7 @@ export default function ProvidersPage() {
                                                 <button
                                                     onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')}
                                                     className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title={tt('common.approve', 'Approve')}
+                                                    title={leaveUiText.approve}
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
                                                 </button>
@@ -686,7 +733,7 @@ export default function ProvidersPage() {
                                                         reason: ""
                                                     })}
                                                     className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                                                    title={tt('providers.reject', 'Reject')}
+                                                    title={leaveUiText.reject}
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </button>
@@ -695,7 +742,7 @@ export default function ProvidersPage() {
                                         <button
                                             onClick={() => handleDeleteLeave(leave.id)}
                                             className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
-                                            title={t('providers.delete_leave')}
+                                            title={leaveUiText.deleteLeave}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>
@@ -775,7 +822,7 @@ export default function ProvidersPage() {
                     <div className="bg-white w-full max-w-md rounded-[28px] p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                                {tt('providers.reject_leave_title', 'Reject Leave Request')}
+                                {leaveUiText.rejectTitle}
                             </h3>
                             <button
                                 onClick={() => setRejectModal({ isOpen: false, leaveId: "", reason: "" })}
@@ -786,13 +833,13 @@ export default function ProvidersPage() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                {t('providers.rejection_reason')}
+                                {leaveUiText.rejectionReason}
                             </label>
                             <textarea
                                 rows={3}
                                 value={rejectModal.reason}
                                 onChange={(e) => setRejectModal((prev) => ({ ...prev, reason: e.target.value }))}
-                                placeholder={tt('providers.rejection_reason_placeholder', 'Reason (optional)')}
+                                placeholder={leaveUiText.reasonOptional}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-rose-300"
                             />
                         </div>
@@ -801,14 +848,14 @@ export default function ProvidersPage() {
                                 onClick={() => setRejectModal({ isOpen: false, leaveId: "", reason: "" })}
                                 className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider"
                             >
-                                {t('common.cancel')}
+                                {leaveUiText.close}
                             </button>
                             <button
                                 disabled={isSubmitting}
                                 onClick={() => handleUpdateLeaveStatus(rejectModal.leaveId, 'REJECTED', rejectModal.reason.trim() || undefined)}
                                 className="flex-1 py-3 bg-rose-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider disabled:opacity-50"
                             >
-                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : tt('providers.reject', 'Reject')}
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : leaveUiText.reject}
                             </button>
                         </div>
                     </div>
