@@ -494,13 +494,16 @@ function EmployeeDashboardContent() {
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('providers.no_history')}</p>
                                         </div>
                                     ) : (
-                                        leaves.map((leave, idx) => (
+                                        leaves.map((leave, idx) => {
+                                            const leaveStatus = String(leave?.status || "PENDING").toUpperCase();
+                                            const leaveStatusKey = leaveStatus.toLowerCase();
+                                            return (
                                             <div key={leave.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
                                                         "h-12 w-12 rounded-2xl flex items-center justify-center",
-                                                        leave.status === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
-                                                        leave.status === 'REJECTED' ? "bg-rose-50 text-rose-600" :
+                                                        leaveStatus === 'APPROVED' ? "bg-emerald-50 text-emerald-600" :
+                                                        leaveStatus === 'REJECTED' ? "bg-rose-50 text-rose-600" :
                                                         "bg-amber-50 text-amber-600"
                                                     )}>
                                                         <CalendarOff className="h-6 w-6" />
@@ -514,16 +517,16 @@ function EmployeeDashboardContent() {
                                                             <span className="text-slate-200">•</span>
                                                             <span className={cn(
                                                                 "font-black",
-                                                                leave.status === 'APPROVED' ? "text-emerald-500" :
-                                                                leave.status === 'REJECTED' ? "text-rose-500" :
+                                                                leaveStatus === 'APPROVED' ? "text-emerald-500" :
+                                                                leaveStatus === 'REJECTED' ? "text-rose-500" :
                                                                 "text-amber-500"
-                                                            )}>{t(`employee.status_${leave.status.toLowerCase()}`)}</span>
+                                                            )}>{t(`employee.status_${leaveStatusKey}`)}</span>
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <ChevronRight className="h-5 w-5 text-slate-300" />
                                             </div>
-                                        ))
+                                        )})
                                     )}
                                 </div>
                             </motion.div>
