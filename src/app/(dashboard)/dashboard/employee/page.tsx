@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { 
     Briefcase, 
     CalendarClock, 
@@ -22,6 +22,21 @@ import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { queueService, QueueEntry } from "@/services/queueService";
+
+function pickQueueEntryServiceId(entry: QueueEntry, action: "start" | "complete"): string | null {
+    const rows = entry.queue_entry_services;
+    if (!rows?.length) return null;
+    if (action === "complete") {
+        const active = rows.find((s) => s.task_status === "in_progress");
+        if (active) return active.id;
+        const fallback = rows.find(
+            (s) => s.task_status !== "done" && s.task_status !== "cancelled"
+        );
+        return fallback?.id ?? null;
+    }
+    const pending = rows.find((s) => s.task_status === "pending");
+    return pending?.id ?? null;
+}
 import { api } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { businessService } from "@/services/businessService";
@@ -70,6 +85,8 @@ function EmployeeDashboardContent() {
     
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+    const minLeaveDate = useMemo(() => new Date().toLocaleDateString("en-CA"), []);
+
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
@@ -100,10 +117,15 @@ function EmployeeDashboardContent() {
         return () => clearInterval(interval);
     }, [fetchData]);
 
-    const handleStartTask = async (taskId: string) => {
+    const handleStartTask = async (entry: QueueEntry) => {
+        const serviceTaskId = pickQueueEntryServiceId(entry, "start");
+        if (!serviceTaskId) {
+            showToast(t("employee.err_no_service_task"), "error");
+            return;
+        }
         setIsSubmitting(true);
         try {
-            await queueService.startTask(taskId);
+            await queueService.startTask(serviceTaskId);
             showToast(t('queue.success_start'));
             fetchData();
         } catch (error) {
@@ -113,10 +135,15 @@ function EmployeeDashboardContent() {
         }
     };
 
-    const handleCompleteTask = async (taskId: string) => {
+    const handleCompleteTask = async (entry: QueueEntry) => {
+        const serviceTaskId = pickQueueEntryServiceId(entry, "complete");
+        if (!serviceTaskId) {
+            showToast(t("employee.err_no_service_task"), "error");
+            return;
+        }
         setIsSubmitting(true);
         try {
-            await queueService.completeTask(taskId);
+            await queueService.completeTask(serviceTaskId);
             showToast(t('queue.success_complete'));
             fetchData();
         } catch (error) {
@@ -134,6 +161,14 @@ function EmployeeDashboardContent() {
         }
         if (!validateLanguage(leaveFormData.note, language)) {
             showToast(t('common.err_invalid_chars'), "error");
+            return;
+        }
+        if (leaveFormData.start_date < minLeaveDate || leaveFormData.end_date < minLeaveDate) {
+            showToast(t('providers.err_leave_past_dates'), "error");
+            return;
+        }
+        if (leaveFormData.end_date < leaveFormData.start_date) {
+            showToast(t('providers.all_fields_required'), "error");
             return;
         }
 
@@ -349,7 +384,7 @@ function EmployeeDashboardContent() {
                                                 {task.status === 'waiting' && (
                                                     <button 
                                                         disabled={isSubmitting}
-                                                        onClick={() => handleStartTask(task.id)}
+                                                        onClick={() => handleStartTask(task)}
                                                         className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                                                     >
                                                         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
@@ -359,7 +394,7 @@ function EmployeeDashboardContent() {
                                                 {task.status === 'serving' && (
                                                     <button 
                                                         disabled={isSubmitting}
-                                                        onClick={() => handleCompleteTask(task.id)}
+                                                        onClick={() => handleCompleteTask(task)}
                                                         className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-emerald-500/20"
                                                     >
                                                         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -394,8 +429,13 @@ function EmployeeDashboardContent() {
                                             <input 
                                                 required
                                                 type="date"
+                                                min={minLeaveDate}
                                                 value={leaveFormData.start_date}
-                                                onChange={e => setLeaveFormData({...leaveFormData, start_date: e.target.value})}
+                                                onChange={e => setLeaveFormData({
+                                                    ...leaveFormData,
+                                                    start_date: e.target.value,
+                                                    end_date: leaveFormData.end_date < e.target.value ? e.target.value : leaveFormData.end_date
+                                                })}
                                                 className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                             />
                                         </div>
@@ -404,6 +444,7 @@ function EmployeeDashboardContent() {
                                             <input 
                                                 required
                                                 type="date"
+                                                min={leaveFormData.start_date || minLeaveDate}
                                                 value={leaveFormData.end_date}
                                                 onChange={e => setLeaveFormData({...leaveFormData, end_date: e.target.value})}
                                                 className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"

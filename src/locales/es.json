@@ -242,6 +242,7 @@
     "err_load_leaves": "Error al cargar ausencias activas.",
     "success_leave_add": "Ausencia programada con éxito.",
     "err_add_leave": "Error al programar ausencia.",
+    "err_leave_past_dates": "Las fechas de ausencia no pueden ser pasadas.",
     "success_leave_delete": "Ausencia cancelada con éxito.",
     "whatsapp_leave_msg": "Hola {{name}}, su permiso del {{start}} al {{end}} ha sido aprobado.",
     "whatsapp_deny_msg": "Hola {{name}}, lamentablemente su solicitud de permiso del {{start}} al {{end}} no pudo ser aprobada.",

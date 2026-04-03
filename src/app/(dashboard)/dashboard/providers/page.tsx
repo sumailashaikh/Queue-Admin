@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
     Users,
     Plus,
@@ -31,6 +31,7 @@ import { api } from "@/lib/api";
 export default function ProvidersPage() {
     const { business } = useAuth();
     const { t, language } = useLanguage();
+    const minLeaveDate = useMemo(() => new Date().toLocaleDateString("en-CA"), []);
     const [providers, setProviders] = useState<ServiceProvider[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -293,6 +294,18 @@ export default function ProvidersPage() {
     const handleAddLeave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedProvider) return;
+        if (!leaveFormData.start_date || !leaveFormData.end_date) {
+            showToast(t('providers.all_fields_required'), "error");
+            return;
+        }
+        if (leaveFormData.start_date < minLeaveDate || leaveFormData.end_date < minLeaveDate) {
+            showToast(t('providers.err_leave_past_dates'), "error");
+            return;
+        }
+        if (leaveFormData.end_date < leaveFormData.start_date) {
+            showToast(t('providers.all_fields_required'), "error");
+            return;
+        }
         setIsSubmitting(true);
         try {
             const resp = await providerService.addLeave(selectedProvider.id, leaveFormData);
@@ -582,8 +595,8 @@ export default function ProvidersPage() {
                             <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_leave')}</h3><button onClick={() => setIsLeaveModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
                             <form onSubmit={handleAddLeave} className="space-y-6">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.start_date')}</label><input required type="date" value={leaveFormData.start_date} onChange={e => setLeaveFormData({ ...leaveFormData, start_date: e.target.value })} className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-black" /></div>
-                                    <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.end_date')}</label><input required type="date" value={leaveFormData.end_date} onChange={e => setLeaveFormData({ ...leaveFormData, end_date: e.target.value })} className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-black" /></div>
+                                    <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.start_date')}</label><input required type="date" min={minLeaveDate} value={leaveFormData.start_date} onChange={e => setLeaveFormData({ ...leaveFormData, start_date: e.target.value, end_date: leaveFormData.end_date < e.target.value ? e.target.value : leaveFormData.end_date })} className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-black" /></div>
+                                    <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.end_date')}</label><input required type="date" min={leaveFormData.start_date || minLeaveDate} value={leaveFormData.end_date} onChange={e => setLeaveFormData({ ...leaveFormData, end_date: e.target.value })} className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-black" /></div>
                                 </div>
                                 <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.notes')}</label><textarea value={leaveFormData.note} onChange={e => setLeaveFormData({ ...leaveFormData, note: e.target.value })} className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-black" rows={2} /></div>
                                 <button disabled={isSubmitting} className="w-full py-5 bg-amber-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-amber-100">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.submit_leave')}</button>
