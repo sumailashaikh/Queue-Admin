@@ -603,27 +603,78 @@ export default function ProvidersPage() {
                             </form>
                         </div>
                         <div className="w-full md:w-80 space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar border-t md:border-t-0 md:border-l border-slate-100 md:pl-10">
-                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.applied_leaves')}</h4>
-                            {leavesData.map((leave: any) => (
-                                <div key={leave.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-3">
-                                    <div className="min-w-0 flex-1"><p className="text-[10px] font-black text-slate-900">{new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}</p><p className="text-[9px] font-bold text-slate-400 uppercase">{leave.status}</p></div>
-                                    <div className="flex gap-1">
-                                        {leave.status === 'PENDING' && (
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    {t('employee.applied_leaves')}
+                                </h4>
+                                {leavesData.length > 0 && (
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                        {t('common.total')}: {leavesData.length}
+                                    </span>
+                                )}
+                            </div>
+                            {leavesData.map((leave: any) => {
+                                const rawStatus = String(leave.status || 'PENDING').toUpperCase();
+                                const statusKey = rawStatus.toLowerCase();
+                                const isPending = rawStatus === 'PENDING';
+                                const isApproved = rawStatus === 'APPROVED';
+                                const isRejected = rawStatus === 'REJECTED';
+                                return (
+                                <div key={leave.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <p className="text-[10px] font-black text-slate-900">
+                                            {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {leave.leave_type} • {t(`employee.status_${statusKey}`)}
+                                        </p>
+                                        {leave.note && (
+                                            <p className="text-[9px] text-slate-500 line-clamp-2">
+                                                {leave.note}
+                                            </p>
+                                        )}
+                                        {isRejected && leave.rejection_reason && (
+                                            <p className="text-[9px] text-rose-500">
+                                                {t('providers.rejection_reason')}: {leave.rejection_reason}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col gap-1 items-end">
+                                        {isPending && (
                                             <>
-                                                <button onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Approve"><CheckCircle2 className="h-4 w-4" /></button>
-                                                <button onClick={() => {
-                                                    const reason = window.prompt("Reason for rejection?", "Team is fully booked");
-                                                    if (reason !== null) {
-                                                        setRejectionReason(reason);
-                                                        handleUpdateLeaveStatus(leave.id, 'REJECTED');
-                                                    }
-                                                }} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Reject"><X className="h-4 w-4" /></button>
+                                                <button
+                                                    onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')}
+                                                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                    title="Approve"
+                                                >
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const reason = window.prompt("Reason for rejection?", "Team is fully booked");
+                                                        if (reason !== null) {
+                                                            setRejectionReason(reason);
+                                                            handleUpdateLeaveStatus(leave.id, 'REJECTED');
+                                                        }
+                                                    }}
+                                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                                    title="Reject"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
                                             </>
                                         )}
-                                        <button onClick={() => handleDeleteLeave(leave.id)} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"><Trash2 className="h-4 w-4" /></button>
+                                        <button
+                                            onClick={() => handleDeleteLeave(leave.id)}
+                                            className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                                            title={t('providers.delete_leave')}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
