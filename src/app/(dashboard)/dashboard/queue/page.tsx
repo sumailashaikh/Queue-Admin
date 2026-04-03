@@ -170,7 +170,13 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_assign'));
         } catch (error: any) {
             console.error("Failed to assign expert:", error);
-            showToast(t('queue.err_assign'), "error");
+            const raw = String(error.response?.data?.message || error.message || "").trim();
+            const toastMsg = raw
+                ? /\s/.test(raw)
+                    ? raw
+                    : t(raw as any, error.response?.data)
+                : t("queue.err_assign");
+            showToast(toastMsg, "error");
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
         }
     };
