@@ -28,11 +28,7 @@ function pickQueueEntryServiceId(entry: QueueEntry, action: "start" | "complete"
     if (!rows?.length) return null;
     if (action === "complete") {
         const active = rows.find((s) => s.task_status === "in_progress");
-        if (active) return active.id;
-        const fallback = rows.find(
-            (s) => s.task_status !== "done" && s.task_status !== "cancelled"
-        );
-        return fallback?.id ?? null;
+        return active?.id ?? null;
     }
     const pending = rows.find((s) => s.task_status === "pending");
     return pending?.id ?? null;
@@ -90,6 +86,16 @@ function EmployeeDashboardContent() {
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
+    };
+
+    const parseApiMessage = (error: any, fallbackKey: string) => {
+        const raw = String(error?.response?.data?.message || error?.message || "").trim();
+        if (!raw) return t(fallbackKey as any);
+        if (raw.includes(".")) {
+            const localized = t(raw as any, error?.response?.data);
+            return localized !== raw ? localized : raw;
+        }
+        return raw;
     };
 
     const leaveTypeLabel = (leaveType?: string) => {
@@ -155,8 +161,8 @@ function EmployeeDashboardContent() {
             await queueService.completeTask(serviceTaskId);
             showToast(t('queue.success_complete'));
             fetchData();
-        } catch (error) {
-            showToast(t('queue.err_complete'), "error");
+        } catch (error: any) {
+            showToast(parseApiMessage(error, 'queue.err_complete'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -187,7 +193,7 @@ function EmployeeDashboardContent() {
                 showToast(t('providers.err_add_leave'), "error");
                 return;
             }
-            await providerService.addLeave(profile.id, leaveFormData);
+            await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
             showToast(t('employee.leave_success'));
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             fetchData();

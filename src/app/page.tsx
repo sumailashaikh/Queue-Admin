@@ -15,6 +15,7 @@ import {
 
 export default function LandingPage() {
     const [stats, setStats] = useState({ totalUsers: 500, totalBusinesses: 50 });
+    const [hasSession, setHasSession] = useState(false);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -32,6 +33,15 @@ export default function LandingPage() {
         fetchStats();
     }, []);
 
+    useEffect(() => {
+        try {
+            const token = localStorage.getItem("auth_token");
+            setHasSession(!!token);
+        } catch {
+            setHasSession(false);
+        }
+    }, []);
+
     return (
         <div className="relative min-h-screen overflow-x-hidden bg-slate-50 selection:bg-primary/15">
             <div
@@ -47,12 +57,22 @@ export default function LandingPage() {
                         </div>
                         <span className="text-lg font-semibold tracking-tight text-slate-900">QueueUp</span>
                     </Link>
-                    <Link
-                        href="/login"
-                        className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
-                    >
-                        Sign in
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        {hasSession && (
+                            <Link
+                                href="/dashboard"
+                                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                            >
+                                Go to dashboard
+                            </Link>
+                        )}
+                        <Link
+                            href="/login"
+                            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
+                        >
+                            Sign in
+                        </Link>
+                    </div>
                 </div>
             </nav>
 
@@ -69,18 +89,22 @@ export default function LandingPage() {
                         QueueUp helps salons, clinics, and retail teams run a live queue, book appointments, and notify
                         guests by SMS and WhatsApp—without the chaos.
                     </p>
-                    <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                    <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                         <Link
                             href="/login"
                             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-4 text-base font-semibold text-white shadow-lg shadow-primary/25 transition hover:opacity-95 active:scale-[0.98]"
                         >
-                            Sign in to your business
+                            Sign in
                             <ArrowRight className="h-5 w-5" strokeWidth={2} />
                         </Link>
-                        <p className="text-sm text-slate-500">
-                            Already registered? Use the phone number linked to your account.
-                        </p>
+                        <Link
+                            href="/setup"
+                            className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-8 py-4 text-base font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 active:scale-[0.98]"
+                        >
+                            Sign up
+                        </Link>
                     </div>
+                    <p className="mt-2 text-sm text-slate-500">Already registered? Sign in. New business? Start with sign up.</p>
                     <p className="mt-12 text-xs font-medium text-slate-500">
                         Used by{" "}
                         <span className="font-semibold text-slate-700">{stats.totalBusinesses}+</span> businesses ·{" "}
@@ -193,14 +217,22 @@ export default function LandingPage() {
                             Ready to streamline your front desk?
                         </h2>
                         <p className="relative mx-auto mt-4 max-w-lg text-sm text-slate-400 md:text-base">
-                            Sign in with your business phone to open your dashboard.
+                            Existing business accounts sign in with phone OTP. New businesses can create their setup in minutes.
                         </p>
-                        <Link
-                            href="/login"
-                            className="relative mt-8 inline-flex items-center justify-center rounded-2xl bg-primary px-10 py-4 text-base font-semibold text-white shadow-lg shadow-primary/30 transition hover:opacity-95 active:scale-[0.98]"
-                        >
-                            Sign in
-                        </Link>
+                        <div className="relative mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center justify-center rounded-2xl bg-primary px-10 py-4 text-base font-semibold text-white shadow-lg shadow-primary/30 transition hover:opacity-95 active:scale-[0.98]"
+                            >
+                                Sign in
+                            </Link>
+                            <Link
+                                href="/setup"
+                                className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-10 py-4 text-base font-semibold text-white transition hover:bg-white/20 active:scale-[0.98]"
+                            >
+                                Sign up
+                            </Link>
+                        </div>
                     </div>
                 </section>
             </main>

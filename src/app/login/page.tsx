@@ -271,6 +271,7 @@ export default function LoginPage() {
                                     maxLength={6}
                                     autoComplete="one-time-code"
                                     inputMode="numeric"
+                                        enterKeyHint="done"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                     placeholder="000000"
@@ -292,6 +293,9 @@ export default function LoginPage() {
                                     >
                                         {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
                                     </button>
+                                    <p className="text-[10px] text-slate-500 text-center max-w-xs">
+                                        For auto-fill, allow SMS access suggestion in Chrome and keep this screen open until the code arrives.
+                                    </p>
                                 </div>
                             </div>
                             <button

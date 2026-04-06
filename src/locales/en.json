@@ -330,6 +330,8 @@
     "approve_resignation": "Approve Resignation",
     "deny_resignation": "Deny Resignation",
     "err_resignation": "Failed to submit resignation request.",
+    "success_deactivate_full": "Employee deactivated and resignation approved successfully.",
+    "success_resignation_rejected": "Resignation request rejected successfully.",
     "err_active_tasks": "Cannot deactivate: They still have {{count}} open step(s) on today's live queue (waiting or in service). Finish or reassign those guests first.",
     "err_unauthorized_add": "Unauthorized to add providers to this business.",
     "err_not_found": "Service provider not found or unauthorized.",
@@ -349,6 +351,8 @@
     "leave_reject_reason_label": "Message to the employee (required)",
     "leave_reject_reason_placeholder": "Briefly explain why this request cannot be approved (for example staffing or blackout dates). This text is sent to the employee by SMS/WhatsApp.",
     "leave_reject_reason_required": "Please enter a message for the employee before declining.",
+    "success_leave_status_updated": "Leave request updated: {{status}}.",
+    "leave_status_updated_notify_warning": "Leave status updated, but employee notification could not be delivered.",
     "manager_note_label": "Note from your manager",
     "rejection": {
       "reason": "Message from your manager"

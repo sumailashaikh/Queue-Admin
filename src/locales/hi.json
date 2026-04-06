@@ -270,6 +270,8 @@
     "leave_reject_reason_label": "कर्मचारी के लिए संदेश (आवश्यक)",
     "leave_reject_reason_placeholder": "संक्षेप में बताएं कि यह अनुरोध क्यों स्वीकार नहीं किया जा सकता (जैसे स्टाफ या तारीखें)। यह SMS/व्हाट्सएप पर भेजा जाएगा।",
     "leave_reject_reason_required": "अस्वीकार करने से पहले कर्मचारी के लिए एक संदेश लिखें।",
+    "success_leave_status_updated": "छुट्टी अनुरोध अपडेट हुआ: {{status}}।",
+    "leave_status_updated_notify_warning": "स्थिति अपडेट हुई, लेकिन कर्मचारी को सूचना नहीं भेजी जा सकी।",
     "manager_note_label": "आपके प्रबंधक का संदेश",
     "rejection": {
       "reason": "आपके प्रबंधक का संदेश"
@@ -282,6 +284,8 @@
     "approve_resignation": "इस्तीफा स्वीकार करें",
     "deny_resignation": "इस्तीफा अस्वीकार करें",
     "err_resignation": "इस्तीफा अनुरोध जमा करने में विफल।",
+    "success_deactivate_full": "कर्मचारी निष्क्रिय किया गया और इस्तीफा स्वीकृत हुआ।",
+    "success_resignation_rejected": "इस्तीफा अनुरोध सफलतापूर्वक अस्वीकृत किया गया।",
     "err_active_tasks": "निष्क्रिय नहीं किया जा सकता: कर्मचारी के पास {{count}} सक्रिय कार्य हैं।"
   },
   "dashboard": {

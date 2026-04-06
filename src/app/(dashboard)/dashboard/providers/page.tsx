@@ -390,7 +390,7 @@ export default function ProvidersPage() {
         }
         setIsSubmitting(true);
         try {
-            const resp = await providerService.addLeave(selectedProvider.id, leaveFormData);
+            const resp = await providerService.addLeave(selectedProvider.id, { ...leaveFormData, ui_language: language });
             if (resp.status === 'error') {
                 const msg = resp.message || 'providers.err_add_leave';
                 showToast(msg.includes('.') ? t(msg as any, resp) : msg, "error");
@@ -434,8 +434,11 @@ export default function ProvidersPage() {
         }
         setIsSubmitting(true);
         try {
-            await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
-            showToast(t('common.success'));
+            const resp = await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
+            showToast(t('providers.success_leave_status_updated', { status: t(`employee.status_${status.toLowerCase()}`) }));
+            if (resp?.notification_sent === false) {
+                showToast(t('providers.leave_status_updated_notify_warning'), "error");
+            }
             setRejectModal({ isOpen: false, leaveId: "", reason: "" });
             setLeavesData(await providerService.getLeaves(selectedProvider.id));
             await fetchProviders();
@@ -502,7 +505,7 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await businessService.updateResignationStatus(requestId, status);
-            showToast(status === 'APPROVED' ? t('providers.success_deactivate_full') : t('common.success'));
+            showToast(status === 'APPROVED' ? t('providers.success_deactivate_full') : t('providers.success_resignation_rejected'));
             await fetchResignations();
             await fetchProviders();
         } catch (error: any) {

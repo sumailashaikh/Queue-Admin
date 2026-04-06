@@ -273,6 +273,8 @@
     "leave_reject_reason_label": "رسالة للموظف (مطلوبة)",
     "leave_reject_reason_placeholder": "اشرح بإيجاز لماذا لا يمكن الموافقة (مثلاً: نقص فريق العمل). تُرسل للموظف عبر الرسائل أو واتساب.",
     "leave_reject_reason_required": "يرجى إدخال رسالة للموظف قبل الرفض.",
+    "success_leave_status_updated": "تم تحديث طلب الإجازة: {{status}}.",
+    "leave_status_updated_notify_warning": "تم تحديث الحالة، لكن تعذر إرسال إشعار للموظف.",
     "manager_note_label": "ملاحظة من المدير",
     "rejection": {
       "reason": "رسالة من المشرف"
@@ -285,6 +287,8 @@
     "approve_resignation": "الموافقة على الاستقالة",
     "deny_resignation": "رفض الاستقالة",
     "err_resignation": "فشل في تقديم طلب الاستقالة.",
+    "success_deactivate_full": "تم تعطيل الموظف والموافقة على الاستقالة بنجاح.",
+    "success_resignation_rejected": "تم رفض طلب الاستقالة بنجاح.",
     "deactivate_confirm": "هل أنت متأكد أنك تريد إلغاء تنشيط هذا الخبير؟ لن يظهروا بعد الآن في القائمة النشطة.",
     "err_active_tasks": "لا يمكن إلغاء التفعيل: لدى الموظف {{count}} مهام نشطة."
   },
@@ -521,7 +525,31 @@
     "late": "متأخر"
   },
   "employee": {
-    "rejection_feedback_label": "رسالة من المشرف"
+    "dashboard": "لوحة الموظف",
+    "my_work": "مهامي",
+    "no_tasks": "لا توجد مهام مخصصة",
+    "no_tasks_desc": "عند تعيين العملاء لك ستظهر المهام هنا.",
+    "start_task": "بدء الخدمة",
+    "complete_task": "إنهاء",
+    "leave_application": "طلب إجازة",
+    "applied_leaves": "طلبات إجازتي",
+    "apply_new_leave": "تقديم طلب إجازة",
+    "leave_success": "تم إرسال طلب الإجازة بنجاح",
+    "err_no_service_task": "تعذر العثور على خطوة الخدمة. حدّث الصفحة ثم حاول مجددًا.",
+    "status_pending": "بانتظار الموافقة",
+    "status_approved": "مقبول",
+    "status_rejected": "مرفوض",
+    "stats": {
+      "completed_today": "المكتمل اليوم",
+      "pending_tasks": "المهام المعلقة"
+    },
+    "resign": "استقالة",
+    "resign_desc": "أرسل طلب استقالة إلى مالك النشاط.",
+    "resign_reason": "سبب الاستقالة",
+    "last_date": "آخر تاريخ مطلوب",
+    "submit_resignation": "إرسال الاستقالة",
+    "resignation_sent": "تم إرسال طلب الاستقالة بنجاح.",
+    "rejection_feedback_label": "رسالة من المدير"
   },
   "login": {
     "title": "تسجيل دخول النشاط",

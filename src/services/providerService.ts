@@ -65,7 +65,7 @@ export const providerService = {
         return result.data || [];
     },
 
-    async addLeave(providerId: string, data: { start_date: string, end_date: string, leave_type: string, note?: string }): Promise<any> {
+    async addLeave(providerId: string, data: { start_date: string, end_date: string, leave_type: string, note?: string, ui_language?: string }): Promise<any> {
         const result = await api.post<any>(`/service-providers/${providerId}/leaves`, data);
         return result;
     },
