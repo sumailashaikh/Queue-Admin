@@ -6,8 +6,24 @@ export const authService = {
     },
 
     async verifyOTP(phone: string, otp: string) {
-        const invite_token = typeof window !== 'undefined' ? localStorage.getItem('pending_invite_token') : null;
-        const result = await api.post<any>('/auth/verify', { phone, otp, invite_token });
+        // Never send a stale invite token unless user opened /invite in this session (PWA keeps localStorage forever).
+        let invite_token: string | null = null;
+        if (typeof window !== "undefined") {
+            try {
+                if (sessionStorage.getItem("queueup_invite_flow") === "1") {
+                    invite_token = localStorage.getItem("pending_invite_token");
+                } else {
+                    localStorage.removeItem("pending_invite_token");
+                }
+            } catch {
+                invite_token = null;
+            }
+        }
+
+        const payload: { phone: string; otp: string; invite_token?: string } = { phone, otp };
+        if (invite_token) payload.invite_token = invite_token;
+
+        const result = await api.post<any>("/auth/verify", payload);
 
         // Store token and user data
         if (result.data?.session?.access_token) {
@@ -28,6 +44,12 @@ export const authService = {
     logout() {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
+        try {
+            localStorage.removeItem('pending_invite_token');
+            sessionStorage.removeItem('queueup_invite_flow');
+        } catch {
+            /* ignore */
+        }
     },
 
     getToken() {
