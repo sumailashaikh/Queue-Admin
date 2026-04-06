@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { Users, Clock, Loader2, Monitor, Play, Wifi, Calendar } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
 import { businessService } from "@/services/businessService";
@@ -23,21 +23,30 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         return () => clearInterval(timer);
     }, []);
 
+    const fetchDisplayData = useCallback(async () => {
+        try {
+            const res = await businessService.getBusinessDisplayData(slug);
+            setBusiness(res.business);
+            setEntries(res.entries);
+            setError(null);
+
+            // Auto-set language to business language if defined (do not persist locally to user)
+            if (res.business?.language && res.business.language !== language) {
+                setLanguage(res.business.language, false);
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [slug, language, setLanguage]);
+
     useEffect(() => {
         const loadInitialData = async () => {
             try {
-                const res = await businessService.getBusinessDisplayData(slug);
-                setBusiness(res.business);
-                setEntries(res.entries);
-
-                // Auto-set language to business language if defined (do not persist locally to user)
-                if (res.business?.language && res.business.language !== language) {
-                    setLanguage(res.business.language, false);
-                }
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
+                await fetchDisplayData();
+            } catch {
+                // No-op: errors handled in fetchDisplayData
             }
         };
 
@@ -46,19 +55,25 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         const interval = setInterval(async () => {
             if (slug) {
                 try {
-                    const res = await businessService.getBusinessDisplayData(slug);
-                    setEntries(res.entries);
-                    if (res.business?.language && res.business.language !== language) {
-                        setLanguage(res.business.language, false);
-                    }
+                    await fetchDisplayData();
                 } catch (err) {
                     console.error("Poll failed", err);
                 }
             }
-        }, 5000);
+        }, 3000);
 
-        return () => clearInterval(interval);
-    }, [slug, setLanguage, language]);
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                fetchDisplayData();
+            }
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+        };
+    }, [slug, fetchDisplayData]);
 
     const getTranslatedServiceName = (item: any) => {
         if (!item.translations || item.translations.length === 0) return item.service_name;
@@ -97,6 +112,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
 
     const servingEntries = entries.filter(e => e.status === 'serving').slice(0, 3);
     const waitingEntries = entries.filter(e => e.status === 'waiting' || e.status === 'checked_in');
+    const completedEntriesCount = entries.filter(e => e.status === 'completed').length;
 
     return (
         <div className={cn(
@@ -122,6 +138,21 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     <p className="text-[10px] md:text-base font-black text-slate-500 uppercase tracking-widest mt-1">
                         {currentTime.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
+                    <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('display.now_serving')}</p>
+                    <p className="text-2xl md:text-4xl font-black text-slate-900">{servingEntries.length}</p>
+                </div>
+                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
+                    <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.active_guests')}</p>
+                    <p className="text-2xl md:text-4xl font-black text-slate-900">{waitingEntries.length}</p>
+                </div>
+                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
+                    <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('dashboard.completed')}</p>
+                    <p className="text-2xl md:text-4xl font-black text-emerald-600">{completedEntriesCount}</p>
                 </div>
             </div>
 

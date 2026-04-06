@@ -438,7 +438,7 @@ function EmployeeDashboardContent() {
                                         <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">{t('employee.apply_new_leave')}</h3>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.start_date')}</label>
                                             <input 
@@ -451,7 +451,7 @@ function EmployeeDashboardContent() {
                                                     start_date: e.target.value,
                                                     end_date: leaveFormData.end_date < e.target.value ? e.target.value : leaveFormData.end_date
                                                 })}
-                                                className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                                className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -462,7 +462,7 @@ function EmployeeDashboardContent() {
                                                 min={leaveFormData.start_date || minLeaveDate}
                                                 value={leaveFormData.end_date}
                                                 onChange={e => setLeaveFormData({...leaveFormData, end_date: e.target.value})}
-                                                className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                                className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
                                             />
                                         </div>
                                     </div>
@@ -472,7 +472,7 @@ function EmployeeDashboardContent() {
                                         <select 
                                             value={leaveFormData.leave_type}
                                             onChange={e => setLeaveFormData({...leaveFormData, leave_type: e.target.value})}
-                                            className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
+                                            className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all appearance-none"
                                         >
                                             <option value="holiday">{t('providers.holiday')}</option>
                                             <option value="sick">{t('providers.sick')}</option>

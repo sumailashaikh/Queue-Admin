@@ -256,7 +256,7 @@ export default function LiveQueuePage() {
         } catch (error: any) {
             const raw = String(error?.response?.data?.message || error?.message || "").trim();
             const msg = raw.toLowerCase().includes("no available expert")
-                ? "Please assign a service expert to the next customer, then try Next Customer again."
+                ? t('queue.err_next_assign_expert')
                 : (raw || t('queue.err_next'));
             showToast(msg, "error");
         } finally {
@@ -785,19 +785,21 @@ export default function LiveQueuePage() {
             {/* Dashboard Toast Notifications */}
             {
                 toast && (
-                    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-3 sm:px-0 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <div className={cn(
-                            "px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all",
+                            "max-w-[calc(100vw-1.5rem)] sm:max-w-md px-4 py-3 sm:px-6 sm:py-4 rounded-2xl sm:rounded-3xl shadow-2xl flex items-start gap-3 border-2 backdrop-blur-md transition-all",
                             toast.type === 'success'
                                 ? "bg-emerald-500 text-white border-emerald-400/50"
                                 : "bg-red-500 text-white border-red-400/50"
                         )}>
                             {toast.type === 'success' ? (
-                                <CheckCircle2 className="h-5 w-5" />
+                                <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
                             ) : (
-                                <AlertCircle className="h-5 w-5" />
+                                <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                             )}
-                            <p className="text-sm font-bold uppercase tracking-wider">{toast.message}</p>
+                            <p className="text-sm sm:text-[15px] font-semibold leading-snug whitespace-normal break-words">
+                                {toast.message}
+                            </p>
                         </div>
                     </div>
                 )

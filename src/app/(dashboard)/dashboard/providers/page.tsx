@@ -726,12 +726,12 @@ export default function ProvidersPage() {
 
             {/* Leave Management */}
             {isLeaveModalOpen && selectedProvider && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-4xl rounded-[40px] shadow-2xl p-10 flex flex-col md:flex-row gap-10 animate-in zoom-in-95 duration-300">
-                        <div className="flex-1 space-y-8">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-4xl rounded-[28px] sm:rounded-[40px] shadow-2xl p-5 sm:p-8 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10 animate-in zoom-in-95 duration-300 max-h-[92vh] overflow-y-auto">
+                        <div className="flex-1 space-y-6 sm:space-y-8">
                             <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_leave')}</h3><button onClick={() => setIsLeaveModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
                             <form onSubmit={handleAddLeave} className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.start_date')}</label>
                                         <input
@@ -740,7 +740,7 @@ export default function ProvidersPage() {
                                             min={minLeaveDate}
                                             value={leaveFormData.start_date}
                                             onChange={e => setLeaveFormData({ ...leaveFormData, start_date: e.target.value, end_date: leaveFormData.end_date < e.target.value ? e.target.value : leaveFormData.end_date })}
-                                            className="w-full px-4 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-300 transition-all"
+                                            className="w-full px-4 py-3.5 sm:py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-300 transition-all"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -751,7 +751,7 @@ export default function ProvidersPage() {
                                             min={leaveFormData.start_date || minLeaveDate}
                                             value={leaveFormData.end_date}
                                             onChange={e => setLeaveFormData({ ...leaveFormData, end_date: e.target.value })}
-                                            className="w-full px-4 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-300 transition-all"
+                                            className="w-full px-4 py-3.5 sm:py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-300 transition-all"
                                         />
                                     </div>
                                 </div>

@@ -173,6 +173,7 @@
     "err_complete": "Failed to Complete Service",
     "success_next": "Next Customer Called",
     "err_next": "Failed to Call Next Customer",
+    "err_next_assign_expert": "Please assign a service expert to the next customer, then try Next Customer again.",
     "err_status": "Failed to Update Status",
     "success_payment": "Payment Marked as {{method}}",
     "err_payment": "Failed to Update Payment",
