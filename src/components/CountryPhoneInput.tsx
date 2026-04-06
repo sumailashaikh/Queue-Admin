@@ -69,14 +69,18 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
     };
 
     const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value.replace(/\D/g, ""); // Only digits
+        let val = e.target.value.replace(/\D/g, "");
+        // Drop trunk "0" users often type before the national number (e.g. 082... with +91).
+        if (val.startsWith("0") && val.length > 1) {
+            val = val.replace(/^0+/, "");
+        }
         const limitedVal = val.slice(0, selectedCountry.digits);
         setLocalNumber(limitedVal);
         onChange(`${selectedCountry.dialCode}${limitedVal}`);
     };
 
     return (
-        <div className={cn("relative flex items-center gap-2", className)}>
+        <div className={cn("relative flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2", className)}>
             {/* Country Selector */}
             <div className="relative shrink-0">
                 <button
@@ -114,9 +118,9 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                 )}
             </div>
 
-            {/* Phone Number Input */}
-            <div className="relative flex-1">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            {/* Phone Number Input — counter below the field on narrow screens so digits stay readable */}
+            <div className="relative flex-1 min-w-0">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Phone className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
@@ -125,19 +129,21 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                     value={localNumber}
                     onChange={handleNumberChange}
                     placeholder={placeholder}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
+                    className="w-full min-w-0 pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all"
                 />
-                
-                {/* Visual indicator of digit count */}
                 {localNumber.length > 0 && (
-                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <span className={cn(
-                            "text-[10px] font-black uppercase tracking-widest",
-                            localNumber.length === selectedCountry.digits ? "text-emerald-500" : "text-slate-300"
-                        )}>
+                    <div className="flex justify-end pr-0.5 pt-0.5">
+                        <span
+                            className={cn(
+                                "text-[10px] font-black uppercase tracking-widest tabular-nums",
+                                localNumber.length === selectedCountry.digits
+                                    ? "text-emerald-600"
+                                    : "text-slate-400"
+                            )}
+                        >
                             {localNumber.length}/{selectedCountry.digits}
                         </span>
-                     </div>
+                    </div>
                 )}
             </div>
             

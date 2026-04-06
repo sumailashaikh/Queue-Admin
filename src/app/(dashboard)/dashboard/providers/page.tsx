@@ -567,10 +567,20 @@ export default function ProvidersPage() {
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border", provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-emerald-50 text-emerald-600 border-emerald-100")}>{t(provider.leave_status === 'on_leave' ? 'providers.on_leave' : 'providers.available')}</div>
-                                    <div className="flex gap-1"><button onClick={() => handleEdit(provider)} className="p-1.5 text-slate-300 hover:text-indigo-600 transition-colors"><Settings className="h-4 w-4" /></button><button onClick={() => handleDelete(provider)} className="p-1.5 text-slate-300 hover:text-rose-600 transition-colors"><Trash2 className="h-4 w-4" /></button></div>
+                                    <div className="flex gap-1">
+                                        <button type="button" onClick={() => handleEdit(provider)} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors active:scale-90" aria-label={t('common.edit')}>
+                                            <Settings className="h-4 w-4" />
+                                        </button>
+                                        <button type="button" onClick={() => handleDelete(provider)} className="p-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors active:scale-90" aria-label={t('common.delete')}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 text-slate-500 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50"><Phone className="h-3.5 w-3.5" /><span className="text-xs font-bold">{provider.phone || t('providers.no_phone')}</span></div>
+                            <div className="flex items-center gap-2 text-slate-600 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50 min-w-0">
+                                <Phone className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                <span className="text-xs font-bold min-w-0 break-all">{provider.phone || t('providers.no_phone')}</span>
+                            </div>
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between"><h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.assigned_services')}</h4><button onClick={() => openAssignModal(provider)} className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1"><Plus className="h-3 w-3" />{t('providers.manage')}</button></div>
                                 <div className="flex flex-wrap gap-1.5">{provider.services?.slice(0, 3).map(s => <span key={s.id} className="px-2 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100/50 rounded-lg text-[10px] font-bold uppercase">{s.name}</span>)}{provider.services && provider.services.length > 3 && <span className="px-2 py-1 bg-slate-50 text-slate-400 rounded-lg text-[10px] font-bold">+{provider.services.length - 3} {t('providers.more')}</span>}</div>
@@ -643,7 +653,7 @@ export default function ProvidersPage() {
                                         />
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-bold text-slate-900 truncate capitalize">{service.translations?.[language]?.name || service.name}</p>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatCurrency(service.price, 'INR', language)}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatCurrency(service.price, business?.currency, language)}</p>
                                         </div>
                                     </label>
                                 ))
@@ -843,7 +853,9 @@ export default function ProvidersPage() {
                                 <p className="text-[9px] text-slate-400 ml-1 italic">{t('providers.custom_invite_hint')}</p>
                             </div>
                         </div>
-                        <button disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.send_invite')}</button>
+                        <button disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100 active:scale-[0.98] active:shadow-inner hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:active:scale-100">
+                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.send_invite')}
+                        </button>
                     </form>
                 </div>
             )}
@@ -855,8 +867,18 @@ export default function ProvidersPage() {
                         <div className="h-16 w-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto"><AlertCircle className="h-8 w-8" /></div>
                         <div><h3 className="text-lg font-bold text-slate-900">{t('providers.deactivate_expert')}</h3><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{t('providers.deactivate_confirm')}</p></div>
                         <div className="flex flex-col gap-2">
-                            <button onClick={confirmDelete} className="w-full py-4 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100">{t('providers.deactivate')}</button>
-                            <button onClick={() => setDeleteModal({ isOpen: false, provider: null })} className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                            <button
+                                type="button"
+                                onClick={confirmDelete}
+                                className="w-full py-4 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 ring-2 ring-transparent hover:bg-rose-700 active:scale-[0.98] active:ring-rose-300 active:shadow-inner transition-all"
+                            >
+                                {t('providers.deactivate')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setDeleteModal({ isOpen: false, provider: null })}
+                                className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 active:scale-[0.98] transition-all"
+                            >
                                 {t('common.cancel')}
                             </button>
                         </div>
@@ -913,10 +935,13 @@ export default function ProvidersPage() {
 
             {/* Toast */}
             {toast && (
-                <div className="fixed top-8 right-8 z-[200] animate-in slide-in-from-right-8">
-                    <div className={cn("px-6 py-4 rounded-2xl shadow-2xl border flex items-center gap-4 min-w-[300px] backdrop-blur-xl bg-white/95", toast.type === 'error' ? "border-rose-100 text-rose-600" : "border-emerald-100 text-emerald-600")}>
-                        {toast.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <ShieldCheck className="h-4 w-4 text-emerald-400" />}
-                        <p className="text-xs font-bold text-slate-900">{toast.message}</p>
+                <div className="fixed z-[200] bottom-6 left-4 right-4 sm:bottom-auto sm:top-6 sm:right-6 sm:left-auto max-w-md mx-auto sm:mx-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-right-8 duration-300">
+                    <div className={cn(
+                        "px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-2xl border flex items-start gap-3 backdrop-blur-xl bg-white/95",
+                        toast.type === 'error' ? "border-rose-100 text-rose-700" : "border-emerald-100 text-emerald-700"
+                    )}>
+                        {toast.type === 'error' ? <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" /> : <ShieldCheck className="h-5 w-5 shrink-0 mt-0.5 text-emerald-500" />}
+                        <p className="text-xs font-semibold text-slate-900 leading-snug">{toast.message}</p>
                     </div>
                 </div>
             )}

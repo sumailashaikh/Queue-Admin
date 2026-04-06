@@ -1,6 +1,15 @@
 {
   "admin": {
-    "active": "نشط"
+    "active": "نشط",
+    "verify_business_success": "تم التحقق من العمل. يمكن للمالك استخدام التطبيق بشكل طبيعي.",
+    "verify_business_fail": "فشل التحقق. حاول مرة أخرى.",
+    "role_update_success": "تم تحديث الدور.",
+    "role_update_fail": "تعذر تحديث الدور.",
+    "status_update_success": "تم تحديث الحالة.",
+    "status_update_fail": "تعذر تحديث الحالة.",
+    "inspect_modal": {
+      "fetch_fail": "تعذر تحميل تفاصيل العمل."
+    }
   },
   "queue": {
     "title": "الطابور المباشر",

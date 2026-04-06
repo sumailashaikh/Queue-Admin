@@ -30,7 +30,7 @@ import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 
 export default function AdminDashboard() {
     const { t: baseT, language } = useLanguage();
-    const t = (key: string, params?: any) => baseT(key, params, 'en');
+    const t = (key: string, params?: any) => baseT(key, params);
     const { user, business } = useAuth();
     const [activeTab, setActiveTab] = useState<'users' | 'businesses'>('businesses');
     const [users, setUsers] = useState<DashboardUser[]>([]);
@@ -186,13 +186,13 @@ export default function AdminDashboard() {
         <div className="space-y-10 max-w-7xl mx-auto pb-20 animate-in fade-in duration-1000">
             {/* Custom Toast Notification */}
             {toast && (
-                <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-10 duration-500">
+                <div className="fixed z-[200] bottom-6 left-4 right-4 sm:bottom-auto sm:top-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 max-w-md mx-auto sm:mx-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-top-10 duration-300">
                     <div className={cn(
-                        "flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl border backdrop-blur-md",
-                        toast.type === 'success' ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-red-500/90 border-red-400 text-white"
+                        "flex items-start gap-3 px-4 py-3 sm:px-6 sm:py-4 rounded-2xl sm:rounded-3xl shadow-2xl border backdrop-blur-md",
+                        toast.type === 'success' ? "bg-emerald-500/95 border-emerald-400 text-white" : "bg-red-500/95 border-red-400 text-white"
                     )}>
-                        {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
-                        <p className="text-xs font-black uppercase tracking-wider">{toast.message}</p>
+                        {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" /> : <XCircle className="h-5 w-5 shrink-0 mt-0.5" />}
+                        <p className="text-xs font-bold sm:font-black uppercase tracking-wide sm:tracking-wider leading-snug">{toast.message}</p>
                     </div>
                 </div>
             )}
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
                     { label: t('admin.active_businesses'), value: globalStats?.activeBusinesses?.toLocaleString() || '...', icon: Store, color: 'indigo' },
                     { label: t('admin.platform_health'), value: globalStats?.platformHealth || '99.9%', icon: Shield, color: 'emerald' },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white border border-slate-100 rounded-[32px] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
+                    <div key={i} className="bg-white border border-slate-100 rounded-[32px] p-5 md:p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
                         <div className="flex items-center justify-between">
                             <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center", `bg-${stat.color}-50 text-${stat.color}-600`)}>
                                 <stat.icon className="h-6 w-6" />
@@ -340,16 +340,16 @@ export default function AdminDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div id="admin-table" className="bg-white border border-slate-100 rounded-[40px] shadow-sm overflow-hidden min-h-[500px]">
-                <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="relative max-w-md w-full group">
-                        <Search className="absolute left-4.5 top-1/2 -translate-y-[48%] h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+            <div id="admin-table" className="bg-white border border-slate-100 rounded-[24px] md:rounded-[40px] shadow-sm overflow-hidden min-h-[400px] md:min-h-[500px]">
+                <div className="p-4 sm:p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="relative max-w-md w-full group min-w-0">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none" />
                         <input
                             type="text"
                             placeholder={t('admin.search_placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-13 pr-6 py-4 bg-slate-50/50 border border-slate-100 rounded-[20px] text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-200 transition-all placeholder:text-slate-400 placeholder:font-medium"
+                            className="w-full min-w-0 pl-12 pr-4 py-3.5 md:py-4 bg-slate-50/50 border border-slate-100 rounded-[20px] text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-200 transition-all placeholder:text-slate-400 placeholder:font-medium"
                         />
                     </div>
                     <div className="flex items-center gap-2">
@@ -359,7 +359,7 @@ export default function AdminDashboard() {
                                 setPagination(p => ({ ...p, page: 1 }));
                             }}
                             className={cn(
-                                "h-14 px-6 border rounded-[20px] text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
+                                "h-12 md:h-14 px-4 md:px-6 border rounded-[20px] text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shrink-0",
                                 statusFilter === 'pending'
                                     ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-200"
                                     : "border-slate-100 text-slate-600 hover:bg-slate-50"
@@ -378,8 +378,146 @@ export default function AdminDashboard() {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                        {/* Mobile-friendly cards (table is unreadable on narrow screens) */}
+                        <div className="md:hidden divide-y divide-slate-100 px-4 pb-4 max-h-[70vh] overflow-y-auto">
+                            {activeTab === 'users'
+                                ? users.map((user) => (
+                                      <div key={user.id} className="py-4 space-y-3">
+                                          <div className="flex items-start gap-3">
+                                              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-400 text-xs shrink-0">
+                                                  {user.full_name?.charAt(0) || 'U'}
+                                              </div>
+                                              <div className="min-w-0 flex-1">
+                                                  <p className="font-bold text-slate-900 break-words">{user.full_name || t('admin.incognito')}</p>
+                                                  <p className="text-xs font-bold text-slate-500 mt-1 break-all">{user.phone}</p>
+                                              </div>
+                                          </div>
+                                          <div className="flex flex-wrap gap-2 items-center">
+                                              <select
+                                                  disabled={updatingRole === user.id}
+                                                  value={user.role}
+                                                  onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                                  className={cn(
+                                                      "px-3 py-2 rounded-lg text-[10px] font-bold uppercase border-0 ring-1 ring-inset flex-1 min-w-[120px]",
+                                                      user.role === 'admin'
+                                                          ? 'bg-indigo-50 text-indigo-700 ring-indigo-200'
+                                                          : user.role === 'owner'
+                                                            ? 'bg-blue-50 text-blue-700 ring-blue-200'
+                                                            : 'bg-slate-50 text-slate-500 ring-slate-200'
+                                                  )}
+                                              >
+                                                  <option value="customer">{t('admin.customer')}</option>
+                                                  <option value="owner">{t('admin.owner')}</option>
+                                                  <option value="admin">Admin</option>
+                                              </select>
+                                              <div
+                                                  className={cn(
+                                                      'px-2 py-1 rounded-md text-[9px] font-bold uppercase',
+                                                      user.status === 'active'
+                                                          ? 'bg-emerald-50 text-emerald-600'
+                                                          : user.status === 'blocked'
+                                                            ? 'bg-red-50 text-red-600'
+                                                            : 'bg-amber-50 text-amber-600'
+                                                  )}
+                                              >
+                                                  {user.status}
+                                              </div>
+                                          </div>
+                                          <p className="text-[10px] font-bold text-slate-400">
+                                              {t('admin.joined')}: {new Date(user.created_at).toLocaleDateString()}
+                                          </p>
+                                          <div className="flex flex-wrap gap-2 justify-end">
+                                              {!user.is_verified && (
+                                                  <button
+                                                      onClick={() => handleStatusChange(user.id, 'active', true)}
+                                                      className="h-9 px-3 bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase active:scale-95 transition-transform flex items-center gap-1"
+                                                  >
+                                                      <CheckCircle2 className="h-3 w-3" />
+                                                      {t('admin.verify')}
+                                                  </button>
+                                              )}
+                                              {user.status !== 'blocked' && (
+                                                  <button
+                                                      onClick={() => handleStatusChange(user.id, 'blocked')}
+                                                      className="h-9 px-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-bold uppercase active:scale-95 transition-transform flex items-center gap-1"
+                                                  >
+                                                      <XCircle className="h-3 w-3" />
+                                                      {t('admin.block')}
+                                                  </button>
+                                              )}
+                                          </div>
+
+                                      </div>
+                                  ))
+                                : businesses.map((business) => (
+                                      <div key={business.id} className="py-4 space-y-3">
+                                          <div className="flex justify-between gap-3 items-start">
+                                              <div className="min-w-0 flex-1">
+                                                  <p className="font-bold text-slate-900 text-base break-words">{business.name}</p>
+                                                  <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mt-0.5 break-all">
+                                                      /{business.slug}
+                                                  </p>
+                                              </div>
+                                              <div className="flex items-center gap-1.5 shrink-0">
+                                                  {business.owner?.status === 'active' ? (
+                                                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                                                  ) : business.owner?.status === 'blocked' ? (
+                                                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                                                  ) : (
+                                                      <Clock className="h-4 w-4 text-amber-500 shrink-0" />
+                                                  )}
+                                                  <span
+                                                      className={cn(
+                                                          'text-[10px] font-bold uppercase',
+                                                          business.owner?.status === 'active'
+                                                              ? 'text-emerald-600'
+                                                              : business.owner?.status === 'blocked'
+                                                                ? 'text-red-600'
+                                                                : 'text-amber-600'
+                                                      )}
+                                                  >
+                                                      {business.owner?.status || 'Pending'}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                          <div className="rounded-xl bg-slate-50/80 px-3 py-2 border border-slate-100">
+                                              <p className="text-xs font-bold text-slate-900 break-words">{business.owner?.full_name}</p>
+                                              <p className="text-xs font-bold text-slate-500 break-all mt-0.5">{business.owner?.phone}</p>
+                                          </div>
+                                          <p className="text-[10px] font-bold text-slate-400">
+                                              {t('admin.joined')}: {new Date(business.created_at).toLocaleDateString()}
+                                          </p>
+                                          <div className="flex flex-wrap gap-2 justify-end">
+                                              {!business.owner?.is_verified && business.owner?.id && (
+                                                  <button
+                                                      onClick={async () => {
+                                                          try {
+                                                              await adminService.updateUserStatus(business.owner!.id, 'active', true);
+                                                              showToast(t('admin.verify_business_success'));
+                                                              fetchData();
+                                                          } catch (error) {
+                                                              showToast(t('admin.verify_business_fail'), 'error');
+                                                          }
+                                                      }}
+                                                      className="h-10 px-3 bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase active:scale-95 transition-transform flex items-center gap-1"
+                                                  >
+                                                      <CheckCircle2 className="h-3 w-3" />
+                                                      {t('admin.verify_owner')}
+                                                  </button>
+                                              )}
+                                              <button
+                                                  onClick={() => handleInspect(business)}
+                                                  className="h-10 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase active:scale-95 transition-transform"
+                                              >
+                                                  {t('admin.inspect')}
+                                              </button>
+                                          </div>
+                                      </div>
+                                  ))}
+                        </div>
+
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-left border-collapse min-w-[720px]">
                                 <thead>
                                     <tr className="bg-slate-50/50">
                                         <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">{t('admin.identity')}</th>
@@ -498,16 +636,16 @@ export default function AdminDashboard() {
                                                             onClick={async () => {
                                                                 try {
                                                                     await adminService.updateUserStatus(business.owner.id, 'active', true);
-                                                                    showToast("Verification successful! The business is now live.");
+                                                                    showToast(t('admin.verify_business_success'));
                                                                     fetchData(); // Re-fetch data to update business list
                                                                 } catch (error) {
-                                                                    showToast("Failed to verify business.", 'error');
+                                                                    showToast(t('admin.verify_business_fail'), 'error');
                                                                 }
                                                             }}
                                                             className="h-8 px-3 bg-emerald-500 text-white rounded-lg text-[9px] font-bold uppercase tracking-wider hover:bg-emerald-600 transition-all flex items-center gap-1"
                                                         >
                                                             <CheckCircle2 className="h-3 w-3" />
-                                                            VERIFY BUSINESS
+                                                            {t('admin.verify_owner')}
                                                         </button>
                                                     )}
                                                     <button

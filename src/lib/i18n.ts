@@ -138,6 +138,8 @@ const dictionaries: Record<string, Dictionary> = {
             role_update_fail: "Failed to update role",
             status_update_success: "Status updated successfully",
             status_update_fail: "Failed to update status",
+            verify_business_success: "Business verified. The owner account is now active.",
+            verify_business_fail: "Could not verify this business. Try again.",
             analytics_modal: {
                 title: "Advanced Analytics",
                 desc: "Platform-wide performance reports and deep-dive business metrics are currently being calibrated.",
@@ -416,6 +418,8 @@ const dictionaries: Record<string, Dictionary> = {
             role_update_fail: "भूमिका अपडेट करने में विफल",
             status_update_success: "स्थिति सफलतापूर्वक अपडेट की गई",
             status_update_fail: "स्थिति अपडेट करने में विफल",
+            verify_business_success: "व्यवसाय सत्यापित। मालिक खाता अब सक्रिय है।",
+            verify_business_fail: "इस व्यवसाय को सत्यापित नहीं किया जा सका। पुनः प्रयास करें।",
             analytics_modal: {
                 title: "उन्नत विश्लेषण",
                 desc: "प्लेटफ़ॉर्म-व्यापी प्रदर्शन रिपोर्ट और गहन व्यावसायिक मेट्रिक्स वर्तमान में कैलिब्रेट किए जा रहे हैं।",
@@ -589,6 +593,8 @@ const dictionaries: Record<string, Dictionary> = {
             role_update_fail: "فشل تحديث الدور",
             status_update_success: "تم تحديث الحالة بنجاح",
             status_update_fail: "فشل تحديث الحالة",
+            verify_business_success: "تم التحقق من العمل. حساب المالك نشط الآن.",
+            verify_business_fail: "تعذر التحقق من هذا العمل. حاول مرة أخرى.",
             analytics_modal: {
                 title: "تحليلات متقدمة",
                 desc: "تقارير الأداء على مستوى المنصة ومقاييس الأعمال العميقة قيد المعايرة حالياً.",

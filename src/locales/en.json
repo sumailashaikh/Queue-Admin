@@ -28,6 +28,12 @@
     "syncing": "Syncing Data...",
     "showing_users": "Showing {{start}}-{{end}} of {{total}} users",
     "inspect": "Inspect",
+    "role_update_success": "Role updated successfully.",
+    "role_update_fail": "Could not update role.",
+    "status_update_success": "Status updated successfully.",
+    "status_update_fail": "Could not update status.",
+    "verify_business_success": "Business verified. The owner can use the app normally.",
+    "verify_business_fail": "Verification failed. Try again.",
     "create_modal": {
       "title": "Create User",
       "full_name": "Full Name",
@@ -54,7 +60,8 @@
       "activity_log": "Recent Activity",
       "no_data": "No recent activity recorded.",
       "view_public": "View Public Page",
-      "export": "Export CSV Data"
+      "export": "Export CSV Data",
+      "fetch_fail": "Could not load business details."
     },
     "analytics_modal": {
       "title": "Analytics Engine",

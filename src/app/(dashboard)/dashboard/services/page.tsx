@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { serviceService, Service } from "@/services/serviceService";
 import { useAuth } from "@/hooks/useAuth";
-import { cn, formatCurrency, validateLanguage } from "@/lib/utils";
+import { cn, formatCurrency, validateLanguage, getCurrencySymbol } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 
 // Custom Delete Dialog
@@ -102,12 +102,18 @@ export default function ServicesPage() {
     });
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const [newService, setNewService] = useState({
+    const [newService, setNewService] = useState<{
+        name: string;
+        description: string;
+        duration_minutes: number | "";
+        price: number | "";
+        translations: Record<string, any>;
+    }>({
         name: "",
         description: "",
-        duration_minutes: 30,
-        price: 0,
-        translations: {} as Record<string, any>
+        duration_minutes: "",
+        price: "",
+        translations: {}
     });
 
     const fetchServices = useCallback(async () => {
@@ -133,13 +139,15 @@ export default function ServicesPage() {
 
         const trimmedName = newService.name.trim();
 
-        if (!trimmedName || !newService.description.trim() || newService.duration_minutes === undefined || newService.price === undefined) {
+        if (!trimmedName || !newService.description.trim() || newService.duration_minutes === "" || newService.price === "") {
             setError(t('services.all_fields_required'));
             return;
         }
 
-        if (newService.duration_minutes < 0 || newService.price < 0) {
-            setError(t('services.err_negative_values')); 
+        const dm = Number(newService.duration_minutes);
+        const pr = Number(newService.price);
+        if (!Number.isFinite(dm) || dm <= 0 || !Number.isFinite(pr) || pr < 0) {
+            setError(t('services.err_negative_values'));
             return;
         }
 
@@ -158,6 +166,8 @@ export default function ServicesPage() {
         try {
             const serviceData = {
                 ...newService,
+                duration_minutes: dm,
+                price: pr,
                 name: trimmedName,
                 business_id: business?.id,
                 translations: {
@@ -171,8 +181,8 @@ export default function ServicesPage() {
             setNewService({
                 name: "",
                 description: "",
-                duration_minutes: 30,
-                price: 0,
+                duration_minutes: "",
+                price: "",
                 translations: {}
             });
             showToast(t('services.success_add'));
@@ -196,7 +206,7 @@ export default function ServicesPage() {
             return;
         }
 
-        if (editingService.duration_minutes < 0 || editingService.price < 0) {
+        if (Number(editingService.duration_minutes) <= 0 || Number(editingService.price) < 0) {
             setError(t('services.err_negative_values'));
             return;
         }
@@ -295,13 +305,13 @@ export default function ServicesPage() {
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
             {toast && (
-                <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-10 duration-500">
+                <div className="fixed z-[200] bottom-6 left-4 right-4 sm:bottom-auto sm:top-10 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 max-w-md mx-auto sm:mx-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-top-10 duration-300">
                     <div className={cn(
-                        "flex items-center gap-3 px-6 py-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border backdrop-blur-md",
-                        toast.type === 'success' ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-rose-500/90 border-rose-400 text-white"
+                        "flex items-start gap-3 px-4 py-3 sm:px-6 sm:py-4 rounded-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border backdrop-blur-md",
+                        toast.type === 'success' ? "bg-emerald-500/95 border-emerald-400 text-white" : "bg-rose-500/95 border-rose-400 text-white"
                     )}>
-                        {toast.type === 'success' ? <ShieldCheck className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-                        <p className="text-xs font-black uppercase tracking-wider">{toast.message}</p>
+                        {toast.type === 'success' ? <ShieldCheck className="h-5 w-5 shrink-0 mt-0.5" /> : <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />}
+                        <p className="text-xs font-bold sm:font-black uppercase tracking-wide sm:tracking-wider leading-snug">{toast.message}</p>
                     </div>
                 </div>
             )}
@@ -336,8 +346,8 @@ export default function ServicesPage() {
                             setNewService({
                                 name: "",
                                 description: "",
-                                duration_minutes: 30,
-                                price: 0,
+                                duration_minutes: "",
+                                price: "",
                                 translations: {}
                             });
                             setIsAddModalOpen(true);
@@ -386,14 +396,14 @@ export default function ServicesPage() {
                                                 });
                                                 setIsEditModalOpen(true);
                                             }}
-                                            className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"
+                                            className="p-3 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-xl transition-all active:scale-90"
                                             title={t('common.edit')}
                                         >
                                             <Pencil className="h-4 w-4" />
                                         </button>
                                         <button
                                             onClick={() => setDeleteModal({ isOpen: true, serviceId: service.id, serviceName: service.name, error: null })}
-                                            className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-90"
+                                            className="p-3 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-xl transition-all active:scale-90"
                                             title={t('common.delete')}
                                         >
                                             <TrashIcon className="h-4 w-4" />
@@ -475,21 +485,38 @@ export default function ServicesPage() {
                                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.duration_label')}</label>
                                         <input
                                             required
-                                            type="number"
-                                            min="0"
-                                            value={editingService.duration_minutes}
-                                            onChange={(e) => setEditingService({ ...editingService, duration_minutes: Math.max(0, parseInt(e.target.value) || 0) })}
+                                            type="text"
+                                            inputMode="numeric"
+                                            autoComplete="off"
+                                            value={editingService.duration_minutes ? String(editingService.duration_minutes) : ""}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/\D/g, "").slice(0, 5);
+                                                setEditingService({
+                                                    ...editingService,
+                                                    duration_minutes: raw === "" ? 0 : parseInt(raw, 10)
+                                                });
+                                            }}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.price_label')} ({business?.currency || '₹'})</label>
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">
+                                            {t('services.price_label')} ({getCurrencySymbol(business?.currency)}
+                                            {business?.currency ? ` · ${business.currency}` : ""})
+                                        </label>
                                         <input
                                             required
-                                            type="number"
-                                            min="0"
-                                            value={editingService.price}
-                                            onChange={(e) => setEditingService({ ...editingService, price: Math.max(0, parseInt(e.target.value) || 0) })}
+                                            type="text"
+                                            inputMode="numeric"
+                                            autoComplete="off"
+                                            value={String(editingService.price)}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                                setEditingService({
+                                                    ...editingService,
+                                                    price: raw === "" ? 0 : parseInt(raw, 10)
+                                                });
+                                            }}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
@@ -558,21 +585,38 @@ export default function ServicesPage() {
                                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.duration_label')}</label>
                                         <input
                                             required
-                                            type="number"
-                                            min="0"
-                                            value={newService.duration_minutes}
-                                            onChange={(e) => setNewService({ ...newService, duration_minutes: Math.max(0, parseInt(e.target.value) || 0) })}
+                                            type="text"
+                                            inputMode="numeric"
+                                            autoComplete="off"
+                                            value={newService.duration_minutes === "" ? "" : String(newService.duration_minutes)}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/\D/g, "").slice(0, 5);
+                                                setNewService({
+                                                    ...newService,
+                                                    duration_minutes: raw === "" ? "" : parseInt(raw, 10)
+                                                });
+                                            }}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-blue-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.price_label')} ({business?.currency || '₹'})</label>
+                                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">
+                                            {t('services.price_label')} ({getCurrencySymbol(business?.currency)}
+                                            {business?.currency ? ` · ${business.currency}` : ""})
+                                        </label>
                                         <input
                                             required
-                                            type="number"
-                                            min="0"
-                                            value={newService.price}
-                                            onChange={(e) => setNewService({ ...newService, price: Math.max(0, parseInt(e.target.value) || 0) })}
+                                            type="text"
+                                            inputMode="numeric"
+                                            autoComplete="off"
+                                            value={newService.price === "" ? "" : String(newService.price)}
+                                            onChange={(e) => {
+                                                const raw = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                                setNewService({
+                                                    ...newService,
+                                                    price: raw === "" ? "" : parseInt(raw, 10)
+                                                });
+                                            }}
                                             className="w-full px-5 py-4 bg-slate-50 hover:bg-slate-100/80 border-2 border-transparent focus:border-emerald-500 rounded-[24px] text-base font-bold text-slate-900 outline-none transition-all shadow-sm"
                                         />
                                     </div>

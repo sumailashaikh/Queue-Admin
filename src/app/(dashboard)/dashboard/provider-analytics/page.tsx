@@ -14,7 +14,7 @@ import {
     Users,
     Filter
 } from "lucide-react";
-import { cn, formatCurrency, formatDuration } from "@/lib/utils";
+import { cn, formatCurrency, formatDuration, getCurrencySymbol } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { analyticsService, ProviderAnalytics, AnalyticsSummaryStats } from "@/services/analyticsService";
 import { format } from "date-fns";
@@ -96,13 +96,6 @@ export default function ProviderAnalyticsPage() {
     const openBreakdown = (p: ProviderAnalytics) => {
         setSelectedProvider(p);
         setIsModalOpen(true);
-    };
-
-    const getCurrencySymbol = (currency?: string) => {
-        const map: Record<string, string> = {
-            INR: '₹', USD: '$', EUR: '€', GBP: '£', AED: 'د.إ', SAR: '﷼', JPY: '¥', CNY: '¥'
-        };
-        return map[currency || ''] || '$';
     };
 
     return (
@@ -263,7 +256,7 @@ export default function ProviderAnalyticsPage() {
                                 </div>
 
                                 {/* Stats Grid - 2x2 on mobile, 4 in a row on desktop */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pl-13">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full min-w-0">
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.services')}</p>
                                         <span className="font-bold text-slate-900 text-sm truncate block">{p.services_completed}</span>

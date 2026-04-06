@@ -1,6 +1,15 @@
 {
   "admin": {
     "active": "Active",
+    "verify_business_success": "Negocio verificado. El propietario ya puede usar la app con normalidad.",
+    "verify_business_fail": "No se pudo verificar. Inténtalo de nuevo.",
+    "role_update_success": "Rol actualizado correctamente.",
+    "role_update_fail": "No se pudo actualizar el rol.",
+    "status_update_success": "Estado actualizado correctamente.",
+    "status_update_fail": "No se pudo actualizar el estado.",
+    "inspect_modal": {
+      "fetch_fail": "No se pudieron cargar los datos del negocio."
+    },
     "create_modal": {
       "title": "Create System User",
       "desc": "Add a new owner or staff member to the platform.",

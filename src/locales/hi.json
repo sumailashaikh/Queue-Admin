@@ -1,6 +1,15 @@
 {
   "admin": {
-    "active": "सक्रिय"
+    "active": "सक्रिय",
+    "verify_business_success": "व्यवसाय सत्यापित। मालिक अब ऐप का सामान्य उपयोग कर सकता है।",
+    "verify_business_fail": "सत्यापन विफल। पुनः प्रयास करें।",
+    "role_update_success": "भूमिका अपडेट हो गई।",
+    "role_update_fail": "भूमिका अपडेट नहीं हो सकी।",
+    "status_update_success": "स्थिति अपडेट हो गई।",
+    "status_update_fail": "स्थिति अपडेट नहीं हो सकी।",
+    "inspect_modal": {
+      "fetch_fail": "व्यवसाय विवरण लोड नहीं हो सका।"
+    }
   },
   "queue": {
     "title": "लाइव कतार",

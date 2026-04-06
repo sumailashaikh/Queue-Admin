@@ -5,8 +5,39 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/** Narrow symbol for dashboard icons (matches business currency, not UI language). */
+export function getCurrencySymbol(currency?: string | null): string {
+    const raw = currency != null ? String(currency).trim() : "";
+    if (!raw || raw.toLowerCase() === "null") return "$";
+    const code = raw.toUpperCase();
+    try {
+        const part = new Intl.NumberFormat("en", {
+            style: "currency",
+            currency: code,
+            maximumFractionDigits: 0
+        })
+            .formatToParts(0)
+            .find((p) => p.type === "currency")?.value;
+        if (part) return part;
+    } catch {
+        /* fall through */
+    }
+    const map: Record<string, string> = {
+        INR: "₹",
+        USD: "$",
+        EUR: "€",
+        GBP: "£",
+        AED: "د.إ",
+        SAR: "﷼",
+        JPY: "¥",
+        CNY: "¥",
+        AUD: "A$",
+        CAD: "C$"
+    };
+    return map[code] || code;
+}
+
 export function formatCurrency(amount: number, currencyCodeParam: string = 'USD', language: string = 'en') {
-    // Map language to currency for symbols (e.g., hi -> INR -> ₹)
     const languageToCurrency: Record<string, string> = {
         'en': 'USD',
         'es': 'EUR',
@@ -14,13 +45,19 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
         'ar': 'AED'
     };
 
-    // Priority 1: Force currency based on language (User requirement)
-    // Priority 2: Use provided parameter
-    // Priority 3: Default to USD
-    let currencyCode = languageToCurrency[language] || currencyCodeParam || 'USD';
-    
-    // Safety check for empty strings or invalid codes
-    if (!currencyCode || currencyCode === 'null') currencyCode = 'USD';
+    const baseLang = (language || 'en').split('-')[0].toLowerCase();
+    const param = currencyCodeParam != null ? String(currencyCodeParam).trim() : '';
+    const hasExplicitCurrency =
+        param !== '' &&
+        param.toLowerCase() !== 'null' &&
+        /^[A-Z]{3}$/i.test(param);
+
+    // Prefer business/account currency when provided; otherwise fall back to locale default.
+    let currencyCode = hasExplicitCurrency
+        ? param.toUpperCase()
+        : (languageToCurrency[baseLang] || 'USD');
+
+    if (!currencyCode || currencyCode === 'NULL') currencyCode = 'USD';
 
     try {
         // Map language to locale for formatting rules (commas, decimals, position)
@@ -30,7 +67,7 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
             'hi': 'hi-IN',
             'ar': 'ar-SA'
         };
-        const locale = localeMap[language] || 'en-US';
+        const locale = localeMap[baseLang] || 'en-US';
 
         const formatter = new Intl.NumberFormat(locale, {
             style: 'currency',
