@@ -41,6 +41,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [business, setBusiness] = useState<(Business & { queues: any[], services: any[] }) | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [joinError, setJoinError] = useState<string | null>(null);
 
     // Form State
     const [activeView, setActiveView] = useState<'queue' | 'appointment'>('queue');
@@ -182,7 +183,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const handleJoin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        setError(null);
+        setJoinError(null);
 
         try {
             const service_ids = selectedServices.map(s => s.id);
@@ -199,7 +200,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             if (activeView === 'queue') {
                 const openQueue = business!.queues?.find(q => q.status === 'open');
                 if (!openQueue) {
-                    setError('ERR_NO_QUEUE');
+                    setJoinError('ERR_NO_QUEUE');
                     return;
                 }
 
@@ -228,7 +229,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             }
             setStep(3);
         } catch (err: any) {
-            setError(err.message || i18n.t(lang, 'public.err_something_went_wrong'));
+            setJoinError(err.message || i18n.t(lang, 'public.err_something_went_wrong'));
         } finally {
             setIsSubmitting(false);
         }
@@ -243,7 +244,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         );
     }
 
-    if ((error && error !== 'ERR_NO_QUEUE' && error !== i18n.t(lang, 'public.no_queue')) || !business) {
+    if (error || !business) {
         const isFullyBooked = error?.toLowerCase().includes('fully booked') || error?.toLowerCase().includes('closing time') || error?.toLowerCase().includes('tomorrow');
 
         return (
@@ -399,7 +400,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 </div>
                             )}
 
-                            {activeView === 'queue' && (error === 'ERR_NO_QUEUE' || error === i18n.t(lang, 'public.no_queue')) && step === 2 && (
+                    {activeView === 'queue' && (joinError === 'ERR_NO_QUEUE' || joinError === i18n.t(lang, 'public.no_queue')) && step === 2 && (
                                 <div className="mb-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
                                     <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                     <div className="space-y-1">
@@ -600,6 +601,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             </div>
 
                             <form onSubmit={handleJoin} className="space-y-6">
+                                {joinError && joinError !== 'ERR_NO_QUEUE' && joinError !== i18n.t(lang, 'public.no_queue') && (
+                                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                                        <p className="text-[11px] font-bold text-amber-900 leading-relaxed">
+                                            {joinError}
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{i18n.t(lang, 'public.full_name')}</label>
