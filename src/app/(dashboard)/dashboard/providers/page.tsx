@@ -102,15 +102,18 @@ export default function ProvidersPage() {
         return leaveType || tt('providers.other', 'Other');
     };
 
-    const formatInviteTwilioErrors = (ne?: { sms?: string | null; whatsapp?: string | null }) => {
-        const parts = [ne?.sms, ne?.whatsapp].filter((x) => Boolean(x && String(x).trim()));
-        if (!parts.length) return "";
-        return ` (${parts.join(" · ")})`;
-    };
-
     const getInviteNotifyFailMessage = (inviteUrl?: string, hint?: string | null) => {
         const lang = String(language || 'en').toLowerCase();
         const urlText = inviteUrl ? ` ${inviteUrl}` : '';
+        if (hint === 'twilio_daily_limit') {
+            if (lang.startsWith('hi')) {
+                return `निमंत्रण बन गया है, लेकिन आज की SMS सीमा पूरी हो चुकी है। कृपया कुछ समय बाद फिर प्रयास करें या लिंक मैन्युअल भेजें:${urlText}`;
+            }
+            if (lang.startsWith('ar')) {
+                return `تم إنشاء الدعوة، لكن تم الوصول لحد رسائل SMS اليوم. حاول لاحقًا أو أرسل الرابط يدويًا:${urlText}`;
+            }
+            return `Invite created, but today's SMS limit is reached. Please try again later or share the link manually:${urlText}`;
+        }
         if (hint === 'twilio_trial_destination_not_verified') {
             if (lang.startsWith('hi')) {
                 return `Twilio ट्रायल खाता सिर्फ Verified नंबरों पर SMS भेज सकता है। Twilio कंसोल में इस नंबर को Verified Caller IDs में जोड़ें या अपग्रेड करें। मैन्युअल लिंक:${urlText}`;
@@ -479,11 +482,7 @@ export default function ProvidersPage() {
                 business_id: business.id
             });
             if (resp?.notified === false || resp?.message === 'providers.err_notify_fail') {
-                showToast(
-                    getInviteNotifyFailMessage(resp?.invite_url, resp?.notify_hint) +
-                        formatInviteTwilioErrors(resp?.notify_errors),
-                    "error"
-                );
+                showToast(getInviteNotifyFailMessage(resp?.invite_url, resp?.notify_hint), "error");
             } else {
                 const msg = resp.message || 'providers.success_invite';
                 const translated = msg.includes('.') ? t(msg as any, { ...resp, phone: inviteFormData.phone }) : msg;
@@ -505,8 +504,11 @@ export default function ProvidersPage() {
     const handleUpdateResignation = async (requestId: string, status: 'APPROVED' | 'REJECTED') => {
         setIsSubmitting(true);
         try {
-            await businessService.updateResignationStatus(requestId, status);
+            const resp = await businessService.updateResignationStatus(requestId, status);
             showToast(status === 'APPROVED' ? t('providers.success_deactivate_full') : t('providers.success_resignation_rejected'));
+            if (resp?.notification_sent === false) {
+                showToast(t('providers.leave_status_updated_notify_warning'), "error");
+            }
             await fetchProviders();
         } catch (error: any) {
             const msg = error.response?.data?.message || 'common.error';

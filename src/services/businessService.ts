@@ -85,7 +85,8 @@ export const businessService = {
         return result.data;
     },
 
-    async updateResignationStatus(requestId: string, status: 'APPROVED' | 'REJECTED'): Promise<void> {
-        await api.patch(`/service-providers/resignation/${requestId}/status`, { status });
+    async updateResignationStatus(requestId: string, status: 'APPROVED' | 'REJECTED'): Promise<{ notification_sent?: boolean }> {
+        const result = await api.patch<any>(`/service-providers/resignation/${requestId}/status`, { status });
+        return result;
     }
 };
