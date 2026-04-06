@@ -178,7 +178,8 @@ export default function ProvidersPage() {
         if (!business?.id) return;
         try {
             const data = await businessService.getResignationRequests(business.id);
-            setResignations(data);
+            const pendingOnly = (data || []).filter((r: any) => String(r?.status || '').toUpperCase() === 'PENDING');
+            setResignations(pendingOnly);
         } catch (error) {
             console.error("Failed to fetch resignations:", error);
         }
@@ -506,13 +507,13 @@ export default function ProvidersPage() {
         try {
             await businessService.updateResignationStatus(requestId, status);
             showToast(status === 'APPROVED' ? t('providers.success_deactivate_full') : t('providers.success_resignation_rejected'));
-            await fetchResignations();
             await fetchProviders();
         } catch (error: any) {
             const msg = error.response?.data?.message || 'common.error';
             const translated = msg.includes('.') ? t(msg as any, error.response?.data) : msg;
             showToast(translated !== msg ? translated : t('common.error'), "error");
         } finally {
+            await fetchResignations();
             setIsSubmitting(false);
         }
     };
@@ -838,8 +839,20 @@ export default function ProvidersPage() {
                                 <div key={req.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between gap-4">
                                     <div className="space-y-1"><p className="text-sm font-bold text-slate-900">{req.profiles?.full_name}</p><p className="text-[10px] text-slate-500">Last Date: <span className="text-slate-900 font-bold">{new Date(req.requested_last_date).toLocaleDateString()}</span></p></div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleUpdateResignation(req.id, 'APPROVED')} className="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 active:scale-95">{t('providers.approve_resignation')}</button>
-                                        <button onClick={() => handleUpdateResignation(req.id, 'REJECTED')} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">{t('providers.deny_resignation')}</button>
+                                        <button
+                                            disabled={isSubmitting}
+                                            onClick={() => handleUpdateResignation(req.id, 'APPROVED')}
+                                            className="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 active:scale-95 disabled:opacity-60 disabled:active:scale-100"
+                                        >
+                                            {t('providers.approve_resignation')}
+                                        </button>
+                                        <button
+                                            disabled={isSubmitting}
+                                            onClick={() => handleUpdateResignation(req.id, 'REJECTED')}
+                                            className="px-4 py-2 bg-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 disabled:opacity-60 disabled:active:scale-100"
+                                        >
+                                            {t('providers.deny_resignation')}
+                                        </button>
                                     </div>
                                 </div>
                             ))}
