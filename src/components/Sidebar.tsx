@@ -127,7 +127,7 @@ export default function Sidebar({ onClose, isCollapsed = false, forceLanguage }:
                 )}
 
                 {/* Admin section */}
-                {(user?.role === 'admin' || user?.user_metadata?.role === 'admin') && (
+                {(user?.role === 'admin' || user?.user_metadata?.role === 'admin') && pathname.startsWith('/dashboard/admin') && (
                     <div className="pt-2">
                         {!isCollapsed && (
                             <div className="px-4 mb-2">

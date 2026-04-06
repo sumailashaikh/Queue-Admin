@@ -176,7 +176,7 @@ export default function ProviderAnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                     { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, iconText: null, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(business?.currency), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(undefined, language), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                     { label: t('provider_analytics.avg_service_time'), value: formatDuration(summary?.avg_service_time || 0, t), iconText: null, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">

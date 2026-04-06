@@ -844,14 +844,6 @@ export default function AdminDashboard() {
                                 <p className="text-center py-10 text-slate-400 text-xs font-bold uppercase tracking-wider">{t('admin.inspect_modal.no_data')}</p>
                             )}
 
-                            <div className="flex w-full">
-                                <button
-                                    onClick={() => window.open(`/${inspectedBusiness.slug}`, '_blank')}
-                                    className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-[24px] text-xs font-bold uppercase tracking-[0.2em] transition-all"
-                                >
-                                    {t('admin.inspect_modal.view_public')}
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>

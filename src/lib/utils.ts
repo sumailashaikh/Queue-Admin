@@ -5,11 +5,13 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-/** Narrow symbol for dashboard icons (matches business currency, not UI language). */
-export function getCurrencySymbol(currency?: string | null): string {
+/** Currency symbol helper with language-based fallback. */
+export function getCurrencySymbol(currency?: string | null, language: string = "en"): string {
+    const languageToCurrency: Record<string, string> = { en: "USD", es: "EUR", hi: "INR", ar: "AED" };
+    const baseLang = (language || "en").split("-")[0].toLowerCase();
+    const fallbackByLang = languageToCurrency[baseLang] || "USD";
     const raw = currency != null ? String(currency).trim() : "";
-    if (!raw || raw.toLowerCase() === "null") return "$";
-    const code = raw.toUpperCase();
+    const code = !raw || raw.toLowerCase() === "null" ? fallbackByLang : raw.toUpperCase();
     try {
         const part = new Intl.NumberFormat("en", {
             style: "currency",
@@ -52,10 +54,9 @@ export function formatCurrency(amount: number, currencyCodeParam: string = 'USD'
         param.toLowerCase() !== 'null' &&
         /^[A-Z]{3}$/i.test(param);
 
-    // Prefer business/account currency when provided; otherwise fall back to locale default.
-    let currencyCode = hasExplicitCurrency
-        ? param.toUpperCase()
-        : (languageToCurrency[baseLang] || 'USD');
+    // Per current UX: selected app language decides display currency.
+    // If language is unknown, explicit currency param is used as fallback.
+    let currencyCode = languageToCurrency[baseLang] || (hasExplicitCurrency ? param.toUpperCase() : 'USD');
 
     if (!currencyCode || currencyCode === 'NULL') currencyCode = 'USD';
 
