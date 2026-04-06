@@ -218,8 +218,8 @@ function EmployeeDashboardContent() {
             setIsResignationModalOpen(false);
             setResignationFormData({ requested_last_date: "", reason: "" });
             fetchData();
-        } catch (error) {
-            showToast(t('providers.err_resignation'), "error");
+        } catch (error: any) {
+            showToast(parseApiMessage(error, 'providers.err_resignation'), "error");
         } finally {
             setIsSubmitting(false);
         }

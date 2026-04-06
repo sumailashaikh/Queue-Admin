@@ -539,7 +539,14 @@ export default function ProvidersPage() {
                         <input type="text" placeholder={t('providers.search_placeholder')} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all font-medium shadow-sm" />
                     </div>
                     {resignations.length > 0 && (
-                        <button onClick={() => setIsResignationModalOpen(true)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"><AlertCircle className="h-4 w-4" />{t('providers.resignation_requests')} ({resignations.length})</button>
+                        <button
+                            onClick={() => setIsResignationModalOpen(true)}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"
+                        >
+                            <AlertCircle className="h-4 w-4" />
+                            <span>{t('providers.resignation_requests')}</span>
+                            <span dir="ltr">({resignations.length})</span>
+                        </button>
                     )}
                     <button onClick={() => { setInviteFormData({ name: "", phone: "", custom_message: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
                     <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "", translations: {} }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
@@ -832,24 +839,36 @@ export default function ProvidersPage() {
             {/* Resignation Modal */}
             {isResignationModalOpen && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.resignation_requests')}</h3><button onClick={() => setIsResignationModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
-                        <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                    <div className="bg-white w-full max-w-2xl rounded-[32px] md:rounded-[40px] shadow-2xl p-5 md:p-10 space-y-5 md:space-y-8 animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between gap-3">
+                            <h3 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-tight">
+                                {t('providers.resignation_requests')}
+                            </h3>
+                            <button onClick={() => setIsResignationModalOpen(false)} className="shrink-0 p-1">
+                                <X className="h-6 w-6 text-slate-400" />
+                            </button>
+                        </div>
+                        <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1 md:pr-2 custom-scrollbar">
                             {resignations.length === 0 ? <p className="text-center py-10 text-xs font-bold text-slate-400 uppercase tracking-widest">{t('providers.no_resignations')}</p> : resignations.map((req: any) => (
-                                <div key={req.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center justify-between gap-4">
-                                    <div className="space-y-1"><p className="text-sm font-bold text-slate-900">{req.profiles?.full_name}</p><p className="text-[10px] text-slate-500">Last Date: <span className="text-slate-900 font-bold">{new Date(req.requested_last_date).toLocaleDateString()}</span></p></div>
-                                    <div className="flex gap-2">
+                                <div key={req.id} className="p-4 md:p-6 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div className="space-y-1 min-w-0">
+                                        <p className="text-sm font-bold text-slate-900 break-words">{req.profiles?.full_name}</p>
+                                        <p className="text-[10px] text-slate-500">
+                                            Last Date: <span className="text-slate-900 font-bold" dir="ltr">{new Date(req.requested_last_date).toLocaleDateString()}</span>
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:gap-2">
                                         <button
                                             disabled={isSubmitting}
                                             onClick={() => handleUpdateResignation(req.id, 'APPROVED')}
-                                            className="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 active:scale-95 disabled:opacity-60 disabled:active:scale-100"
+                                            className="w-full sm:w-auto px-3 md:px-4 py-2.5 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 active:scale-95 disabled:opacity-60 disabled:active:scale-100"
                                         >
                                             {t('providers.approve_resignation')}
                                         </button>
                                         <button
                                             disabled={isSubmitting}
                                             onClick={() => handleUpdateResignation(req.id, 'REJECTED')}
-                                            className="px-4 py-2 bg-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 disabled:opacity-60 disabled:active:scale-100"
+                                            className="w-full sm:w-auto px-3 md:px-4 py-2.5 bg-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 disabled:opacity-60 disabled:active:scale-100"
                                         >
                                             {t('providers.deny_resignation')}
                                         </button>

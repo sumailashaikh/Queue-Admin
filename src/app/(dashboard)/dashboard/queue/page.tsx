@@ -254,7 +254,11 @@ export default function LiveQueuePage() {
             await fetchEntries(selectedQueue.id);
             showToast(t('queue.success_next'));
         } catch (error: any) {
-            showToast(t('queue.err_next'), "error");
+            const raw = String(error?.response?.data?.message || error?.message || "").trim();
+            const msg = raw.toLowerCase().includes("no available expert")
+                ? "Please assign a service expert to the next customer, then try Next Customer again."
+                : (raw || t('queue.err_next'));
+            showToast(msg, "error");
         } finally {
             setIsSubmitting(false);
         }

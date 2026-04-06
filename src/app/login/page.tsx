@@ -241,7 +241,8 @@ export default function LoginPage() {
                                     />
                                 </div>
                                 <p className="text-[10px] font-bold text-secondary uppercase tracking-widest px-1">
-                                    {regionSettings?.name} ({phoneLimit} Digits)
+                                    <span>{regionSettings?.name} </span>
+                                    <span dir="ltr">({phoneLimit} Digits)</span>
                                 </p>
                             </div>
                             <button
