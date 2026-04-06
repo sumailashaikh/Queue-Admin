@@ -113,6 +113,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
     const servingEntries = entries.filter(e => e.status === 'serving').slice(0, 3);
     const waitingEntries = entries.filter(e => e.status === 'waiting' || e.status === 'checked_in');
     const completedEntriesCount = entries.filter(e => e.status === 'completed').length;
+    const hasActiveGuests = waitingEntries.length > 0;
 
     return (
         <div className={cn(
@@ -157,7 +158,10 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             </div>
 
             <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-12 flex-1 min-h-0 w-full">
-                <div className="col-span-1 lg:col-span-7 flex flex-col gap-4 md:gap-8 w-full">
+                <div className={cn(
+                    "col-span-1 flex flex-col gap-4 md:gap-8 w-full",
+                    hasActiveGuests ? "lg:col-span-7" : "lg:col-span-12"
+                )}>
                     <div className="flex items-center gap-3 md:gap-4 px-2 md:px-6">
                         <div className="h-8 w-8 md:h-14 md:w-14 bg-slate-900 rounded-lg md:rounded-2xl flex flex-shrink-0 items-center justify-center text-white shadow-lg md:shadow-xl shadow-slate-200">
                             <Play className={cn("h-4 w-4 md:h-8 md:w-8 fill-current", isRTL && "rotate-180")} />
@@ -167,7 +171,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
 
                     <div className={cn(
                         "grid gap-3 md:gap-8 flex-1",
-                        servingEntries.length > 2 ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+                        servingEntries.length > 2
+                            ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+                            : servingEntries.length === 2
+                                ? "grid-cols-1 md:grid-cols-2"
+                                : "grid-cols-1"
                     )}>
                         {servingEntries.length > 0 ? (
                             servingEntries.map((item, idx) => (
@@ -214,7 +222,10 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </div>
 
                 {/* Right: Waitlist & Interactions */}
-                <div className="col-span-1 lg:col-span-5 flex flex-col gap-4 md:gap-8 bg-white rounded-[24px] md:rounded-[40px] border border-slate-100 p-4 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.05)] overflow-hidden w-full">
+                <div className={cn(
+                    "col-span-1 lg:col-span-5 flex flex-col gap-4 md:gap-8 bg-white rounded-[24px] md:rounded-[40px] border border-slate-100 p-4 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.05)] overflow-hidden w-full",
+                    !hasActiveGuests && "lg:max-w-xl lg:ml-auto self-start"
+                )}>
                     <div className="flex items-center justify-between border-b border-slate-50 pb-4 md:pb-6">
                         <div className="flex items-center gap-2 md:gap-3">
                             <Users className="h-5 w-5 md:h-8 md:w-8 text-slate-900" />
@@ -227,7 +238,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     </div>
 
                     <div className="flex-1 space-y-2 md:space-y-4 overflow-y-auto pr-1 md:pr-4 scrollbar-hide">
-                        {waitingEntries.slice(0, 8).map((item) => (
+                        {waitingEntries.length > 0 ? waitingEntries.slice(0, 8).map((item) => (
                             <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group w-full overflow-hidden gap-2">
                                 <div className="space-y-0.5 flex-1 min-w-0 pr-2">
                                     <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize truncate">{item.customer_name}</p>
@@ -237,7 +248,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                     {item.display_token}
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
+                                <p className="text-sm md:text-base font-bold text-slate-500">{t('dashboard.no_entries_today')}</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Elite QR Engagement Block */}
