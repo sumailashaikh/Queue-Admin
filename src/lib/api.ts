@@ -35,13 +35,30 @@ export const api = {
             headers: { ...defaultHeaders, ...headers }
         });
 
-        const response = await fetch(url, {
-            ...rest,
-            headers: {
-                ...defaultHeaders,
-                ...headers,
-            },
-        });
+        const timeoutMs = 20000;
+        const timeoutController = !rest.signal ? new AbortController() : null;
+        const timeoutId = timeoutController
+            ? setTimeout(() => timeoutController.abort(), timeoutMs)
+            : null;
+
+        let response: Response;
+        try {
+            response = await fetch(url, {
+                ...rest,
+                signal: rest.signal || timeoutController?.signal,
+                headers: {
+                    ...defaultHeaders,
+                    ...headers,
+                },
+            });
+        } catch (error: any) {
+            if (error?.name === 'AbortError') {
+                throw new Error(`Request timeout after ${Math.floor(timeoutMs / 1000)}s`);
+            }
+            throw error;
+        } finally {
+            if (timeoutId) clearTimeout(timeoutId);
+        }
 
         // Global 401 Handling
         if (response.status === 401) {

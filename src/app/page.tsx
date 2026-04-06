@@ -47,12 +47,6 @@ export default function LandingPage() {
                         </div>
                         <span className="text-lg font-semibold tracking-tight text-slate-900">QueueUp</span>
                     </Link>
-                    <Link
-                        href="/login"
-                        className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
-                    >
-                        Sign in / Sign up
-                    </Link>
                 </div>
             </nav>
 
@@ -193,14 +187,7 @@ export default function LandingPage() {
                         <p className="relative mx-auto mt-4 max-w-lg text-sm text-slate-400 md:text-base">
                             Existing business accounts sign in with phone OTP. New businesses can create their setup in minutes.
                         </p>
-                        <div className="relative mt-8 flex items-center justify-center">
-                            <Link
-                                href="/login"
-                                className="inline-flex items-center justify-center rounded-2xl bg-primary px-10 py-4 text-base font-semibold text-white shadow-lg shadow-primary/30 transition hover:opacity-95 active:scale-[0.98]"
-                            >
-                                Sign in / Sign up
-                            </Link>
-                        </div>
+                        <div className="relative mt-8 flex items-center justify-center" />
                     </div>
                 </section>
             </main>
@@ -217,12 +204,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <p className="text-xs text-slate-500">© {new Date().getFullYear()} QueueUp. All rights reserved.</p>
-                    <Link
-                        href="/login"
-                        className="text-sm font-medium text-slate-700 underline-offset-4 hover:text-primary hover:underline"
-                    >
-                        Business sign in
-                    </Link>
+                    <span className="text-sm font-medium text-slate-500">One secure login for all users</span>
                 </div>
             </footer>
         </div>
