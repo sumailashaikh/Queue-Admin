@@ -15,6 +15,11 @@ export const authService = {
             localStorage.setItem('auth_user', JSON.stringify(result.data.user));
             // One-time use on client side as well
             if (invite_token) localStorage.removeItem('pending_invite_token');
+            try {
+                sessionStorage.removeItem('queueup_invite_flow');
+            } catch {
+                /* ignore */
+            }
         }
 
         return result;

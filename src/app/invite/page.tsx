@@ -12,6 +12,7 @@ function InviteLandingInner() {
     if (token) {
       try {
         localStorage.setItem("pending_invite_token", token);
+        sessionStorage.setItem("queueup_invite_flow", "1");
       } catch { }
     }
     router.replace("/login");

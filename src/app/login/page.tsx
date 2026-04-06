@@ -38,6 +38,49 @@ export default function LoginPage() {
         return () => clearInterval(timer);
     }, [resendTimer]);
 
+    /** Drop stale invite tokens unless we just came from /invite (installed PWAs keep localStorage a long time). */
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            if (sessionStorage.getItem("queueup_invite_flow") !== "1") {
+                localStorage.removeItem("pending_invite_token");
+            }
+        } catch {
+            /* private mode */
+        }
+    }, []);
+
+    /**
+     * Chrome/Android Web OTP API: reads OTP from SMS when the message includes an
+     * origin-bound line (see Supabase phone template). Without that line in the SMS,
+     * the OS may still suggest the code via autocomplete="one-time-code" — behavior varies.
+     */
+    useEffect(() => {
+        if (step !== 2 || typeof window === "undefined") return;
+        if (!("OTPCredential" in window)) return;
+
+        const ac = new AbortController();
+        const req = {
+            otp: { transport: ["sms"] as const },
+            signal: ac.signal
+        } as Parameters<typeof navigator.credentials.get>[0];
+
+        navigator.credentials
+            .get(req)
+            .then((cred) => {
+                const code = cred && "code" in cred ? (cred as { code?: string }).code : undefined;
+                if (code) {
+                    const digits = String(code).replace(/\D/g, "").slice(0, 6);
+                    if (digits.length === 6) setOtp(digits);
+                }
+            })
+            .catch(() => {
+                /* No SMS match, permission denied, or unsupported — expected on many devices */
+            });
+
+        return () => ac.abort();
+    }, [step]);
+
     useEffect(() => {
         let currentRegion = REGIONS.find(r => r.code === "IN");
         try {
