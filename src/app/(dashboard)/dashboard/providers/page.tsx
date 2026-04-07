@@ -27,7 +27,6 @@ import { businessService } from "@/services/businessService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
-import { buildPatch } from "@/lib/patch";
 
 export default function ProvidersPage() {
     const { business } = useAuth();
@@ -235,33 +234,59 @@ export default function ProvidersPage() {
 
         const submitData = {
             ...formData,
-            translations: {
-                ...(formData.translations || {}),
-                [language]: {
-                    name: formData.name.trim(),
-                    role: formData.role.trim(),
-                    department: formData.department.trim()
-                }
-            }
+            name: formData.name.trim(),
+            phone: formData.phone.trim(),
+            role: formData.role.trim(),
+            department: formData.department.trim()
         };
 
         setIsSubmitting(true);
         try {
             if (selectedProvider) {
-                const patch = buildPatch(
-                    {
-                        name: selectedProvider.name || "",
-                        phone: selectedProvider.phone || "",
-                        role: selectedProvider.role || "",
-                        department: selectedProvider.department || "",
-                        translations: (selectedProvider.translations as any) || {}
-                    },
-                    submitData
-                );
+                const trans = (selectedProvider.translations as any)?.[language];
+                const originalName = ((typeof trans === 'object' && trans.name) || selectedProvider.name || "").trim();
+                const originalRole = ((typeof trans === 'object' && trans.role) || selectedProvider.role || "").trim();
+                const originalDept = ((typeof trans === 'object' && trans.department) || selectedProvider.department || "").trim();
+                const originalPhone = (selectedProvider.phone || "").trim();
+
+                const patch: any = {};
+                if (submitData.name !== originalName) patch.name = submitData.name;
+                if (submitData.phone !== originalPhone) patch.phone = submitData.phone;
+                if (submitData.role !== originalRole) patch.role = submitData.role;
+                if (submitData.department !== originalDept) patch.department = submitData.department;
+
+                // Only send translations when translated fields changed
+                const nextLangTrans: any = {
+                    ...(typeof trans === 'object' && trans ? trans : {})
+                };
+                let transChanged = false;
+                if (submitData.name !== originalName) { nextLangTrans.name = submitData.name; transChanged = true; }
+                if (submitData.role !== originalRole) { nextLangTrans.role = submitData.role; transChanged = true; }
+                if (submitData.department !== originalDept) { nextLangTrans.department = submitData.department; transChanged = true; }
+
+                if (transChanged) {
+                    patch.translations = {
+                        ...((selectedProvider.translations as any) || {}),
+                        [language]: nextLangTrans
+                    };
+                }
+
                 await providerService.updateProvider(selectedProvider.id, patch);
                 showToast(t('providers.success_update'));
             } else {
-                const resp = await providerService.createProvider({ ...submitData, business_id: business?.id, is_active: true });
+                const resp = await providerService.createProvider({
+                    ...submitData,
+                    translations: {
+                        ...(formData.translations || {}),
+                        [language]: {
+                            name: submitData.name,
+                            role: submitData.role,
+                            department: submitData.department
+                        }
+                    },
+                    business_id: business?.id,
+                    is_active: true
+                });
                 const status = resp.status || 'success';
                 if (status === 'error') {
                     const msg = resp.message || 'providers.err_save';
