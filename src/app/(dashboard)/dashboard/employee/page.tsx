@@ -203,7 +203,7 @@ function EmployeeDashboardContent() {
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             fetchData();
         } catch (error) {
-            showToast(t('providers.err_add_leave'), "error");
+            showToast(parseApiMessage(error as any, 'providers.err_add_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }

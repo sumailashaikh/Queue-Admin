@@ -252,6 +252,7 @@
     "err_load_leaves": "Error al cargar ausencias activas.",
     "success_leave_add": "Ausencia programada con ?xito.",
     "err_add_leave": "Error al programar ausencia.",
+    "err_leave_overlap": "Ya existe una solicitud de ausencia para esas fechas. Por favor elige otras fechas.",
     "err_leave_past_dates": "Las fechas de ausencia no pueden ser pasadas.",
     "success_leave_delete": "Ausencia cancelada con ?xito.",
     "whatsapp_leave_msg": "Hola {{name}}, su permiso del {{start}} al {{end}} ha sido aprobado.",
