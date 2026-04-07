@@ -477,7 +477,7 @@ export default function ProvidersPage() {
             const resp = await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
             showToast(t('providers.success_leave_status_updated', { status: t(`employee.status_${status.toLowerCase()}`) }));
             if (resp?.notification_sent === false) {
-                showToast(t('providers.leave_status_updated_notify_warning'), "error");
+                showToast(t('providers.leave_status_updated_notify_warning'));
             }
             setRejectModal({ isOpen: false, leaveId: "", reason: "" });
             setLeavesData(await providerService.getLeaves(selectedProvider.id));

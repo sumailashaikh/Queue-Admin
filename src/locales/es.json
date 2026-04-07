@@ -282,7 +282,7 @@
     "leave_reject_reason_placeholder": "Explique brevemente por qu? no puede aprobarse (p. ej., personal o fechas bloqueadas). Se enviar? por SMS/WhatsApp.",
     "leave_reject_reason_required": "Escriba un mensaje para el empleado antes de rechazar.",
     "success_leave_status_updated": "Solicitud de permiso actualizada: {{status}}.",
-    "leave_status_updated_notify_warning": "Estado actualizado, pero no se pudo enviar la notificaci?n al empleado.",
+    "leave_status_updated_notify_warning": "Estado actualizado. Si no se entrega SMS/WhatsApp, el empleado aún puede ver este mensaje en la aplicación.",
     "manager_note_label": "Nota de su responsable",
     "rejection": {
       "reason": "Mensaje de su responsable"

@@ -276,7 +276,7 @@
     "leave_reject_reason_placeholder": "اشرح بإيجاز لماذا لا يمكن الموافقة (مثلاً: نقص فريق العمل). تُرسل للموظف عبر الرسائل أو واتساب.",
     "leave_reject_reason_required": "يرجى إدخال رسالة للموظف قبل الرفض.",
     "success_leave_status_updated": "تم تحديث طلب الإجازة: {{status}}.",
-    "leave_status_updated_notify_warning": "تم تحديث الحالة، لكن تعذر إرسال إشعار للموظف.",
+    "leave_status_updated_notify_warning": "تم تحديث الحالة. إذا لم يتم تسليم SMS/WhatsApp، فسيظل الموظف يرى هذه الرسالة داخل التطبيق.",
     "manager_note_label": "ملاحظة من المدير",
     "rejection": {
       "reason": "رسالة من المشرف"

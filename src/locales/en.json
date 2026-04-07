@@ -356,7 +356,7 @@
     "leave_reject_reason_placeholder": "Briefly explain why this request cannot be approved (for example staffing or blackout dates). This text is sent to the employee by SMS/WhatsApp.",
     "leave_reject_reason_required": "Please enter a message for the employee before declining.",
     "success_leave_status_updated": "Leave request updated: {{status}}.",
-    "leave_status_updated_notify_warning": "Leave status updated, but employee notification could not be delivered.",
+    "leave_status_updated_notify_warning": "Leave status updated. If SMS/WhatsApp is not delivered, the employee can still see this message in the app.",
     "manager_note_label": "Note from your manager",
     "rejection": {
       "reason": "Message from your manager"
