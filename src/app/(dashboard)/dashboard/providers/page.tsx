@@ -27,6 +27,7 @@ import { businessService } from "@/services/businessService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
+import { buildPatch } from "@/lib/patch";
 
 export default function ProvidersPage() {
     const { business } = useAuth();
@@ -247,7 +248,17 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             if (selectedProvider) {
-                await providerService.updateProvider(selectedProvider.id, submitData);
+                const patch = buildPatch(
+                    {
+                        name: selectedProvider.name || "",
+                        phone: selectedProvider.phone || "",
+                        role: selectedProvider.role || "",
+                        department: selectedProvider.department || "",
+                        translations: (selectedProvider.translations as any) || {}
+                    },
+                    submitData
+                );
+                await providerService.updateProvider(selectedProvider.id, patch);
                 showToast(t('providers.success_update'));
             } else {
                 const resp = await providerService.createProvider({ ...submitData, business_id: business?.id, is_active: true });

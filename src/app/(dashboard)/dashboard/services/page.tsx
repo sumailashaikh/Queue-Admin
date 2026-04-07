@@ -20,6 +20,7 @@ import { serviceService, Service } from "@/services/serviceService";
 import { useAuth } from "@/hooks/useAuth";
 import { cn, formatCurrency, validateLanguage, getCurrencySymbol } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { buildPatch } from "@/lib/patch";
 
 // Custom Delete Dialog
 function DeleteDialog({ isOpen, onClose, onConfirm, serviceName, isDeleting, error }: {
@@ -246,7 +247,26 @@ export default function ServicesPage() {
                     [language]: { name: trimmedName, description: editingService.description.trim() }
                 }
             };
-            await serviceService.updateService(editingService.id, updatedService);
+            const patch = originalService
+                ? buildPatch(
+                    {
+                        name: originalService.name || "",
+                        description: originalService.description || "",
+                        duration_minutes: Number(originalService.duration_minutes),
+                        price: Number(originalService.price),
+                        translations: (originalService.translations as any) || {}
+                    },
+                    {
+                        name: updatedService.name || "",
+                        description: updatedService.description || "",
+                        duration_minutes: Number(updatedService.duration_minutes),
+                        price: Number(updatedService.price),
+                        translations: (updatedService.translations as any) || {}
+                    }
+                )
+                : updatedService;
+
+            await serviceService.updateService(editingService.id, patch);
             await fetchServices();
             setIsEditModalOpen(false);
             setEditingService(null);
