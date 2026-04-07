@@ -264,7 +264,7 @@ export default function ProvidersPage() {
                 if (submitData.role !== originalRole) { nextLangTrans.role = submitData.role; transChanged = true; }
                 if (submitData.department !== originalDept) { nextLangTrans.department = submitData.department; transChanged = true; }
 
-                if (transChanged) {
+                if (transChanged && language !== 'en') {
                     patch.translations = {
                         ...((selectedProvider.translations as any) || {}),
                         [language]: nextLangTrans

@@ -223,7 +223,7 @@ export default function ServicesPage() {
                 editingService.description.trim() !== originalService.description.trim() ||
                 Number(editingService.duration_minutes) !== Number(originalService.duration_minutes) ||
                 Number(editingService.price) !== Number(originalService.price) ||
-                JSON.stringify(editingService.translations?.[language] || {}) !== JSON.stringify(originalService.translations?.[language] || {});
+                (language !== 'en' && JSON.stringify(editingService.translations?.[language] || {}) !== JSON.stringify(originalService.translations?.[language] || {}));
             
             if (!hasChanges) {
                 showToast(t('services.no_changes_detected'), "error");
@@ -239,14 +239,17 @@ export default function ServicesPage() {
 
         setIsSubmitting(true);
         try {
-            const updatedService = {
+            const updatedService: any = {
                 ...editingService,
                 name: trimmedName,
-                translations: {
+                description: editingService.description.trim()
+            };
+            if (language !== 'en') {
+                updatedService.translations = {
                     ...(editingService.translations || {}),
                     [language]: { name: trimmedName, description: editingService.description.trim() }
-                }
-            };
+                };
+            }
             const patch = originalService
                 ? buildPatch(
                     {
@@ -254,14 +257,14 @@ export default function ServicesPage() {
                         description: originalService.description || "",
                         duration_minutes: Number(originalService.duration_minutes),
                         price: Number(originalService.price),
-                        translations: (originalService.translations as any) || {}
+                        translations: language !== 'en' ? ((originalService.translations as any) || {}) : undefined
                     },
                     {
                         name: updatedService.name || "",
                         description: updatedService.description || "",
                         duration_minutes: Number(updatedService.duration_minutes),
                         price: Number(updatedService.price),
-                        translations: (updatedService.translations as any) || {}
+                        translations: language !== 'en' ? ((updatedService.translations as any) || {}) : undefined
                     }
                 )
                 : updatedService;
