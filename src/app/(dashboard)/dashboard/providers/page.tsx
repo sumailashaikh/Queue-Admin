@@ -189,16 +189,14 @@ export default function ProvidersPage() {
 
     useEffect(() => {
         fetchProviders();
-        fetchServices();
         fetchResignations();
 
         const interval = setInterval(() => {
             fetchProviders();
-            fetchServices();
             fetchResignations();
-        }, 60000);
+        }, 180000);
         return () => clearInterval(interval);
-    }, [fetchProviders, fetchServices, fetchResignations]);
+    }, [fetchProviders, fetchResignations]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -354,6 +352,7 @@ export default function ProvidersPage() {
     const openAssignModal = (provider: ServiceProvider) => {
         setSelectedProvider(provider);
         setAssignedServiceIds(provider.services?.map(s => s.id) || []);
+        if (!services.length) fetchServices();
         setIsAssignModalOpen(true);
     };
 
