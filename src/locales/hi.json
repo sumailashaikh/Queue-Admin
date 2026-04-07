@@ -288,6 +288,8 @@
     "err_resignation": "इस्तीफा अनुरोध जमा करने में विफल।",
     "success_deactivate_full": "कर्मचारी निष्क्रिय किया गया और इस्तीफा स्वीकृत हुआ।",
     "success_resignation_rejected": "इस्तीफा अनुरोध सफलतापूर्वक अस्वीकृत किया गया।",
+    "resignation_active_till": "स्वीकृत ({{date}} तक सक्रिय)",
+    "resignation_deactivated": "निष्क्रिय (एक्सेस ब्लॉक)",
     "err_active_tasks": "निष्क्रिय नहीं किया जा सकता: कर्मचारी के पास {{count}} सक्रिय कार्य हैं।"
   },
   "dashboard": {

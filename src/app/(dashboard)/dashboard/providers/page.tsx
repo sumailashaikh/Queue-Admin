@@ -181,8 +181,7 @@ export default function ProvidersPage() {
         if (!business?.id) return;
         try {
             const data = await businessService.getResignationRequests(business.id);
-            const pendingOnly = (data || []).filter((r: any) => String(r?.status || '').toUpperCase() === 'PENDING');
-            setResignations(pendingOnly);
+            setResignations(data || []);
         } catch (error) {
             console.error("Failed to fetch resignations:", error);
         }
@@ -454,8 +453,10 @@ export default function ProvidersPage() {
         setIsSubmitting(true);
         try {
             await providerService.deleteLeave(leaveId);
+            // Optimistically remove immediately so UI cannot look stale.
+            setLeavesData(prev => prev.filter((l: any) => l.id !== leaveId));
             showToast(t('providers.success_leave_delete'));
-            setLeavesData(await providerService.getLeaves(selectedProvider.id));
+            setLeavesData(await providerService.getLeaves(selectedProvider.id, business?.id));
             await fetchProviders();
         } catch (error: any) {
             const msg = error.response?.data?.message || 'providers.err_delete_leave';
@@ -558,6 +559,7 @@ export default function ProvidersPage() {
 
     const daysList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const filteredProviders = providers.filter(p => p.is_active !== false && p.name.toLowerCase().includes(search.toLowerCase()));
+    const pendingResignationCount = resignations.filter((r: any) => String(r?.status || '').toUpperCase() === 'PENDING').length;
 
     if (loading) {
         return <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('dashboard.loading')}</p></div>;
@@ -576,14 +578,14 @@ export default function ProvidersPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input type="text" placeholder={t('providers.search_placeholder')} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all font-medium shadow-sm" />
                     </div>
-                    {resignations.length > 0 && (
+                    {pendingResignationCount > 0 && (
                         <button
                             onClick={() => setIsResignationModalOpen(true)}
                             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-sm font-bold shadow-sm hover:bg-rose-100"
                         >
                             <AlertCircle className="h-4 w-4" />
                             <span>{t('providers.resignation_requests')}</span>
-                            <span dir="ltr">({resignations.length})</span>
+                            <span dir="ltr">({pendingResignationCount})</span>
                         </button>
                     )}
                     <button onClick={() => { setInviteFormData({ name: "", phone: "", custom_message: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
@@ -887,14 +889,32 @@ export default function ProvidersPage() {
                             </button>
                         </div>
                         <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1 md:pr-2 custom-scrollbar">
-                            {resignations.length === 0 ? <p className="text-center py-10 text-xs font-bold text-slate-400 uppercase tracking-widest">{t('providers.no_resignations')}</p> : resignations.map((req: any) => (
+                            {resignations.length === 0 ? <p className="text-center py-10 text-xs font-bold text-slate-400 uppercase tracking-widest">{t('providers.no_resignations')}</p> : resignations.map((req: any) => {
+                                const raw = String(req?.status || '').toUpperCase();
+                                const isPending = raw === 'PENDING';
+                                const isApproved = raw === 'APPROVED';
+                                const requestedLastDate = String(req?.requested_last_date || '');
+                                const todayStr = new Date().toLocaleDateString('en-CA');
+                                const stillActiveUntilDate = isApproved && requestedLastDate && todayStr < requestedLastDate;
+                                const statusLabel = isPending
+                                    ? t('employee.status_pending')
+                                    : isApproved
+                                        ? (stillActiveUntilDate
+                                            ? t('providers.resignation_active_till', { date: new Date(requestedLastDate).toLocaleDateString() })
+                                            : t('providers.resignation_deactivated'))
+                                        : t('employee.status_rejected');
+                                return (
                                 <div key={req.id} className="p-4 md:p-6 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div className="space-y-1 min-w-0">
                                         <p className="text-sm font-bold text-slate-900 break-words">{req.profiles?.full_name}</p>
                                         <p className="text-[10px] text-slate-500">
                                             Last Date: <span className="text-slate-900 font-bold" dir="ltr">{new Date(req.requested_last_date).toLocaleDateString()}</span>
                                         </p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                                            {statusLabel}
+                                        </p>
                                     </div>
+                                    {isPending && (
                                     <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:gap-2">
                                         <button
                                             disabled={isSubmitting}
@@ -911,8 +931,9 @@ export default function ProvidersPage() {
                                             {t('providers.deny_resignation')}
                                         </button>
                                     </div>
+                                    )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 </div>

@@ -38,7 +38,13 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     isPendingPayment,
     onUpdatePayment
 }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const getProviderName = React.useCallback((p: any) => {
+        const tr = p?.translations?.[language];
+        if (typeof tr === "object" && tr?.name) return tr.name;
+        return p?.name || "";
+    }, [language]);
+
     const [isInitializing, setIsInitializing] = React.useState(false);
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
     const paymentButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -220,7 +226,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                         <option value="">{isInitializing ? t('queue.starting') || 'Starting...' : t('queue.select_expert')}</option>
                         {providers.filter(p => p.is_active).map(p => (
                             <option key={p.id} value={p.id} className="font-sans py-2 text-slate-900">
-                                {p.name} {p.current_tasks_count > 0 ? `· ${t('queue.busy')}` : !p.is_available ? `· ${t('queue.away')}` : ""}
+                                {getProviderName(p)} {p.current_tasks_count > 0 ? `· ${t('queue.busy')}` : !p.is_available ? `· ${t('queue.away')}` : ""}
                             </option>
                         ))}
                     </select>
@@ -266,7 +272,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                                     const onLeave = p.is_available === false;
                                     return (
                                         <option key={p.id} value={p.id} className="font-sans py-2 text-slate-900">
-                                            {p.name} {isBusy ? `· ${t('queue.busy')}` : onLeave ? `· ${t('queue.away')}` : ""}
+                                            {getProviderName(p)} {isBusy ? `· ${t('queue.busy')}` : onLeave ? `· ${t('queue.away')}` : ""}
                                         </option>
                                     );
                                 })}

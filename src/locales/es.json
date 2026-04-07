@@ -297,6 +297,8 @@
     "err_resignation": "Error al enviar la solicitud de renuncia.",
     "success_deactivate_full": "Empleado desactivado y renuncia aprobada con exito.",
     "success_resignation_rejected": "Solicitud de renuncia rechazada con exito.",
+    "resignation_active_till": "Aprobada (activa hasta {{date}})",
+    "resignation_deactivated": "Desactivada (acceso bloqueado)",
     "err_active_tasks": "No se puede desactivar: el empleado tiene {{count}} tareas activas."
   },
   "dashboard": {

@@ -334,6 +334,8 @@
     "err_resignation": "Failed to submit resignation request.",
     "success_deactivate_full": "Employee deactivated and resignation approved successfully.",
     "success_resignation_rejected": "Resignation request rejected successfully.",
+    "resignation_active_till": "Approved (active till {{date}})",
+    "resignation_deactivated": "Deactivated (access blocked)",
     "err_active_tasks": "Cannot deactivate: They still have {{count}} open step(s) on today's live queue (waiting or in service). Finish or reassign those guests first.",
     "err_unauthorized_add": "Unauthorized to add providers to this business.",
     "err_not_found": "Service provider not found or unauthorized.",

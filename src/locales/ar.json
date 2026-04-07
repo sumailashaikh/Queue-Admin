@@ -291,6 +291,8 @@
     "err_resignation": "فشل في تقديم طلب الاستقالة.",
     "success_deactivate_full": "تم تعطيل الموظف والموافقة على الاستقالة بنجاح.",
     "success_resignation_rejected": "تم رفض طلب الاستقالة بنجاح.",
+    "resignation_active_till": "تمت الموافقة (نشط حتى {{date}})",
+    "resignation_deactivated": "تم إلغاء التفعيل (تم حظر الوصول)",
     "deactivate_confirm": "هل أنت متأكد أنك تريد إلغاء تنشيط هذا الخبير؟ لن يظهروا بعد الآن في القائمة النشطة.",
     "err_active_tasks": "لا يمكن إلغاء التفعيل: لدى الموظف {{count}} مهام نشطة."
   },

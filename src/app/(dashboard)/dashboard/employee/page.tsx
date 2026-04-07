@@ -195,11 +195,6 @@ function EmployeeDashboardContent() {
             }
             const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
             showToast(t('employee.leave_success'));
-            if (resp?.owner_phone_configured === false) {
-                showToast(t('employee.leave_owner_no_phone_hint'));
-            } else if (resp?.notification_sent === false) {
-                showToast(t('employee.leave_notify_owner_failed'));
-            }
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             fetchData();
         } catch (error) {
