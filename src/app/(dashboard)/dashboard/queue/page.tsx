@@ -647,10 +647,10 @@ export default function LiveQueuePage() {
                                 : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        {t('queue.active_queue')} ({entries.filter(e => {
+                        {t('queue.active_queue')} <span dir="ltr">({entries.filter(e => {
                             const s = (e.status || "").toLowerCase().trim();
                             return s === 'waiting' || s === 'serving' || s === 'skipped';
-                        }).length})
+                        }).length})</span>
                     </button>
                     <button
                         onClick={() => setViewMode('noshow')}
@@ -661,7 +661,7 @@ export default function LiveQueuePage() {
                                 : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        {t('queue.no_shows')} ({entries.filter(e => (e.status || "").toLowerCase().trim() === 'no_show').length})
+                        {t('queue.no_shows')} <span dir="ltr">({entries.filter(e => (e.status || "").toLowerCase().trim() === 'no_show').length})</span>
                     </button>
                 </div>
 
