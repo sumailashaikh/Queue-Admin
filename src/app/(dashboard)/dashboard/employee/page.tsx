@@ -118,7 +118,7 @@ function EmployeeDashboardContent() {
                 : [];
             setProfile(profileData);
             setTasks(tasksData);
-            setLeaves(leavesData);
+            setLeaves((leavesData || []).filter((l: any) => String(l?.status || "").toUpperCase() !== "REJECTED"));
         } catch (error) {
             console.error("Failed to fetch employee data:", error);
         } finally {
@@ -193,8 +193,13 @@ function EmployeeDashboardContent() {
                 showToast(t('providers.err_add_leave'), "error");
                 return;
             }
-            await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
+            const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
             showToast(t('employee.leave_success'));
+            if (resp?.owner_phone_configured === false) {
+                showToast(t('employee.leave_owner_no_phone_hint'), "error");
+            } else if (resp?.notification_sent === false) {
+                showToast(t('employee.leave_notify_owner_failed'), "error");
+            }
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
             fetchData();
         } catch (error) {

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Clock, CalendarCheck, TrendingUp, Wallet, Share2, QrCode, Monitor, X, Printer, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { Users, Clock, CalendarCheck, TrendingUp, Wallet, Share2, QrCode, Monitor, X, Printer, CheckCircle2, Bell } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { analyticsService, DailySummary } from "@/services/analyticsService";
 import { queueService } from "@/services/queueService";
 import { businessService } from "@/services/businessService"; // Assuming businessService is needed for business data
+import { providerService } from "@/services/providerService";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardPage() {
@@ -31,6 +33,7 @@ export default function DashboardPage() {
     // Live Analytics States
     const [popularServices, setPopularServices] = useState<{ name: string, count: number, color: string }[]>([]);
     const [queueHealth, setQueueHealth] = useState({ completed: 0, waiting: 0, serving: 0, skipped: 0 });
+    const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -64,6 +67,17 @@ export default function DashboardPage() {
                 const summary = await analyticsService.getDailySummary();
                 const myBusiness = await businessService.getMyBusiness(); // Fetch business data
                 setBusiness(myBusiness);
+
+                if (myBusiness?.id && user?.role === "owner") {
+                    try {
+                        const n = await providerService.getPendingLeaveCount(myBusiness.id);
+                        setPendingLeaveCount(n);
+                    } catch {
+                        setPendingLeaveCount(0);
+                    }
+                } else {
+                    setPendingLeaveCount(0);
+                }
 
                 // Fetch active queues to get serving/waiting counts
                 const queues = await queueService.getMyQueues();
@@ -126,7 +140,7 @@ export default function DashboardPage() {
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30s
         return () => clearInterval(interval);
-    }, [language]);
+    }, [language, user?.id, user?.role]);
 
     return (
         <div className="relative">
@@ -156,6 +170,26 @@ export default function DashboardPage() {
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('dashboard.business_overview')}</h1>
                     <p className="text-sm font-semibold text-slate-500">{t('dashboard.real_time_insights')}</p>
                 </div>
+
+                {user?.role === "owner" && pendingLeaveCount > 0 && (
+                    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                                <Bell className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-amber-950">{t('dashboard.pending_leave_alert', { count: pendingLeaveCount })}</p>
+                                <p className="mt-1 text-xs font-semibold text-amber-900/80">{t('dashboard.pending_leave_alert_hint')}</p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/dashboard/providers"
+                            className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 px-5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-colors hover:bg-slate-800"
+                        >
+                            {t('dashboard.pending_leave_alert_cta')}
+                        </Link>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     {stats.map((stat) => (

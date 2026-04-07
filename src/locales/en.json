@@ -405,7 +405,10 @@
     "ios_safari": "iOS (Safari)",
     "desktop_chrome": "Desktop / Chrome",
     "step_1_desc": "Tap the Share button then select Add to Home Screen.",
-    "step_2_desc": "Click the install icon in the URL bar, or tap the Menu (⋮) and select Install app."
+    "step_2_desc": "Click the install icon in the URL bar, or tap the Menu (⋮) and select Install app.",
+    "pending_leave_alert": "You have {{count}} pending leave request(s)",
+    "pending_leave_alert_hint": "Review and approve or reject them on the Providers page so staff get SMS/WhatsApp updates.",
+    "pending_leave_alert_cta": "Open Providers"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -623,6 +626,8 @@
     "applied_leaves": "My Leave Requests",
     "apply_new_leave": "Apply for Leave",
     "leave_success": "Leave application submitted",
+    "leave_notify_owner_failed": "Leave saved, but we could not deliver SMS/WhatsApp to your manager. They can still see it under Providers → Manage Leave.",
+    "leave_owner_no_phone_hint": "Leave saved. Your business has no phone on file for alerts—ask the owner to add a number in Settings.",
     "err_no_service_task": "Could not find this work step. Refresh and try again.",
     "status_pending": "Pending Approval",
     "status_approved": "Approved",

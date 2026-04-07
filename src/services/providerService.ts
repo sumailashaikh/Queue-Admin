@@ -30,6 +30,14 @@ export const providerService = {
         return result.data || [];
     },
 
+    async getPendingLeaveCount(businessId: string): Promise<number> {
+        const result = await api.get<{ pending_count: number }>(
+            `/service-providers/leaves/pending-count?business_id=${encodeURIComponent(businessId)}`
+        );
+        const n = (result as any)?.data?.pending_count;
+        return typeof n === 'number' ? n : 0;
+    },
+
     async createProvider(data: Partial<ServiceProvider>): Promise<any> {
         const result = await api.post<ServiceProvider>('/service-providers', data);
         return result;
