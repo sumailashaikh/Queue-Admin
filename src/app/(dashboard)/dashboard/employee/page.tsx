@@ -22,6 +22,7 @@ import { cn, formatCurrency, validateLanguage, formatLeaveDateRange } from "@/li
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { queueService, QueueEntry } from "@/services/queueService";
+import { appointmentService } from "@/services/appointmentService";
 
 function pickQueueEntryServiceId(entry: QueueEntry, action: "start" | "complete"): string | null {
     const rows = entry.queue_entry_services;
@@ -50,10 +51,13 @@ function EmployeeDashboardContent() {
     
     const [profile, setProfile] = useState<ServiceProvider | null>(null);
     const [tasks, setTasks] = useState<QueueEntry[]>([]);
+    const [appointments, setAppointments] = useState<any[]>([]);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'work' | 'leave'>(tabParam === 'leave' ? 'leave' : 'work');
+    const [leaveImpact, setLeaveImpact] = useState<any | null>(null);
+    const [isImpactModalOpen, setIsImpactModalOpen] = useState(false);
 
     // Update activeTab if URL parameter changes
     useEffect(() => {
@@ -69,6 +73,9 @@ function EmployeeDashboardContent() {
         start_date: "",
         end_date: "",
         leave_type: "holiday",
+        leave_kind: "FULL_DAY",
+        start_time: "",
+        end_time: "",
         note: ""
     });
     
@@ -109,15 +116,17 @@ function EmployeeDashboardContent() {
 
     const fetchData = useCallback(async () => {
         try {
-            const [profileData, tasksData] = await Promise.all([
+            const [profileData, tasksData, apptsData] = await Promise.all([
                 providerService.getMyProfile(),
-                queueService.getMyTasks()
+                queueService.getMyTasks(),
+                appointmentService.getMyAssignedAppointments()
             ]);
             const leavesData = profileData?.id
                 ? await providerService.getLeaves(profileData.id)
                 : [];
             setProfile(profileData);
             setTasks(tasksData);
+            setAppointments(apptsData || []);
             setLeaves((leavesData || []).filter((l: any) => String(l?.status || "").toUpperCase() !== "REJECTED"));
         } catch (error) {
             console.error("Failed to fetch employee data:", error);
@@ -174,6 +183,11 @@ function EmployeeDashboardContent() {
             showToast(t('providers.all_fields_required'), "error");
             return;
         }
+        const kind = String((leaveFormData as any).leave_kind || 'FULL_DAY').toUpperCase();
+        if ((kind === 'HALF_DAY' || kind === 'EMERGENCY') && (!leaveFormData.start_time || !leaveFormData.end_time)) {
+            showToast(t('providers.err_leave_time_required'), "error");
+            return;
+        }
         if (!validateLanguage(leaveFormData.note, language)) {
             showToast(t('common.err_invalid_chars'), "error");
             return;
@@ -193,12 +207,67 @@ function EmployeeDashboardContent() {
                 showToast(t('providers.err_add_leave'), "error");
                 return;
             }
-            const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
+
+            // Smart leave validation: warn/block based on appointments + regular/VIP
+            const impactResp = await providerService.validateLeave(profile.id, {
+                start_date: leaveFormData.start_date,
+                end_date: leaveFormData.end_date,
+                leave_kind: (leaveFormData as any).leave_kind,
+                start_time: leaveFormData.start_time || undefined,
+                end_time: leaveFormData.end_time || undefined
+            });
+            const impact = impactResp?.data;
+            const policy = impact?.policy || {};
+            const shouldOpenModal =
+                (impact?.total_appointments || 0) > 0 ||
+                (impact?.regular_customers || 0) > 0 ||
+                (impact?.vip_customers || 0) > 0;
+            if (shouldOpenModal && (policy.vip_requires_owner_approval || policy.emergency_requires_handling || (impact?.regular_customers || 0) > 0)) {
+                setLeaveImpact(impact);
+                setIsImpactModalOpen(true);
+                return;
+            }
+
+            await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
             showToast(t('employee.leave_success'));
-            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error) {
             showToast(parseApiMessage(error as any, 'providers.err_add_leave'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const submitLeaveWithOwnerApproval = async () => {
+        if (!profile?.id) return;
+        setIsSubmitting(true);
+        try {
+            await providerService.addLeave(profile.id, { ...leaveFormData, allow_owner_approval: true, ui_language: language } as any);
+            setIsImpactModalOpen(false);
+            setLeaveImpact(null);
+            showToast(t('employee.leave_success'));
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
+            fetchData();
+        } catch (error: any) {
+            showToast(parseApiMessage(error, 'providers.err_add_leave'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const submitLeaveAnyway = async () => {
+        if (!profile?.id) return;
+        setIsSubmitting(true);
+        try {
+            await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language } as any);
+            setIsImpactModalOpen(false);
+            setLeaveImpact(null);
+            showToast(t('employee.leave_success'));
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
+            fetchData();
+        } catch (error: any) {
+            showToast(parseApiMessage(error, 'providers.err_add_leave'), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -238,6 +307,8 @@ function EmployeeDashboardContent() {
 
     const completedToday = tasks.filter(t => t.status === 'completed').length;
     const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const todaysAppointments = appointments.filter((a: any) => String(a?.start_time || '').slice(0, 10) === todayStr);
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24 md:pb-8">
@@ -360,7 +431,38 @@ function EmployeeDashboardContent() {
                                         <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider text-center px-8">{t('employee.no_tasks_desc')}</p>
                                     </div>
                                 ) : (
-                                    tasks.map((task, idx) => (
+                                    <>
+                                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('appointments.title')}</p>
+                                                    <p className="text-2xl font-black text-slate-900 mt-1">{todaysAppointments.length}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('dashboard.today')}</p>
+                                                </div>
+                                                <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                                                    <CalendarClock className="h-6 w-6" />
+                                                </div>
+                                            </div>
+                                            {appointments.length > 0 && (
+                                                <div className="mt-5 space-y-3">
+                                                    {(appointments || []).slice(0, 3).map((a: any) => (
+                                                        <div key={a.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {a?.service?.name || t('services.title')}
+                                                                </p>
+                                                            </div>
+                                                            <span className="text-[10px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                                                {String(a.appointment_state || '').toLowerCase()}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {tasks.map((task, idx) => (
                                         <motion.div 
                                             key={task.id}
                                             initial={{ opacity: 0, y: 10 }}
@@ -418,7 +520,8 @@ function EmployeeDashboardContent() {
                                                 )}
                                             </div>
                                         </motion.div>
-                                    ))
+                                        ))}
+                                    </>
                                 )}
                             </motion.div>
                         ) : (
@@ -480,6 +583,42 @@ function EmployeeDashboardContent() {
                                             <option value="other">{t('providers.other')}</option>
                                         </select>
                                     </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.leave_kind')}</label>
+                                        <select
+                                            value={(leaveFormData as any).leave_kind}
+                                            onChange={e => setLeaveFormData({ ...(leaveFormData as any), leave_kind: e.target.value })}
+                                            className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all appearance-none"
+                                        >
+                                            <option value="FULL_DAY">{t('providers.full_day')}</option>
+                                            <option value="HALF_DAY">{t('providers.half_day')}</option>
+                                            <option value="EMERGENCY">{t('providers.emergency_time')}</option>
+                                        </select>
+                                    </div>
+
+                                    {(['HALF_DAY', 'EMERGENCY'].includes(String((leaveFormData as any).leave_kind || '').toUpperCase())) && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.start_time')}</label>
+                                                <input
+                                                    type="time"
+                                                    value={leaveFormData.start_time}
+                                                    onChange={e => setLeaveFormData({ ...(leaveFormData as any), start_time: e.target.value })}
+                                                    className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.end_time')}</label>
+                                                <input
+                                                    type="time"
+                                                    value={leaveFormData.end_time}
+                                                    onChange={e => setLeaveFormData({ ...(leaveFormData as any), end_time: e.target.value })}
+                                                    className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.notes')}</label>
@@ -575,7 +714,7 @@ function EmployeeDashboardContent() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         className={cn(
-                            "fixed bottom-24 left-6 right-6 z-[220] p-4 rounded-2xl shadow-xl border flex items-center gap-3 md:left-auto md:right-8 md:bottom-8 md:w-80",
+                            "fixed bottom-24 left-6 right-6 z-220 p-4 rounded-2xl shadow-xl border flex items-center gap-3 md:left-auto md:right-8 md:bottom-8 md:w-80",
                             toast.type === 'success' ? "bg-emerald-600 border-emerald-500 text-white" : "bg-rose-600 border-rose-500 text-white"
                         )}
                     >
@@ -585,9 +724,117 @@ function EmployeeDashboardContent() {
                 )}
             </AnimatePresence>
 
+            {/* Smart Leave Impact Modal */}
+            {isImpactModalOpen && (
+                <div className="fixed inset-0 z-210 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-10 space-y-6">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_leave')}</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                        {t('appointments.title')} • {leaveImpact?.total_appointments || 0}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => { setIsImpactModalOpen(false); setLeaveImpact(null); }}
+                                    className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                                >
+                                    <X className="h-6 w-6 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="rounded-3xl border border-slate-100 bg-slate-50 px-5 py-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t('dashboard.overview')}</p>
+                                <div className="mt-3 grid grid-cols-3 gap-3">
+                                    <div className="rounded-2xl bg-white border border-slate-100 p-3">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total</p>
+                                        <p className="text-lg font-black text-slate-900">{leaveImpact?.total_appointments || 0}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-white border border-slate-100 p-3">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Regular</p>
+                                        <p className="text-lg font-black text-slate-900">{leaveImpact?.regular_customers || 0}</p>
+                                    </div>
+                                    <div className="rounded-2xl bg-white border border-slate-100 p-3">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">VIP</p>
+                                        <p className="text-lg font-black text-slate-900">{leaveImpact?.vip_customers || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {(leaveImpact?.appointments || []).slice(0, 5).length > 0 && (
+                                <div className="space-y-3">
+                                    {(leaveImpact.appointments || []).slice(0, 5).map((a: any) => (
+                                        <div key={a.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                    {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                            <span className="text-[10px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                                {String(a.status || '').toLowerCase()}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="space-y-3">
+                                {leaveImpact?.policy?.emergency_requires_handling ? (
+                                    <div className="rounded-2xl border border-rose-100 bg-rose-50/80 px-4 py-3">
+                                        <p className="text-xs font-bold text-rose-700">{t('providers.err_emergency_leave_requires_handling')}</p>
+                                    </div>
+                                ) : leaveImpact?.policy?.vip_requires_owner_approval ? (
+                                    <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3">
+                                        <p className="text-xs font-bold text-amber-700">{t('providers.err_vip_leave_requires_owner')}</p>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+                                        <p className="text-xs font-bold text-slate-700">
+                                            {t('providers.leave_status_updated_notify_warning')}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { setIsImpactModalOpen(false); setLeaveImpact(null); }}
+                                    className="flex-1 py-4 rounded-2xl border-2 border-slate-200 text-slate-700 text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                                >
+                                    {t('providers.cancel')}
+                                </button>
+                                {leaveImpact?.policy?.emergency_requires_handling ? null : leaveImpact?.policy?.vip_requires_owner_approval ? (
+                                    <button
+                                        type="button"
+                                        disabled={isSubmitting}
+                                        onClick={submitLeaveWithOwnerApproval}
+                                        className="flex-1 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.approve_and_notify')}
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        disabled={isSubmitting}
+                                        onClick={submitLeaveAnyway}
+                                        className="flex-1 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('providers.submit_leave')}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Resignation Modal */}
             {isResignationModalOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <form onSubmit={handleResignationSubmit} className="p-10 space-y-8">
                             <div className="flex items-center justify-between">

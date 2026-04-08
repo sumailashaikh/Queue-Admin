@@ -73,7 +73,35 @@ export const providerService = {
         return result.data || [];
     },
 
-    async addLeave(providerId: string, data: { start_date: string, end_date: string, leave_type: string, note?: string, ui_language?: string }): Promise<any> {
+    async validateLeave(providerId: string, data: { start_date: string, end_date: string, leave_kind?: string, start_time?: string, end_time?: string }): Promise<any> {
+        const result = await api.post<any>(`/service-providers/${providerId}/leaves/validate`, data);
+        return result;
+    },
+
+    async previewReassignPlan(providerId: string, data: { start_date: string; end_date: string; leave_kind?: string; start_time?: string; end_time?: string; appointment_ids?: string[] }): Promise<any> {
+        const result = await api.post<any>(`/service-providers/${providerId}/leaves/reassign-plan`, data);
+        return result;
+    },
+
+    async applyReassignPlan(providerId: string, assignments: { appointment_id: string; to_provider_id?: string | null }[]): Promise<any> {
+        const result = await api.post<any>(`/service-providers/${providerId}/leaves/reassign-apply`, { assignments });
+        return result;
+    },
+
+    async addLeave(
+        providerId: string,
+        data: {
+            start_date: string;
+            end_date: string;
+            leave_type: string;
+            leave_kind?: 'FULL_DAY' | 'HALF_DAY' | 'EMERGENCY';
+            start_time?: string;
+            end_time?: string;
+            allow_owner_approval?: boolean;
+            note?: string;
+            ui_language?: string;
+        }
+    ): Promise<any> {
         const result = await api.post<any>(`/service-providers/${providerId}/leaves`, data);
         return result;
     },

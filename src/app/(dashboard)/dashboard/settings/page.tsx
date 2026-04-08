@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { formatGlobalPhone } from "@/lib/phoneUtils";
 import { useLanguage } from "@/context/LanguageContext";
+import { appointmentService } from "@/services/appointmentService";
 
 export default function SettingsPage() {
     const { business, setBusiness } = useAuth();
@@ -36,6 +37,14 @@ export default function SettingsPage() {
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [vipCustomers, setVipCustomers] = useState<any[]>([]);
+    const [allCustomers, setAllCustomers] = useState<{ id: string; full_name: string; phone?: string }[]>([]);
+    const [vipForm, setVipForm] = useState<{ customerId: string; isVip: boolean; note: string }>({
+        customerId: "",
+        isVip: true,
+        note: ""
+    });
+    const [vipLoading, setVipLoading] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToastMessage(message);
@@ -95,6 +104,10 @@ export default function SettingsPage() {
             const updated = await businessService.updateBusiness(business.id, payload);
 
             setBusiness(updated);
+            // Apply the business language as default UI language for this session
+            if (payload.language) {
+                setLanguage(payload.language, true).catch(() => {});
+            }
             // Update local form state with formatted numbers
             setFormData(prev => ({ ...prev, phone: payload.phone, whatsapp_number: payload.whatsapp_number }));
             setSuccess(true);
@@ -103,6 +116,51 @@ export default function SettingsPage() {
             setError(err.message || t('settings.fail_msg'));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const refreshVipData = async () => {
+        if (!business?.id) return;
+        setVipLoading(true);
+        try {
+            const [vip, appts] = await Promise.all([
+                businessService.listVipCustomers(business.id),
+                appointmentService.getBusinessAppointments()
+            ]);
+            setVipCustomers(vip || []);
+
+            const map = new Map<string, { id: string; full_name: string; phone?: string }>();
+            (appts || []).forEach((a: any) => {
+                const p = a?.profiles;
+                if (p?.id) {
+                    map.set(p.id, { id: p.id, full_name: p.full_name || 'Customer', phone: p.phone });
+                }
+            });
+            setAllCustomers(Array.from(map.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
+        } catch {
+            // non-blocking
+        } finally {
+            setVipLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        refreshVipData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [business?.id]);
+
+    const saveVip = async () => {
+        if (!business?.id || !vipForm.customerId) return;
+        setVipLoading(true);
+        try {
+            await businessService.setCustomerVipFlag(business.id, vipForm.customerId, vipForm.isVip, vipForm.note);
+            showToast(t('settings.vip_saved'), 'success');
+            setVipForm({ customerId: "", isVip: true, note: "" });
+            refreshVipData();
+        } catch (err: any) {
+            showToast(err?.message || t('settings.vip_save_error'), 'error');
+        } finally {
+            setVipLoading(false);
         }
     };
 
@@ -280,7 +338,7 @@ export default function SettingsPage() {
                                             type="time"
                                             value={formData.open_time}
                                             onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
-                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] [color-scheme:light] dark:[color-scheme:dark]"
+                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] scheme-light dark:scheme-dark"
                                         />
                                     </div>
                                 </div>
@@ -294,7 +352,7 @@ export default function SettingsPage() {
                                             type="time"
                                             value={formData.close_time}
                                             onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
-                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] [color-scheme:light] dark:[color-scheme:dark]"
+                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] scheme-light dark:scheme-dark"
                                         />
                                     </div>
                                 </div>
@@ -337,6 +395,104 @@ export default function SettingsPage() {
                             </button>
                         </div>
                     </form>
+
+                    {/* VIP Customers */}
+                    <div className="pro-card p-8 space-y-6">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-900">{t('settings.vip_title')}</h2>
+                                <p className="text-sm font-semibold text-slate-600">{t('settings.vip_desc')}</p>
+                            </div>
+                            {vipLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2 space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.vip_select_customer')}</label>
+                                <select
+                                    value={vipForm.customerId}
+                                    onChange={(e) => setVipForm((p) => ({ ...p, customerId: e.target.value }))}
+                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                >
+                                    <option value="">{t('settings.vip_select_placeholder')}</option>
+                                    {allCustomers.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.full_name}{c.phone ? ` (${c.phone})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.vip_flag')}</label>
+                                <select
+                                    value={vipForm.isVip ? '1' : '0'}
+                                    onChange={(e) => setVipForm((p) => ({ ...p, isVip: e.target.value === '1' }))}
+                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                >
+                                    <option value="1">{t('settings.vip_yes')}</option>
+                                    <option value="0">{t('settings.vip_no')}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.vip_note')}</label>
+                            <input
+                                type="text"
+                                value={vipForm.note}
+                                onChange={(e) => setVipForm((p) => ({ ...p, note: e.target.value }))}
+                                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                placeholder={t('settings.vip_note_placeholder')}
+                            />
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                disabled={!vipForm.customerId || vipLoading}
+                                onClick={saveVip}
+                                className="px-5 py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50"
+                            >
+                                {t('settings.vip_save')}
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('settings.vip_current')}</h3>
+                            {(vipCustomers || []).length === 0 ? (
+                                <div className="p-4 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm font-semibold">
+                                    {t('settings.vip_none')}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {vipCustomers.map((v: any) => (
+                                        <div key={v.customer_id} className="flex items-center justify-between gap-4 p-4 rounded-xl border border-slate-100 bg-white">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-bold text-slate-900 truncate">{v?.profiles?.full_name || 'Customer'}</p>
+                                                <p className="text-xs font-semibold text-slate-500 truncate">{v?.profiles?.phone || ''}</p>
+                                                {v?.vip_note ? <p className="text-xs font-semibold text-slate-400 mt-1">{v.vip_note}</p> : null}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                disabled={vipLoading}
+                                                onClick={async () => {
+                                                    try {
+                                                        await businessService.setCustomerVipFlag(business!.id, v.customer_id, false);
+                                                        refreshVipData();
+                                                    } catch {
+                                                        showToast(t('settings.vip_save_error'), 'error');
+                                                    }
+                                                }}
+                                                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-50"
+                                            >
+                                                {t('settings.vip_remove')}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="space-y-6">
@@ -439,7 +595,7 @@ export default function SettingsPage() {
 
             {/* Toast Notification */}
             {toastMessage && (
-                <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className={cn(
                         "px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all text-white",
                         toastType === 'error' ? "bg-red-500 border-red-400/50" : "bg-emerald-500 border-emerald-400/50"
@@ -452,7 +608,7 @@ export default function SettingsPage() {
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="p-10 flex flex-col items-center text-center space-y-8">
                             <div className="h-20 w-20 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto text-red-500 transition-transform hover:scale-110 duration-500">

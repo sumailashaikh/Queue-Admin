@@ -75,6 +75,11 @@ export const appointmentService = {
         return result.data || [];
     },
 
+    async getMyAssignedAppointments(): Promise<any[]> {
+        const result = await api.get<any[]>('/appointments/assigned/me');
+        return result.data || [];
+    },
+
     async updateStatus(id: string, status: Appointment['status']): Promise<Appointment> {
         const result = await api.patch<Appointment>(`/appointments/${id}/status`, { status });
         return result.data;
@@ -93,5 +98,13 @@ export const appointmentService = {
     async updatePayment(id: string, paymentMethod: 'cash' | 'qr' | 'card' | 'unpaid'): Promise<Appointment> {
         const result = await api.patch<Appointment>(`/appointments/${id}/payment`, { payment_method: paymentMethod });
         return result.data;
-    }
+    },
+
+    async reassign(id: string, toProviderId: string, fromProviderId?: string): Promise<any> {
+        const result = await api.patch<any>(`/appointments/${id}/reassign`, {
+            to_provider_id: toProviderId,
+            from_provider_id: fromProviderId
+        });
+        return result.data;
+    },
 };

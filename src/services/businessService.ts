@@ -88,5 +88,18 @@ export const businessService = {
     async updateResignationStatus(requestId: string, status: 'APPROVED' | 'REJECTED'): Promise<{ notification_sent?: boolean }> {
         const result = await api.patch<any>(`/service-providers/resignation/${requestId}/status`, { status });
         return result;
+    },
+
+    async listVipCustomers(businessId: string): Promise<any[]> {
+        const result = await api.get<any[]>(`/businesses/${businessId}/customers/vip`);
+        return result.data || [];
+    },
+
+    async setCustomerVipFlag(businessId: string, customerId: string, isVip: boolean, vipNote?: string): Promise<any> {
+        const result = await api.put<any>(`/businesses/${businessId}/customers/${customerId}/vip`, {
+            is_vip: isVip,
+            vip_note: vipNote
+        });
+        return result.data;
     }
 };

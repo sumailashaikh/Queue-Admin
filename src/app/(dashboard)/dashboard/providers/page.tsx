@@ -24,6 +24,7 @@ import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { businessService } from "@/services/businessService";
+import { appointmentService } from "@/services/appointmentService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
@@ -67,6 +68,17 @@ export default function ProvidersPage() {
         leaveId: "",
         reason: ""
     });
+    const [impactModal, setImpactModal] = useState<{ isOpen: boolean; loading: boolean; leave: any | null; impact: any | null }>({
+        isOpen: false,
+        loading: false,
+        leave: null,
+        impact: null
+    });
+    const [reassignPlan, setReassignPlan] = useState<any | null>(null);
+    const [isPlanLoading, setIsPlanLoading] = useState(false);
+    const [planAssignments, setPlanAssignments] = useState<Record<string, string | null>>({});
+    const [reassignTo, setReassignTo] = useState<Record<string, string>>({});
+    const [rescheduleTo, setRescheduleTo] = useState<Record<string, string>>({});
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -494,6 +506,112 @@ export default function ProvidersPage() {
         }
     };
 
+    const providerServiceIds = (p: any): string[] => {
+        const rows = (p as any)?.services || (p as any)?.provider_services || [];
+        const ids = (rows || []).flatMap((r: any) => {
+            const s = r?.services || r?.service || r;
+            const id = s?.id || r?.service_id;
+            return id ? [String(id)] : [];
+        });
+        return [...new Set(ids)];
+    };
+
+    const eligibleProvidersForService = (serviceId?: string | null) => {
+        if (!serviceId) return providers.filter((p) => p.is_active && p.id !== selectedProvider?.id);
+        return providers.filter((p) => p.is_active && p.id !== selectedProvider?.id && providerServiceIds(p).includes(String(serviceId)));
+    };
+
+    const openImpactModal = async (leave: any) => {
+        if (!selectedProvider?.id) return;
+        setImpactModal({ isOpen: true, loading: true, leave, impact: null });
+        try {
+            const kind = String(leave?.leave_kind || 'FULL_DAY').toUpperCase();
+            const resp = await providerService.validateLeave(selectedProvider.id, {
+                start_date: leave.start_date,
+                end_date: leave.end_date,
+                leave_kind: kind,
+                start_time: leave?.start_time || undefined,
+                end_time: leave?.end_time || undefined
+            });
+            setImpactModal({ isOpen: true, loading: false, leave, impact: (resp as any)?.data || null });
+        } catch (error: any) {
+            showToast(parseApiMessage(error, 'providers.err_load_leaves', 'Failed to load leave impact'), 'error');
+            setImpactModal({ isOpen: false, loading: false, leave: null, impact: null });
+        }
+    };
+
+    const refreshImpact = async () => {
+        const leave = impactModal.leave;
+        if (!leave || !selectedProvider?.id) return;
+        setImpactModal((p) => ({ ...p, loading: true }));
+        try {
+            const kind = String(leave?.leave_kind || 'FULL_DAY').toUpperCase();
+            const resp = await providerService.validateLeave(selectedProvider.id, {
+                start_date: leave.start_date,
+                end_date: leave.end_date,
+                leave_kind: kind,
+                start_time: leave?.start_time || undefined,
+                end_time: leave?.end_time || undefined
+            });
+            setImpactModal((p) => ({ ...p, loading: false, impact: (resp as any)?.data || null }));
+        } catch {
+            setImpactModal((p) => ({ ...p, loading: false }));
+        }
+    };
+
+    const autoReassignAllImpacted = async () => {
+        if (!impactModal.impact?.appointments?.length || !selectedProvider?.id) return;
+        setIsPlanLoading(true);
+        try {
+            const leave = impactModal.leave;
+            const kind = String(leave?.leave_kind || 'FULL_DAY').toUpperCase();
+            const resp = await providerService.previewReassignPlan(selectedProvider.id, {
+                start_date: leave?.start_date,
+                end_date: leave?.end_date,
+                leave_kind: kind,
+                start_time: leave?.start_time || undefined,
+                end_time: leave?.end_time || undefined,
+                appointment_ids: (impactModal.impact.appointments || []).map((a: any) => String(a.id))
+            });
+            const plan = (resp as any)?.data;
+            setReassignPlan(plan);
+            const next: Record<string, string | null> = {};
+            (plan?.plan || []).forEach((p: any) => {
+                next[String(p.appointment_id)] = p.suggested_provider_id ? String(p.suggested_provider_id) : null;
+            });
+            setPlanAssignments(next);
+        } catch (e: any) {
+            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to generate reassignment plan'), 'error');
+        } finally {
+            setIsPlanLoading(false);
+        }
+    };
+
+    const confirmPlannedAssignments = async () => {
+        if (!selectedProvider?.id || !reassignPlan?.plan?.length) return;
+        setIsSubmitting(true);
+        try {
+            const payload = (reassignPlan.plan || []).map((p: any) => ({
+                appointment_id: String(p.appointment_id),
+                to_provider_id: planAssignments[String(p.appointment_id)] || null
+            }));
+            const resp = await providerService.applyReassignPlan(selectedProvider.id, payload);
+            const failed = (resp as any)?.data?.failed || 0;
+            if (failed > 0) {
+                showToast(tt('providers.err_bulk_partial', `Some assignments failed (${failed}). Please review.`), 'error');
+            } else {
+                showToast(tt('providers.success_reassign_all', 'Impacted appointments reassigned.'));
+            }
+            setReassignPlan(null);
+            setPlanAssignments({});
+            await refreshImpact();
+        } catch (e: any) {
+            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to apply reassignment plan'), 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     /** Ensure invite SMS uses E.164 (+country + national digits). */
     const normalizeInvitePhone = (phone: string) => {
         const digits = String(phone || "").replace(/\D/g, "");
@@ -643,7 +761,7 @@ export default function ProvidersPage() {
 
             {/* Modals */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <form onSubmit={handleSubmit} className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase">{selectedProvider ? t('providers.update_professional') : t('providers.add_new_professional')}</h3><button type="button" onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:text-rose-500"><X className="h-6 w-6" /></button></div>
                         {error && (
@@ -667,7 +785,7 @@ export default function ProvidersPage() {
 
             {/* Assignment Modal */}
             {isAssignModalOpen && selectedProvider && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between">
                             <div>
@@ -724,7 +842,7 @@ export default function ProvidersPage() {
 
             {/* Availability Modal */}
             {isAvailabilityModalOpen && selectedProvider && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-4xl rounded-[40px] shadow-2xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_availability')}</h3>
@@ -763,7 +881,7 @@ export default function ProvidersPage() {
 
             {/* Leave Management */}
             {isLeaveModalOpen && selectedProvider && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-4xl rounded-[28px] sm:rounded-[40px] shadow-2xl p-5 sm:p-8 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10 animate-in zoom-in-95 duration-300 max-h-[92vh] overflow-y-auto">
                         <div className="flex-1 space-y-6 sm:space-y-8">
                             <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_leave')}</h3><button onClick={() => setIsLeaveModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
@@ -847,6 +965,13 @@ export default function ProvidersPage() {
                                                     <CheckCircle2 className="h-4 w-4" />
                                                 </button>
                                                 <button
+                                                    onClick={() => openImpactModal(leave)}
+                                                    className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                                    title={tt('providers.impact_view', 'View impact')}
+                                                >
+                                                    <ShieldCheck className="h-4 w-4" />
+                                                </button>
+                                                <button
                                                     onClick={() => setRejectModal({
                                                         isOpen: true,
                                                         leaveId: leave.id,
@@ -858,6 +983,15 @@ export default function ProvidersPage() {
                                                     <X className="h-4 w-4" />
                                                 </button>
                                             </>
+                                        )}
+                                        {!isPending && (
+                                            <button
+                                                onClick={() => openImpactModal(leave)}
+                                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                                title={tt('providers.impact_view', 'View impact')}
+                                            >
+                                                <ShieldCheck className="h-4 w-4" />
+                                            </button>
                                         )}
                                         <button
                                             onClick={() => handleDeleteLeave(leave.id)}
@@ -875,9 +1009,277 @@ export default function ProvidersPage() {
                 </div>
             )}
 
+            {/* Leave Impact Modal */}
+            {impactModal.isOpen && selectedProvider && (
+                <div className="fixed inset-0 z-120 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-3xl rounded-[32px] md:rounded-[40px] shadow-2xl p-6 md:p-10 space-y-6 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h3 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-tight">
+                                    {tt('providers.impact_title', 'Leave impact')}
+                                </h3>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    {formatLeaveDateRange(impactModal.leave?.start_date, impactModal.leave?.end_date, language)}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setImpactModal({ isOpen: false, loading: false, leave: null, impact: null })}
+                                className="shrink-0 p-1"
+                            >
+                                <X className="h-6 w-6 text-slate-400" />
+                            </button>
+                        </div>
+
+                        {impactModal.loading ? (
+                            <div className="py-14 flex items-center justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total</p>
+                                        <p className="text-2xl font-black text-slate-900">{impactModal.impact?.total_appointments || 0}</p>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Regular</p>
+                                        <p className="text-2xl font-black text-slate-900">{impactModal.impact?.regular_customers || 0}</p>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">VIP</p>
+                                        <p className="text-2xl font-black text-slate-900">{impactModal.impact?.vip_customers || 0}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {(impactModal.impact?.appointments || []).length === 0 ? (
+                                        <div className="p-6 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm font-semibold">
+                                            {tt('providers.impact_none', 'No impacted appointments found for this leave window.')}
+                                        </div>
+                                    ) : (
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                disabled={isSubmitting || isPlanLoading}
+                                                onClick={autoReassignAllImpacted}
+                                                className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:opacity-50"
+                                            >
+                                                {isPlanLoading ? (
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                        {tt('providers.planning', 'Planning...')}
+                                                    </span>
+                                                ) : (
+                                                    tt('providers.auto_reassign_all', 'Auto reassign all')
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {(impactModal.impact?.appointments || []).length > 0 && (
+                                        <>
+                                        {(impactModal.impact.appointments || []).map((a: any) => {
+                                            const serviceId = a?.service?.id || null;
+                                            const eligible = eligibleProvidersForService(serviceId);
+                                            const currentReassign = reassignTo[a.id] || "";
+                                            const currentReschedule = rescheduleTo[a.id] || "";
+                                            return (
+                                                <div key={a.id} className="p-4 rounded-2xl border border-slate-100 bg-white space-y-3">
+                                                    <div className="flex items-start justify-between gap-4">
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || tt('admin.customer', 'Customer')}</p>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                                                {new Date(a.start_time).toLocaleString()} • {a?.service?.name || tt('services.title', 'Service')}
+                                                            </p>
+                                                        </div>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-700">
+                                                            {String(a.status || '').toUpperCase()}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <div className="space-y-2">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                                                {tt('providers.impact_reassign', 'Reassign')}
+                                                            </p>
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={currentReassign}
+                                                                    onChange={(e) => setReassignTo((p) => ({ ...p, [a.id]: e.target.value }))}
+                                                                    className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
+                                                                >
+                                                                    <option value="">{tt('providers.select_provider', 'Select provider')}</option>
+                                                                    {eligible.map((p: any) => (
+                                                                        <option key={p.id} value={p.id}>
+                                                                            {p.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                <button
+                                                                    disabled={!currentReassign || isSubmitting}
+                                                                    onClick={async () => {
+                                                                        setIsSubmitting(true);
+                                                                        try {
+                                                                            await appointmentService.reassign(a.id, currentReassign, selectedProvider.id);
+                                                                            showToast(tt('providers.success_reassign', 'Reassigned successfully'));
+                                                                            setReassignTo((p) => ({ ...p, [a.id]: "" }));
+                                                                            await refreshImpact();
+                                                                        } catch (e: any) {
+                                                                            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to reassign'), 'error');
+                                                                        } finally {
+                                                                            setIsSubmitting(false);
+                                                                        }
+                                                                    }}
+                                                                    className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                                                                >
+                                                                    {tt('providers.apply', 'Apply')}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                                                                {tt('providers.impact_reschedule', 'Reschedule')}
+                                                            </p>
+                                                            <div className="flex gap-2">
+                                                                <input
+                                                                    type="datetime-local"
+                                                                    value={currentReschedule}
+                                                                    onChange={(e) => setRescheduleTo((p) => ({ ...p, [a.id]: e.target.value }))}
+                                                                    className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
+                                                                />
+                                                                <button
+                                                                    disabled={!currentReschedule || isSubmitting}
+                                                                    onClick={async () => {
+                                                                        setIsSubmitting(true);
+                                                                        try {
+                                                                            const iso = new Date(currentReschedule).toISOString();
+                                                                            await appointmentService.reschedule(a.id, iso);
+                                                                            showToast(tt('appointments.success_reschedule', 'Appointment successfully rescheduled.'));
+                                                                            setRescheduleTo((p) => ({ ...p, [a.id]: "" }));
+                                                                            await refreshImpact();
+                                                                        } catch (e: any) {
+                                                                            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to reschedule'), 'error');
+                                                                        } finally {
+                                                                            setIsSubmitting(false);
+                                                                        }
+                                                                    }}
+                                                                    className="px-4 py-2.5 rounded-xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                                                                >
+                                                                    {tt('providers.apply', 'Apply')}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        </>
+                                    )}
+                                </div>
+
+                                {reassignPlan?.plan?.length ? (
+                                    <div className="pt-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                                {tt('providers.preview_title', 'Preview before apply')}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setReassignPlan(null); setPlanAssignments({}); }}
+                                                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700"
+                                            >
+                                                {tt('providers.clear_preview', 'Clear')}
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {(reassignPlan.plan || []).map((p: any) => {
+                                                const apptId = String(p.appointment_id);
+                                                const serviceId = p?.service?.id || null;
+                                                const eligible = eligibleProvidersForService(serviceId);
+                                                const selected = planAssignments[apptId];
+                                                return (
+                                                    <div key={apptId} className="p-4 rounded-2xl border border-slate-100 bg-slate-50">
+                                                        <div className="flex items-start justify-between gap-4">
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-bold text-slate-900 truncate">
+                                                                    {p?.customer?.full_name || tt('admin.customer', 'Customer')}
+                                                                    {p?.priority === 'VIP' ? ' (VIP)' : p?.priority === 'REGULAR' ? ' (Regular)' : ''}
+                                                                </p>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                                                    {new Date(p.start_time).toLocaleString()} • {p?.service?.name || tt('services.title', 'Service')}
+                                                                </p>
+                                                                {p.needs_reschedule && (
+                                                                    <p className="text-[10px] font-bold text-rose-600 mt-1">
+                                                                        {tt('providers.needs_reschedule', 'Needs reschedule')}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                            <div className="w-56 space-y-2">
+                                                                <select
+                                                                    value={selected === null ? '__NONE__' : (selected || '')}
+                                                                    onChange={(e) => {
+                                                                        const v = e.target.value;
+                                                                        setPlanAssignments((prev) => ({
+                                                                            ...prev,
+                                                                            [apptId]: v === '__NONE__' ? null : v
+                                                                        }));
+                                                                    }}
+                                                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold bg-white"
+                                                                >
+                                                                    <option value="__NONE__">{tt('providers.needs_reschedule', 'Needs reschedule')}</option>
+                                                                    {eligible.map((prov: any) => (
+                                                                        <option key={prov.id} value={prov.id}>
+                                                                            {prov.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                    {tt(`providers.reason_${String(p.suggested_reason || '')}`, String(p.suggested_reason || ''))}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="flex justify-end gap-3">
+                                            <button
+                                                type="button"
+                                                disabled={isSubmitting}
+                                                onClick={confirmPlannedAssignments}
+                                                className="px-5 py-3 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-100 disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : tt('providers.confirm_all', 'Confirm all')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <div className="flex justify-end gap-3 pt-2">
+                                    {String(impactModal.leave?.status || '').toUpperCase() === 'PENDING' && (
+                                        <button
+                                            disabled={isSubmitting}
+                                            onClick={async () => {
+                                                await handleUpdateLeaveStatus(impactModal.leave.id, 'APPROVED');
+                                                setImpactModal({ isOpen: false, loading: false, leave: null, impact: null });
+                                            }}
+                                            className="px-5 py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 disabled:opacity-50"
+                                        >
+                                            {tt('providers.leave_tooltip_approve', 'Approve')}
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Resignation Modal */}
             {isResignationModalOpen && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-2xl rounded-[32px] md:rounded-[40px] shadow-2xl p-5 md:p-10 space-y-5 md:space-y-8 animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between gap-3">
                             <h3 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-tight">
@@ -905,7 +1307,7 @@ export default function ProvidersPage() {
                                 return (
                                 <div key={req.id} className="p-4 md:p-6 bg-slate-50 rounded-2xl md:rounded-3xl border border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div className="space-y-1 min-w-0">
-                                        <p className="text-sm font-bold text-slate-900 break-words">{req.profiles?.full_name}</p>
+                                        <p className="text-sm font-bold text-slate-900 wrap-break-word">{req.profiles?.full_name}</p>
                                         <p className="text-[10px] text-slate-500">
                                             Last Date: <span className="text-slate-900 font-bold" dir="ltr">{new Date(req.requested_last_date).toLocaleDateString()}</span>
                                         </p>
@@ -940,7 +1342,7 @@ export default function ProvidersPage() {
 
             {/* Invite Modal */}
             {isInviteModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
                     <form onSubmit={handleInviteSubmit} className="bg-white w-full max-w-lg rounded-[40px] p-10 space-y-8 shadow-2xl animate-in zoom-in-95">
                         <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase">{t('providers.invite_staff')}</h3><button type="button" onClick={() => setIsInviteModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
                         <div className="space-y-6">
@@ -975,7 +1377,7 @@ export default function ProvidersPage() {
 
             {/* Deactivate Check */}
             {deleteModal.isOpen && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
                     <div className="bg-white w-full max-w-sm rounded-[32px] p-8 text-center space-y-6 shadow-2xl animate-in zoom-in-95">
                         <div className="h-16 w-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto"><AlertCircle className="h-8 w-8" /></div>
                         <div><h3 className="text-lg font-bold text-slate-900">{t('providers.deactivate_expert')}</h3><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{t('providers.deactivate_confirm')}</p></div>
@@ -1001,7 +1403,7 @@ export default function ProvidersPage() {
 
             {/* Reject Leave Modal */}
             {rejectModal.isOpen && (
-                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                <div className="fixed inset-0 z-120 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
                     <div className="bg-white w-full max-w-md rounded-[28px] p-6 space-y-4 shadow-2xl animate-in zoom-in-95">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
@@ -1048,7 +1450,7 @@ export default function ProvidersPage() {
 
             {/* Toast */}
             {toast && (
-                <div className="fixed z-[200] bottom-6 left-4 right-4 sm:bottom-auto sm:top-6 sm:right-6 sm:left-auto max-w-md mx-auto sm:mx-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-right-8 duration-300">
+                <div className="fixed z-200 bottom-6 left-4 right-4 sm:bottom-auto sm:top-6 sm:right-6 sm:left-auto max-w-md mx-auto sm:mx-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-right-8 duration-300">
                     <div className={cn(
                         "px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-2xl border flex items-start gap-3 backdrop-blur-xl bg-white/95",
                         toast.type === 'error' ? "border-rose-100 text-rose-700" : "border-emerald-100 text-emerald-700"
