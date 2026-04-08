@@ -114,6 +114,7 @@
     "success_next": "Próximo cliente llamado",
     "err_next": "No se pudo llamar al próximo cliente",
     "err_next_assign_expert": "Asigna un experto de servicio al siguiente cliente y vuelve a intentar \"Siguiente cliente\".",
+    "err_next_expert_busy": "El experto asignado está atendiendo a otro cliente. Espera un momento o elige otro experto disponible.",
     "err_status": "No se pudo actualizar el estado",
     "success_payment": "Pago marcado como {{method}}",
     "err_payment": "No se pudo actualizar el pago",

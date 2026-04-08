@@ -255,9 +255,12 @@ export default function LiveQueuePage() {
             showToast(t('queue.success_next'));
         } catch (error: any) {
             const raw = String(error?.response?.data?.message || error?.message || "").trim();
-            const msg = raw.toLowerCase().includes("no available expert")
+            const lower = raw.toLowerCase();
+            const msg = lower.includes("please assign")
                 ? t('queue.err_next_assign_expert')
-                : (raw || t('queue.err_next'));
+                : (lower.includes("no available expert") || lower.includes("currently serving another customer"))
+                    ? t('queue.err_next_expert_busy')
+                    : (raw || t('queue.err_next'));
             showToast(msg, "error");
         } finally {
             setIsSubmitting(false);
