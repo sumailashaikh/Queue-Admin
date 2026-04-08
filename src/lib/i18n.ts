@@ -729,7 +729,7 @@ export const i18n = {
      * @param lang Language code (e.g., 'en', 'es', 'hi')
      * @param key Dot-notated string (e.g., 'dashboard')
      */
-    t: (lang: string = 'en', key: string): string => {
+    t: (lang: string = 'en', key: string, params?: Record<string, any>): string => {
         const dictionary = dictionaries[lang] || dictionaries['en'];
         const keys = key.split('.');
 
@@ -744,7 +744,14 @@ export const i18n = {
         }
 
         if (typeof result === 'string') {
-            return result;
+            let out = result;
+            if (params) {
+                Object.entries(params).forEach(([k, v]) => {
+                    out = out.replaceAll(`{{${k}}}`, String(v));
+                    out = out.replaceAll(`{${k}}`, String(v));
+                });
+            }
+            return out;
         }
 
         // Fallback to English dictionary
@@ -757,6 +764,16 @@ export const i18n = {
             }
         }
 
-        return typeof fallback === 'string' ? fallback : key;
+        if (typeof fallback === 'string') {
+            let out = fallback;
+            if (params) {
+                Object.entries(params).forEach(([k, v]) => {
+                    out = out.replaceAll(`{{${k}}}`, String(v));
+                    out = out.replaceAll(`{${k}}`, String(v));
+                });
+            }
+            return out;
+        }
+        return key;
     }
 };

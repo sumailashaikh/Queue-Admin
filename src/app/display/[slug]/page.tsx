@@ -80,6 +80,22 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         };
     }, [slug, fetchDisplayData]);
 
+    const safeEntries = useMemo(() => (Array.isArray(entries) ? entries.filter(Boolean) : []), [entries]);
+    const servingEntries = useMemo(() => safeEntries.filter(e => e.status === 'serving').slice(0, 6), [safeEntries]);
+    const waitingEntries = useMemo(() => safeEntries.filter(e => e.status === 'waiting' || e.status === 'checked_in'), [safeEntries]);
+    const nextEntries = waitingEntries.slice(0, 3);
+    const waitingOverflow = waitingEntries.slice(3);
+    const hasActiveGuests = waitingEntries.length > 0 || servingEntries.length > 0;
+    const servingCount = servingEntries.length;
+    const servingGridClass =
+        servingCount <= 1
+            ? "grid-cols-1"
+            : servingCount === 2
+                ? "grid-cols-1 md:grid-cols-2"
+                : servingCount <= 4
+                    ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+                    : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6";
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
@@ -100,22 +116,6 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             </div>
         );
     }
-
-    const safeEntries = useMemo(() => (Array.isArray(entries) ? entries.filter(Boolean) : []), [entries]);
-    const servingEntries = useMemo(() => safeEntries.filter(e => e.status === 'serving').slice(0, 6), [safeEntries]);
-    const waitingEntries = useMemo(() => safeEntries.filter(e => e.status === 'waiting' || e.status === 'checked_in'), [safeEntries]);
-    const nextEntries = waitingEntries.slice(0, 3);
-    const waitingOverflow = waitingEntries.slice(3);
-    const hasActiveGuests = waitingEntries.length > 0 || servingEntries.length > 0;
-    const servingCount = servingEntries.length;
-    const servingGridClass =
-        servingCount <= 1
-            ? "grid-cols-1"
-            : servingCount === 2
-                ? "grid-cols-1 md:grid-cols-2"
-                : servingCount <= 4
-                    ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
-                    : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6";
 
     return (
         <div className={cn(
