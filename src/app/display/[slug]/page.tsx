@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, use, useCallback } from "react";
-import { Users, Clock, Loader2, Monitor, Play, Wifi } from "lucide-react";
+import { useEffect, useState, use, useCallback, useMemo } from "react";
+import { Users, Clock, Loader2, Monitor, Play, Wifi, Bell } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
 import { businessService } from "@/services/businessService";
 import { QRCodeSVG } from "qrcode.react";
@@ -96,13 +96,25 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         );
     }
 
-    const servingEntries = entries.filter(e => e.status === 'serving').slice(0, 3);
-    const waitingEntries = entries.filter(e => e.status === 'waiting' || e.status === 'checked_in');
-    const hasActiveGuests = waitingEntries.length > 0;
+    const servingEntries = useMemo(() => entries.filter(e => e.status === 'serving').slice(0, 6), [entries]);
+    const waitingEntries = useMemo(() => entries.filter(e => e.status === 'waiting' || e.status === 'checked_in'), [entries]);
+    const nextEntries = waitingEntries.slice(0, 3);
+    const waitingOverflow = waitingEntries.slice(3);
+    const hasActiveGuests = waitingEntries.length > 0 || servingEntries.length > 0;
+    const servingCount = servingEntries.length;
+    const servingGridClass =
+        servingCount <= 1
+            ? "grid-cols-1"
+            : servingCount === 2
+                ? "grid-cols-1 md:grid-cols-2"
+                : servingCount <= 4
+                    ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
+                    : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6";
+    const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
     return (
         <div className={cn(
-            "min-h-screen bg-slate-50 text-slate-900 p-2 md:p-8 lg:p-12 flex flex-col gap-4 lg:gap-12 overflow-x-hidden w-full max-w-[100vw]",
+            "min-h-screen bg-slate-50 text-slate-900 p-2 md:p-4 lg:p-6 flex flex-col gap-3 lg:gap-4 overflow-x-hidden w-full max-w-[100vw]",
             isRTL ? "font-arabic" : ""
         )} dir={isRTL ? "rtl" : "ltr"}>
             {/* Premium Elite Header Area */}
@@ -127,7 +139,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 gap-2 md:gap-3">
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
                     <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('display.now_serving')}</p>
                     <p className="text-2xl md:text-4xl font-black text-slate-900">{servingEntries.length}</p>
@@ -138,132 +150,105 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </div>
             </div>
 
-            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-12 flex-1 min-h-0 w-full">
-                <div className={cn(
-                    "col-span-1 flex flex-col gap-4 md:gap-8 w-full",
-                    hasActiveGuests ? "lg:col-span-7" : "lg:col-span-12"
-                )}>
-                    <div className="flex items-center gap-3 md:gap-4 px-2 md:px-6">
-                        <div className="h-8 w-8 md:h-14 md:w-14 bg-slate-900 rounded-lg md:rounded-2xl flex flex-shrink-0 items-center justify-center text-white shadow-lg md:shadow-xl shadow-slate-200">
-                            <Play className={cn("h-4 w-4 md:h-8 md:w-8 fill-current", isRTL && "rotate-180")} />
+            <div className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-12 gap-3">
+                <section className={cn("lg:col-span-8 flex flex-col gap-3 min-h-0", !hasActiveGuests && "lg:col-span-12")}>
+                    <div className="flex items-center gap-2 px-1">
+                        <div className="h-8 w-8 bg-emerald-600 rounded-lg flex shrink-0 items-center justify-center text-white shadow-lg">
+                            <Play className={cn("h-4 w-4 fill-current", isRTL && "rotate-180")} />
                         </div>
-                        <h2 className="text-lg md:text-4xl font-black uppercase tracking-widest text-slate-900 break-words flex-1 min-w-0">{t('display.now_serving')}</h2>
+                        <h2 className="text-base md:text-2xl font-black uppercase tracking-widest text-slate-900">{t('display.now_serving')}</h2>
                     </div>
 
-                    <div className={cn(
-                        "grid gap-3 md:gap-8 flex-1",
-                        servingEntries.length > 2
-                            ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-                            : servingEntries.length === 2
-                                ? "grid-cols-1 md:grid-cols-2"
-                                : "grid-cols-1"
-                    )}>
-                        {servingEntries.length > 0 ? (
-                            servingEntries.map((item, idx) => (
-                                <div key={item.id} className={cn(
-                                    "flex flex-col md:flex-row items-center justify-between p-3 md:p-10 rounded-[20px] md:rounded-[40px] border-2 md:border-4 transition-all duration-700 gap-3 md:gap-6",
-                                    idx === 0
-                                        ? "bg-white border-slate-900 text-slate-900 shadow-[0_15px_40px_rgba(0,0,0,0.06)] md:shadow-[0_30px_80px_rgba(0,0,0,0.08)] scale-[1.01]"
-                                        : "bg-white border-slate-100 text-slate-900 shadow-xl opacity-60"
-                                )}>
-                                    <div className="space-y-4 md:space-y-6 text-center md:text-left">
-                                        <span className={cn(
-                                            "px-3 py-1 md:px-5 md:py-2 rounded-full text-[10px] md:text-base font-black uppercase tracking-widest",
-                                            idx === 0 ? "bg-emerald-500 text-white animate-pulse" : "bg-slate-100 text-slate-500"
-                                        )}>
-                                            {t('status.serving')}
-                                        </span>
+                    {servingEntries.length === 1 ? (
+                        <div className="flex-1 min-h-[45vh] md:min-h-[58vh] rounded-[24px] bg-emerald-600 text-white border-4 border-emerald-500 shadow-2xl flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute top-4 right-4 text-white/80 text-xs font-black uppercase tracking-widest">{t('status.serving')}</div>
+                            <div className="text-center px-6">
+                                <div className="text-[clamp(56px,14vw,180px)] font-black leading-none tracking-tight">{servingEntries[0].display_token}</div>
+                            </div>
+                        </div>
+                    ) : servingEntries.length > 1 ? (
+                        <div className={cn("grid gap-3 flex-1", servingGridClass)}>
+                            {servingEntries.map((item) => (
+                                <div key={item.id} className="rounded-[20px] bg-emerald-600 text-white border-2 border-emerald-500 shadow-xl flex flex-col items-center justify-center p-4 min-h-[120px] md:min-h-[180px]">
+                                    <span className="text-[10px] uppercase tracking-widest font-black text-white/90">{t('status.serving')}</span>
+                                    <span className="text-[clamp(36px,6vw,96px)] font-black leading-none">{item.display_token}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex-1 rounded-[24px] bg-white border-2 border-dashed border-slate-200 flex items-center justify-center text-center p-6">
+                            <p className="text-lg md:text-3xl font-black text-slate-300 uppercase tracking-widest">{t('display.waiting_for_next')}</p>
+                        </div>
+                    )}
+                </section>
+
+                <aside className={cn("lg:col-span-4 flex flex-col gap-3 min-h-0", !hasActiveGuests && "hidden")}>
+                    <div className="rounded-[20px] border border-blue-100 bg-blue-50 p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Bell className="h-4 w-4 text-blue-700" />
+                            <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-blue-900">Next</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                            {nextEntries.length > 0 ? nextEntries.map((item) => (
+                                <div key={item.id} className="rounded-xl bg-blue-600 text-white px-3 py-2 flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Next</span>
+                                    <span className="text-[clamp(20px,4.8vw,38px)] font-black leading-none">{item.display_token}</span>
+                                </div>
+                            )) : (
+                                <div className="rounded-xl bg-white border border-blue-100 p-3 text-xs font-bold text-blue-900">No next token</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {(!isMobile || waitingOverflow.length <= 6) && (
+                        <div className="rounded-[20px] border border-amber-100 bg-amber-50 p-3 flex-1 min-h-0">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Users className="h-4 w-4 text-amber-800" />
+                                <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-amber-900">{t('status.waiting')}</h3>
+                            </div>
+                            <div className="space-y-2 overflow-y-auto max-h-[34vh] md:max-h-[44vh] pr-1 scrollbar-hide">
+                                {waitingOverflow.length > 0 ? waitingOverflow.map((item) => (
+                                    <div key={item.id} className="rounded-xl bg-amber-100 text-amber-900 px-3 py-2 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{t('status.waiting')}</span>
+                                        <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item.display_token}</span>
                                     </div>
-                                    <div className={cn(
-                                        "h-20 md:h-44 w-32 md:w-60 rounded-[16px] md:rounded-[32px] flex flex-col items-center justify-center font-black shadow-2xl px-2 md:px-4 text-center border-2 md:border-4",
-                                        idx === 0 ? "bg-slate-900 text-white border-slate-800" : "bg-white text-slate-900 border-slate-100"
-                                    )}>
-                                        <span className="text-[6px] md:text-[9px] uppercase tracking-[0.4em] opacity-40 mb-0.5 md:mb-1">{t('display.token')}</span>
-                                        <span className={cn(
-                                            "leading-none",
-                                            item.display_token?.length > 3 ? "text-xl md:text-5xl" : "text-3xl md:text-8xl"
-                                        )}>
-                                            {item.display_token}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="flex-1 w-full min-h-[250px] md:min-h-[400px] rounded-[24px] md:rounded-[48px] bg-white border-2 md:border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center p-6 md:p-12 shadow-inner overflow-hidden">
-                                <Clock className="h-16 w-16 md:h-32 md:w-32 text-slate-100 mb-4 md:mb-8 flex-shrink-0" />
-                                <p className="w-full text-lg md:text-4xl font-black text-slate-200 uppercase tracking-widest flex-shrink break-words whitespace-normal px-2 leading-relaxed">{t('display.waiting_for_next')}</p>
+                                )) : (
+                                    <div className="rounded-xl bg-white border border-amber-100 p-3 text-xs font-bold text-amber-900">No waiting tokens</div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Right: Waitlist & Interactions */}
-                <div className={cn(
-                    "col-span-1 lg:col-span-5 flex flex-col gap-4 md:gap-8 bg-white rounded-[24px] md:rounded-[40px] border border-slate-100 p-4 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.05)] overflow-hidden w-full",
-                    !hasActiveGuests && "lg:max-w-xl lg:ml-auto self-start"
-                )}>
-                    <div className="flex items-center justify-between border-b border-slate-50 pb-4 md:pb-6">
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <Users className="h-5 w-5 md:h-8 md:w-8 text-slate-900" />
-                            <h2 className="text-lg md:text-2xl font-black uppercase tracking-widest text-slate-900">{t('sidebar.live_queue')}</h2>
                         </div>
-                        <div className="px-3 py-1 md:px-6 md:py-2 bg-slate-900 text-white rounded-full text-xs md:text-xl font-black shadow-lg flex items-center gap-2">
-                            <span>{waitingEntries.length}</span>
-                            <span className="hidden sm:inline">{t('queue.active_guests').toUpperCase()}</span>
-                        </div>
-                    </div>
+                    )}
 
-                    <div className="flex-1 space-y-2 md:space-y-4 overflow-y-auto pr-1 md:pr-4 scrollbar-hide">
-                        {waitingEntries.length > 0 ? waitingEntries.slice(0, 8).map((item) => (
-                            <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group w-full overflow-hidden gap-2">
-                                <div className="space-y-0.5 flex-1 min-w-0 pr-2">
-                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors uppercase truncate">
-                                        {t('status.waiting')}
-                                    </p>
-                                </div>
-                                <div className="h-7 md:h-14 min-w-[2.5rem] md:min-w-[6rem] flex-shrink-0 w-auto px-2 md:px-4 bg-white rounded-[6px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-xs md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
-                                    {item.display_token}
-                                </div>
-                            </div>
-                        )) : (
-                            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center">
-                                <p className="text-sm md:text-base font-bold text-slate-500">{t('dashboard.no_entries_today')}</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Elite QR Engagement Block */}
-                    <div className="mt-2 md:mt-8 p-3 md:p-6 bg-slate-900 rounded-[16px] md:rounded-[32px] flex flex-col sm:flex-row items-center gap-3 md:gap-6 text-white shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-white/10 transition-all" />
-                        <div className="h-20 w-20 md:h-32 md:w-32 bg-white p-2 md:p-4 rounded-[12px] md:rounded-[24px] shadow-2xl relative z-10 flex-shrink-0">
+                    <div className="p-3 bg-slate-900 rounded-[20px] flex items-center gap-3 text-white shadow-xl relative overflow-hidden">
+                        <div className="h-16 w-16 bg-white p-2 rounded-xl shadow-xl relative z-10 shrink-0">
                             {typeof window !== 'undefined' && (
                                 <QRCodeSVG
                                     value={`${window.location.origin}/${slug}`}
-                                    size={128}
+                                    size={96}
                                     level="H"
                                     className="w-full h-full"
                                 />
                             )}
                         </div>
-                        <div className="space-y-0.5 md:space-y-2 relative z-10 text-center sm:text-left">
-                            <h3 className={cn("text-base md:text-xl font-black tracking-tighter uppercase break-words whitespace-normal", language === 'hi' ? "leading-tight" : "leading-none italic")}>{t('display.scan_to_join')}</h3>
-                            <p className="text-[8px] md:text-xs font-bold text-slate-400 leading-tight uppercase tracking-widest break-words">{t('queue.join_link')}</p>
-                            <div className="flex items-center gap-2 mt-1 md:mt-4 px-2 py-0.5 md:py-1.5 bg-white/10 rounded-full w-fit max-w-[90%] border border-white/10 mx-auto sm:mx-0 overflow-hidden">
-                                <Wifi className="h-2 w-2 md:h-3.5 md:w-3.5 text-emerald-400 flex-shrink-0" />
-                                <span className="text-[6px] md:text-[9px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] truncate">{t('queue.active_queue')}</span>
+                        <div className="space-y-1 relative z-10 min-w-0">
+                            <h3 className={cn("text-sm font-black uppercase tracking-widest", language === 'hi' ? "leading-tight" : "leading-none")}>{t('display.scan_to_join')}</h3>
+                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest truncate">{t('queue.join_link')}</p>
+                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-white/10 rounded-full border border-white/10">
+                                <Wifi className="h-3 w-3 text-emerald-400 shrink-0" />
+                                <span className="text-[9px] font-black uppercase tracking-widest">{t('queue.active_queue')}</span>
                             </div>
                         </div>
                     </div>
-                </div>
+                </aside>
             </div>
 
             {/* Premium Scrolling Ticker */}
             <div className="flex items-center gap-4 md:gap-12 bg-slate-900 py-3 md:py-7 px-4 md:px-12 rounded-full shadow-2xl border border-slate-800">
-                <div className="flex items-center gap-2 md:gap-4 text-white flex-shrink-0">
+                <div className="flex items-center gap-2 md:gap-4 text-white shrink-0">
                     <div className="h-2 w-2 md:h-4 md:w-4 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                     <span className="font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-xl italic">{t('queue.title')}</span>
                 </div>
-                <div className="h-4 md:h-10 w-[1px] md:w-[2px] bg-slate-800" />
+                <div className="h-4 md:h-10 w-px md:w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">
                     <div className="inline-block animate-marquee text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
                         {t('display.welcome')} {business.name} • {t('display.please_wait').toUpperCase().includes('PLEASE') ? t('display.please_wait') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
