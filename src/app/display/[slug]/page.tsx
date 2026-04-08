@@ -263,7 +263,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </aside>
             </div>
 
-            {/* Premium Scrolling Ticker */}
+            {/* Bottom Ticker */}
             <div className="flex items-center gap-4 md:gap-12 bg-slate-900 py-3 md:py-7 px-4 md:px-12 rounded-full shadow-2xl border border-slate-800">
                 <div className="flex items-center gap-2 md:gap-4 text-white shrink-0">
                     <div className="h-2 w-2 md:h-4 md:w-4 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
@@ -271,26 +271,11 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </div>
                 <div className="h-4 md:h-10 w-px md:w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">
-                    <div className="inline-block animate-marquee text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
+                    <div className="inline-block text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
                         {t('display.welcome')} {business?.name || ""} • {String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN').toUpperCase().includes('PLEASE') ? String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
                     </div>
                 </div>
             </div>
-
-            <style jsx>{`
-                @keyframes marquee {
-                    0% { transform: translateX(${isRTL ? '-100%' : '0'}); }
-                    100% { transform: translateX(${isRTL ? '0' : '-100%'}); }
-                }
-                .animate-marquee {
-                    animation: marquee 40s linear infinite;
-                    display: inline-block;
-                    padding-${isRTL ? 'left' : 'right'}: 100%;
-                }
-                .scrollbar-hide::-webkit-scrollbar {
-                    display: none;
-                }
-            `}</style>
         </div>
     );
 }

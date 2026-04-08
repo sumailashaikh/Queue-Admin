@@ -146,8 +146,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         if (selectedM >= freeM) return "";
         const busyUntil = providerBusyUntilLabel();
         return busyUntil
-            ? `This provider is likely busy until ${busyUntil}. Please choose a time after that.`
-            : "This provider is currently busy. Please choose a later time.";
+            ? i18n.t(lang, 'public.provider_busy_until', { time: busyUntil }) || `This provider is likely busy until ${busyUntil}. Please choose a time after that.`
+            : i18n.t(lang, 'public.provider_busy_choose_later') || "This provider is currently busy. Please choose a later time.";
     })();
 
     const isStoreOpen = () => {

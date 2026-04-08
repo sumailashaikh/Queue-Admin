@@ -92,7 +92,9 @@ const dictionaries: Record<string, Dictionary> = {
             no_slots_hint: "No slots found for this provider on selected date. Choose another provider or date.",
             selected_provider: "Selected Provider",
             hour_short: "hr",
-            minute_short: "min"
+            minute_short: "min",
+            provider_busy_until: "This provider is likely busy until {{time}}. Please choose a time after that.",
+            provider_busy_choose_later: "This provider is currently busy. Please choose a later time."
         },
         status: {
             access_denied: "Access Denied",
@@ -287,7 +289,9 @@ const dictionaries: Record<string, Dictionary> = {
             no_slots_hint: "No se encontraron horarios para este proveedor en la fecha seleccionada. Elige otro proveedor o fecha.",
             selected_provider: "Proveedor seleccionado",
             hour_short: "h",
-            minute_short: "min"
+            minute_short: "min",
+            provider_busy_until: "Es probable que este proveedor esté ocupado hasta las {{time}}. Elige un horario después de ese momento.",
+            provider_busy_choose_later: "Este proveedor está ocupado en este momento. Elige un horario más tarde."
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -412,7 +416,9 @@ const dictionaries: Record<string, Dictionary> = {
             no_slots_hint: "चुनी गई तारीख पर इस प्रदाता के लिए स्लॉट नहीं मिले। दूसरा प्रदाता या तारीख चुनें।",
             selected_provider: "चयनित प्रदाता",
             hour_short: "घं",
-            minute_short: "मिनट"
+            minute_short: "मिनट",
+            provider_busy_until: "यह प्रदाता संभवतः {{time}} तक व्यस्त रहेगा। कृपया इसके बाद का समय चुनें।",
+            provider_busy_choose_later: "यह प्रदाता अभी व्यस्त है। कृपया बाद का समय चुनें।"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -607,7 +613,9 @@ const dictionaries: Record<string, Dictionary> = {
             no_slots_hint: "لا توجد مواعيد لهذا المقدم في التاريخ المحدد. اختر مقدم خدمة أو تاريخاً آخر.",
             selected_provider: "مقدم الخدمة المحدد",
             hour_short: "سا",
-            minute_short: "د"
+            minute_short: "د",
+            provider_busy_until: "من المحتمل أن يكون مقدم الخدمة مشغولاً حتى {{time}}. يرجى اختيار وقت بعد ذلك.",
+            provider_busy_choose_later: "مقدم الخدمة مشغول حالياً. يرجى اختيار وقت لاحق."
         },
         status: {
             access_denied: "تم رفض الوصول",
