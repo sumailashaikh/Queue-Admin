@@ -363,6 +363,8 @@
     "impact_view": "View impact",
     "impact_title": "Leave impact",
     "impact_none": "No impacted appointments found for this leave window.",
+    "impact_none_appointments": "No impacted appointments found. Live queue tasks are shown above.",
+    "impact_queue_tasks": "Impacted live queue tasks",
     "impact_reassign": "Reassign",
     "impact_reschedule": "Reschedule",
     "select_provider": "Select provider",
@@ -691,5 +693,7 @@
     "submit_resignation": "Submit Resignation",
     "resignation_sent": "Resignation request submitted successfully.",
     "rejection_feedback_label": "Message from your manager"
+    ,
+    "joined_at": "Joined At"
   }
 }

@@ -283,6 +283,8 @@
     "impact_view": "عرض التأثير",
     "impact_title": "تأثير الإجازة",
     "impact_none": "لا توجد مواعيد متأثرة في هذه الفترة.",
+    "impact_none_appointments": "لا توجد مواعيد متأثرة. تم عرض مهام الطابور المباشر أعلاه.",
+    "impact_queue_tasks": "مهام الطابور المباشر المتأثرة",
     "impact_reassign": "إعادة تعيين",
     "impact_reschedule": "إعادة جدولة",
     "select_provider": "اختر الموظف",
@@ -603,7 +605,8 @@
     "last_date": "آخر تاريخ مطلوب",
     "submit_resignation": "إرسال الاستقالة",
     "resignation_sent": "تم إرسال طلب الاستقالة بنجاح.",
-    "rejection_feedback_label": "رسالة من المدير"
+    "rejection_feedback_label": "رسالة من المدير",
+    "joined_at": "وقت الانضمام"
   },
   "login": {
     "title": "تسجيل دخول النشاط",

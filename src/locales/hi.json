@@ -280,6 +280,8 @@
     "impact_view": "प्रभाव देखें",
     "impact_title": "छुट्टी का प्रभाव",
     "impact_none": "इस अवधि के लिए कोई प्रभावित अपॉइंटमेंट नहीं मिली।",
+    "impact_none_appointments": "कोई प्रभावित अपॉइंटमेंट नहीं मिली। ऊपर लाइव क्यू टास्क दिखाए गए हैं।",
+    "impact_queue_tasks": "प्रभावित लाइव क्यू टास्क",
     "impact_reassign": "री-असाइन",
     "impact_reschedule": "री-शेड्यूल",
     "select_provider": "कर्मचारी चुनें",
@@ -602,7 +604,8 @@
     "last_date": "अनुरोधित अंतिम तिथि",
     "submit_resignation": "इस्तीफा जमा करें",
     "resignation_sent": "इस्तीफा अनुरोध सफलतापूर्वक जमा किया गया।",
-    "rejection_feedback_label": "आपके प्रबंधक का संदेश"
+    "rejection_feedback_label": "आपके प्रबंधक का संदेश",
+    "joined_at": "जॉइन समय"
   }
   ,
   "login": {

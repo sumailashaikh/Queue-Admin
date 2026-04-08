@@ -289,6 +289,8 @@
     "impact_view": "Ver impacto",
     "impact_title": "Impacto de la ausencia",
     "impact_none": "No se encontraron citas afectadas en esta ventana.",
+    "impact_none_appointments": "No se encontraron citas afectadas. Las tareas de cola en vivo se muestran arriba.",
+    "impact_queue_tasks": "Tareas de cola en vivo afectadas",
     "impact_reassign": "Reasignar",
     "impact_reschedule": "Reprogramar",
     "select_provider": "Seleccionar empleado",
@@ -584,7 +586,8 @@
     "leave_success": "Solicitud de permiso enviada",
     "leave_notify_owner_failed": "Permiso guardado, pero no pudimos enviar SMS/WhatsApp al responsable. Puede verlo en Proveedores ? Gestionar permiso.",
     "leave_owner_no_phone_hint": "Permiso guardado. Falta tel?fono del negocio para alertas: pida al propietario agregarlo en Configuraci?n.",
-    "rejection_feedback_label": "Mensaje de su responsable"
+    "rejection_feedback_label": "Mensaje de su responsable",
+    "joined_at": "Hora de ingreso"
   },
   "login": {
     "title": "Acceso de Negocio",

@@ -113,6 +113,12 @@ export default function ProvidersPage() {
         if (v === 'other') return tt('providers.other', 'Other');
         return leaveType || tt('providers.other', 'Other');
     };
+    const localizeLeaveKind = (leaveKind?: string) => {
+        const v = String(leaveKind || 'FULL_DAY').toUpperCase();
+        if (v === 'HALF_DAY') return tt('providers.half_day', 'Half Day');
+        if (v === 'EMERGENCY') return tt('providers.emergency_time', 'Emergency (time)');
+        return tt('providers.full_day', 'Full Day');
+    };
 
     const getInviteNotifyFailMessage = (inviteUrl?: string, hint?: string | null) => {
         const lang = String(language || 'en').toLowerCase();
@@ -938,7 +944,7 @@ export default function ProvidersPage() {
                                             {formatLeaveDateRange(leave.start_date, leave.end_date, language)}
                                         </p>
                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                            {localizeLeaveType(leave.leave_type)} • {t(`employee.status_${statusKey}`)}
+                                            {localizeLeaveType(leave.leave_type)} • {localizeLeaveKind(leave.leave_kind)} • {t(`employee.status_${statusKey}`)}
                                         </p>
                                         {leave.note && (
                                             <p className="text-[9px] text-slate-500 line-clamp-2">
@@ -1052,9 +1058,34 @@ export default function ProvidersPage() {
                                 </div>
 
                                 <div className="space-y-3">
+                                    {(impactModal.impact?.queue_tasks || []).length > 0 && (
+                                        <div className="p-4 rounded-2xl border border-amber-100 bg-amber-50/70">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-2">
+                                                {tt('providers.impact_queue_tasks', 'Impacted live queue tasks')}
+                                            </p>
+                                            <div className="space-y-2">
+                                                {(impactModal.impact?.queue_tasks || []).slice(0, 5).map((q: any) => (
+                                                    <div key={q.id} className="flex items-center justify-between bg-white border border-amber-100 rounded-xl px-3 py-2">
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-bold text-slate-900 truncate">{q.customer_name || tt('admin.customer', 'Customer')}</p>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                                                {q.service?.name || tt('services.title', 'Service')} • {new Date(q.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </p>
+                                                        </div>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">
+                                                            {String(q.status || '').toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {(impactModal.impact?.appointments || []).length === 0 ? (
                                         <div className="p-6 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm font-semibold">
-                                            {tt('providers.impact_none', 'No impacted appointments found for this leave window.')}
+                                            {(impactModal.impact?.queue_tasks || []).length > 0
+                                                ? tt('providers.impact_none_appointments', 'No impacted appointments found. Live queue tasks are shown above.')
+                                                : tt('providers.impact_none', 'No impacted appointments found for this leave window.')}
                                         </div>
                                     ) : (
                                         <div className="flex justify-end">

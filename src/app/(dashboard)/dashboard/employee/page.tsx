@@ -113,6 +113,12 @@ function EmployeeDashboardContent() {
         if (v === "other") return t("providers.other");
         return leaveType || t("providers.other");
     };
+    const leaveKindLabel = (leaveKind?: string) => {
+        const v = String(leaveKind || "FULL_DAY").toUpperCase();
+        if (v === "HALF_DAY") return t("providers.half_day");
+        if (v === "EMERGENCY") return t("providers.emergency_time");
+        return t("providers.full_day");
+    };
 
     const fetchData = useCallback(async () => {
         try {
@@ -492,7 +498,7 @@ function EmployeeDashboardContent() {
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('queue.joined_at')}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('employee.joined_at')}</p>
                                                     <p className="text-xs font-extrabold text-slate-900">{new Date(task.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                 </div>
                                             </div>
@@ -669,6 +675,8 @@ function EmployeeDashboardContent() {
                                                             </p>
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex flex-wrap items-center gap-1.5">
                                                                 {leaveTypeLabel(leave.leave_type)}
+                                                                <span className="text-slate-200">•</span>
+                                                                {leaveKindLabel(leave.leave_kind)}
                                                                 <span className="text-slate-200">•</span>
                                                                 <span className={cn(
                                                                     "font-black",
