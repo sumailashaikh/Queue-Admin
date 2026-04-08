@@ -96,6 +96,19 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         return `${h12}:${minutes} ${ampm}`;
     };
 
+    const providerBusyUntilLabel = () => {
+        if (!selectedProvider || selectedProvider.is_available_now) return "";
+        const mins = Number(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes || 0);
+        if (!mins || !business?.timezone) return "";
+        const busyUntil = new Date(Date.now() + mins * 60000);
+        return busyUntil.toLocaleTimeString('en-US', {
+            timeZone: business.timezone,
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
     const formatMinutesHuman = (totalMins?: number) => {
         const mins = Math.max(0, Number(totalMins || 0));
         if (mins < 60) return `${mins} ${i18n.t(lang, 'public.minute_short') || 'min'}`;
@@ -112,6 +125,30 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             ? Math.round(totalDuration / selectedServices.length)
             : 20
     );
+    const providerConflictMessage = (() => {
+        if (activeView !== 'appointment' || !selectedProviderId || !bookingDate || !bookingTime || !selectedProvider || selectedProvider.is_available_now) return "";
+        if (!business?.timezone) return "";
+        const minsToFree = Number(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes || 0);
+        if (!minsToFree) return "";
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: business.timezone });
+        if (bookingDate !== today) return "";
+
+        const nowLocal = new Date().toLocaleTimeString('en-GB', {
+            timeZone: business.timezone,
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        const [nh, nm] = nowLocal.split(':').map(Number);
+        const selected = bookingTime.split(':').map(Number);
+        const selectedM = (selected[0] || 0) * 60 + (selected[1] || 0);
+        const freeM = (nh * 60 + nm) + minsToFree;
+        if (selectedM >= freeM) return "";
+        const busyUntil = providerBusyUntilLabel();
+        return busyUntil
+            ? `This provider is likely busy until ${busyUntil}. Please choose a time after that.`
+            : "This provider is currently busy. Please choose a later time.";
+    })();
 
     const isStoreOpen = () => {
         if (!business) return false;
@@ -672,6 +709,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     ));
                                                 })()}
                                             </select>
+                                            {providerConflictMessage && (
+                                                <p className="mt-1 text-[11px] text-amber-700 font-semibold">
+                                                    {providerConflictMessage}
+                                                </p>
+                                            )}
                                             {selectedProviderId && totalDuration > 0 && !providerSlotsLoading && providerSlots.length === 0 && (
                                                 <p className="mt-1 text-[11px] text-amber-700 font-semibold">
                                                     {i18n.t(lang, 'public.no_slots_hint') || 'No slots found for this provider on selected date. Choose another provider or date.'}

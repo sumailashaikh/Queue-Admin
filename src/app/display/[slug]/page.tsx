@@ -125,7 +125,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             {/* Premium Elite Header Area */}
             <div className="flex flex-col md:flex-row items-center justify-between bg-slate-900 px-4 py-4 md:px-10 md:py-8 rounded-[24px] md:rounded-[32px] shadow-2xl border border-slate-800 gap-4 md:gap-6">
                 <div className="space-y-0.5 md:space-y-1 text-center md:text-left">
-                    <h1 className="text-2xl md:text-5xl font-black tracking-tight text-white uppercase italic leading-none">{business.name}</h1>
+                    <h1 className="text-2xl md:text-5xl font-black tracking-tight text-white uppercase italic leading-none">{business?.name || "BUSINESS"}</h1>
                     <div className="flex items-center justify-center md:justify-start gap-2 md:gap-3 text-slate-400 font-black text-[10px] md:text-base">
                         <Monitor className="h-3 w-3 md:h-5 md:w-5" />
                         <span className="uppercase tracking-[0.2em] md:tracking-[0.4em]">{t('display.title')}</span>
@@ -168,7 +168,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                         <div className="flex-1 min-h-[45vh] md:min-h-[58vh] rounded-[24px] bg-emerald-600 text-white border-4 border-emerald-500 shadow-2xl flex items-center justify-center relative overflow-hidden">
                             <div className="absolute top-4 right-4 text-white/80 text-xs font-black uppercase tracking-widest">{t('status.serving')}</div>
                             <div className="text-center px-6">
-                                <div className="text-[clamp(56px,14vw,180px)] font-black leading-none tracking-tight">{servingEntries[0].display_token}</div>
+                                <div className="text-[clamp(56px,14vw,180px)] font-black leading-none tracking-tight">{servingEntries[0]?.display_token || "--"}</div>
                             </div>
                         </div>
                     ) : servingEntries.length > 1 ? (
@@ -176,7 +176,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             {servingEntries.map((item) => (
                                 <div key={item.id} className="rounded-[20px] bg-emerald-600 text-white border-2 border-emerald-500 shadow-xl flex flex-col items-center justify-center p-4 min-h-[120px] md:min-h-[180px]">
                                     <span className="text-[10px] uppercase tracking-widest font-black text-white/90">{t('status.serving')}</span>
-                                    <span className="text-[clamp(36px,6vw,96px)] font-black leading-none">{item.display_token}</span>
+                                    <span className="text-[clamp(36px,6vw,96px)] font-black leading-none">{item?.display_token || "--"}</span>
                                 </div>
                             ))}
                         </div>
@@ -197,7 +197,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                             {nextEntries.length > 0 ? nextEntries.map((item) => (
                                 <div key={item.id} className="rounded-xl bg-blue-600 text-white px-3 py-2 flex items-center justify-between">
                                     <span className="text-[10px] font-black uppercase tracking-widest">Next</span>
-                                    <span className="text-[clamp(20px,4.8vw,38px)] font-black leading-none">{item.display_token}</span>
+                                    <span className="text-[clamp(20px,4.8vw,38px)] font-black leading-none">{item?.display_token || "--"}</span>
                                 </div>
                             )) : (
                                 <div className="rounded-xl bg-white border border-blue-100 p-3 text-xs font-bold text-blue-900">No next token</div>
@@ -215,7 +215,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                 {waitingOverflow.length > 0 ? waitingOverflow.map((item) => (
                                     <div key={item.id} className="rounded-xl bg-amber-100 text-amber-900 px-3 py-2 flex items-center justify-between">
                                         <span className="text-[10px] font-black uppercase tracking-widest">{t('status.waiting')}</span>
-                                        <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item.display_token}</span>
+                                        <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item?.display_token || "--"}</span>
                                     </div>
                                 )) : (
                                     <div className="rounded-xl bg-white border border-amber-100 p-3 text-xs font-bold text-amber-900">No waiting tokens</div>
@@ -233,7 +233,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                 {waitingOverflow.map((item) => (
                                     <div key={item.id} className="rounded-xl bg-amber-100 text-amber-900 px-3 py-2 flex items-center justify-between">
                                         <span className="text-[10px] font-black uppercase tracking-widest">{t('status.waiting')}</span>
-                                        <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item.display_token}</span>
+                                        <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item?.display_token || "--"}</span>
                                     </div>
                                 ))}
                             </div>
@@ -272,7 +272,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 <div className="h-4 md:h-10 w-px md:w-[2px] bg-slate-800" />
                 <div className="flex-1 overflow-hidden whitespace-nowrap">
                     <div className="inline-block animate-marquee text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
-                        {t('display.welcome')} {business.name} • {t('display.please_wait').toUpperCase().includes('PLEASE') ? t('display.please_wait') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
+                        {t('display.welcome')} {business?.name || ""} • {String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN').toUpperCase().includes('PLEASE') ? String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
                     </div>
                 </div>
             </div>
