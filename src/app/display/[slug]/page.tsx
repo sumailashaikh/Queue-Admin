@@ -270,12 +270,31 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     <span className="font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-xl italic">{t('queue.title')}</span>
                 </div>
                 <div className="h-4 md:h-10 w-px md:w-[2px] bg-slate-800" />
-                <div className="flex-1 overflow-hidden whitespace-nowrap">
-                    <div className="inline-block text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
-                        {t('display.welcome')} {business?.name || ""} • {String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN').toUpperCase().includes('PLEASE') ? String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
+                <div className="flex-1 overflow-hidden whitespace-nowrap relative">
+                    <div className="ticker-track text-[10px] md:text-xl font-black text-slate-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">
+                        <span className="ticker-item">
+                            {t('display.welcome')} {business?.name || ""} • {String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN').toUpperCase().includes('PLEASE') ? String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
+                        </span>
+                        <span className="ticker-item">
+                            {t('display.welcome')} {business?.name || ""} • {String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN').toUpperCase().includes('PLEASE') ? String(t('display.please_wait') || 'PLEASE WAIT FOR YOUR TURN') : 'PLEASE WAIT FOR YOUR TURN'} • {t('display.scan_to_join')} • {t('display.estimated_wait')} {formatDuration(waitingEntries.length * 10, t)} •
+                        </span>
                     </div>
                 </div>
             </div>
+            <style jsx>{`
+                .ticker-track {
+                    display: inline-flex;
+                    min-width: 200%;
+                    animation: tickerMove 28s linear infinite;
+                }
+                .ticker-item {
+                    padding-right: 3rem;
+                }
+                @keyframes tickerMove {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+            `}</style>
         </div>
     );
 }

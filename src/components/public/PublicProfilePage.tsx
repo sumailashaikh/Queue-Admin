@@ -76,6 +76,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         if (!p.service_ids || p.service_ids.length === 0) return true;
         return selectedServiceIds.every((sid) => p.service_ids.includes(sid));
     });
+    const visibleProviders = eligibleProviders.filter((p) => !p.is_on_leave);
     const selectedProvider = providerInsights.find((p) => p.id === selectedProviderId) || null;
 
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
@@ -219,11 +220,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     }, [slug, selectedProviderId, bookingDate, totalDuration, activeView]);
 
     useEffect(() => {
-        if (selectedProviderId && !eligibleProviders.some((p) => p.id === selectedProviderId)) {
+        if (selectedProviderId && !visibleProviders.some((p) => p.id === selectedProviderId)) {
             setSelectedProviderId("");
             setBookingTime("");
         }
-    }, [eligibleProviders, selectedProviderId]);
+    }, [visibleProviders, selectedProviderId]);
 
     // Auto-select first available date logic
     useEffect(() => {
@@ -607,7 +608,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm outline-none"
                                 >
                                     <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Auto assign best available'}</option>
-                                    {eligibleProviders.map((p) => (
+                                    {visibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {p.name} {p.is_on_leave
                                                 ? `(${i18n.t(lang, 'public.status_unavailable_today') || 'Unavailable today'})`
@@ -680,6 +681,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                         const [h, m] = t.split(':').map(Number);
                                                         return h * 60 + m;
                                                     };
+                                                    const selectedDuration = Math.max(0, Number(totalDuration || 0));
                                                     const openMins = parseToMins(business.open_time || "09:00");
                                                     const closeMins = parseToMins(business.close_time || "21:00");
                                                     const bufferLimit = closeMins - 10;
@@ -698,7 +700,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                         startMins = Math.max(openMins, currentMins + 15);
                                                         startMins = Math.ceil(startMins / 15) * 15;
                                                     }
-                                                    for (let m = startMins; m + totalDuration <= bufferLimit; m += 15) {
+                                                    for (let m = startMins; m + selectedDuration <= bufferLimit; m += 15) {
                                                         const h = Math.floor(m / 60);
                                                         const mins = m % 60;
                                                         const timeStr = `${h.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
