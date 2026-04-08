@@ -62,6 +62,7 @@ function StatusContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState(new Date());
+    const [showDoneToast, setShowDoneToast] = useState(false);
 
     const urlLang = searchParams.get("lang");
     const lang = urlLang || status?.business_language || 'en';
@@ -274,8 +275,25 @@ function StatusContent() {
                         >
                             {i18n.t(lang, 'status.force_refresh')}
                         </button>
+                        <button
+                            onClick={() => {
+                                setShowDoneToast(true);
+                                setTimeout(() => {
+                                    const next = status?.business_slug ? `/p/${status.business_slug}` : "/";
+                                    window.location.href = next;
+                                }, 1400);
+                            }}
+                            className="w-full h-12 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] active:scale-[0.98] transition-all"
+                        >
+                            {i18n.t(lang, 'public.done') || "Done"}
+                        </button>
                     </div>
                 </div>
+                {showDoneToast && (
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-lg">
+                        {i18n.t(lang, 'status.thank_you') || "Thank you! We will notify you."}
+                    </div>
+                )}
             </main >
         </div >
     );

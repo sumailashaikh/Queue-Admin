@@ -95,6 +95,21 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         return `${h12}:${minutes} ${ampm}`;
     };
 
+    const formatMinutesHuman = (totalMins?: number) => {
+        const mins = Math.max(0, Number(totalMins || 0));
+        if (mins < 60) return `${mins} min`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m ? `${h} hr ${m} min` : `${h} hr`;
+    };
+
+    const averageServiceMinutes = Math.max(
+        10,
+        selectedServices.length > 0
+            ? Math.round(totalDuration / selectedServices.length)
+            : 20
+    );
+
     const isStoreOpen = () => {
         if (!business) return false;
         if (business.is_closed) return false;
@@ -325,11 +340,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center p-0 md:p-6 lg:p-12">
-            <div className="w-full max-w-lg bg-white min-h-screen md:min-h-0 md:rounded-[40px] shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center p-0 md:p-4 lg:p-8">
+            <div className="w-full max-w-lg bg-white min-h-screen md:min-h-0 md:rounded-[32px] shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col">
 
                 {/* Header Section */}
-                <div className="p-8 pb-12 bg-slate-900 text-white space-y-4">
+                <div className="p-5 sm:p-7 pb-8 sm:pb-10 bg-slate-900 text-white space-y-3">
                     <div className="flex items-center justify-between">
                         <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center font-bold text-xl">
                             {business.name.charAt(0).toUpperCase()}
@@ -369,7 +384,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="px-8 -mt-6">
+                <div className="px-5 sm:px-7 -mt-5">
                     <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-1 flex">
                         {[1, 2, 3].map((s) => (
                             <div
@@ -384,7 +399,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-5 sm:p-7">
                     {/* View Switcher */}
                     {step < 3 && (
                         <>
@@ -529,9 +544,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 )}
                             </div>
 
-                            <div className="space-y-3 pt-2">
+                            <div className="space-y-2 pt-1">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                                    Select Employee (Optional)
+                                    Select Provider (Optional)
                                 </label>
                                 <select
                                     value={selectedProviderId}
@@ -544,25 +559,33 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <option value="">Auto assign best available</option>
                                     {eligibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.name} {p.is_on_leave ? "(On Leave)" : p.is_available_now ? "(Available)" : `(Busy: ${p.busy_source || 'queue'})`}
+                                            {p.name} {p.is_on_leave
+                                                ? "(Unavailable today)"
+                                                : p.is_available_now
+                                                    ? "(Available)"
+                                                    : `(Busy - ${Math.max(0, p.queue_ahead || 0)} in queue)`}
                                         </option>
                                     ))}
                                 </select>
 
                                 {selectedProvider && (
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
                                         <p className="font-bold text-slate-900">{selectedProvider.name}</p>
                                         <p className="mt-1">
-                                            Status: {selectedProvider.is_on_leave ? "On leave" : selectedProvider.is_available_now ? "Available now" : "Busy"}
+                                            Status: {selectedProvider.is_on_leave ? "Unavailable now" : selectedProvider.is_available_now ? "Available now" : "Busy"}
                                         </p>
-                                        {!selectedProvider.is_available_now && (
-                                            <p>
-                                                Next free in: {selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes || 0} min
-                                            </p>
-                                        )}
-                                        <p>Queue ahead: {selectedProvider.queue_ahead}</p>
-                                        <p>Busy reason: {selectedProvider.busy_source || "free"}</p>
-                                        <p>Active appointments: {selectedProvider.active_appointments}</p>
+                                        <p>
+                                            Next Available: {selectedProvider.is_available_now
+                                                ? "Now"
+                                                : formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}
+                                        </p>
+                                        <p>Customers Ahead: {Math.max(0, selectedProvider.queue_ahead || 0)}</p>
+                                        <p>
+                                            Estimated Wait Time: {formatMinutesHuman(Math.max(
+                                                Number(selectedProvider.estimated_wait_minutes || 0),
+                                                Math.max(0, Number(selectedProvider.queue_ahead || 0)) * averageServiceMinutes
+                                            ))}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -703,14 +726,14 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                                     {selectedProvider && (
                                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected employee</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Provider</p>
                                             <p className="mt-1 text-sm font-bold text-slate-900">{selectedProvider.name}</p>
                                             <p className="mt-1 text-xs text-slate-600">
                                                 {selectedProvider.is_on_leave
-                                                    ? `On leave`
+                                                    ? `Unavailable now`
                                                     : selectedProvider.is_available_now
                                                         ? "Available now"
-                                                        : `Next free in ${selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes || 0} min`}
+                                                        : `Next free in ${formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}`}
                                             </p>
                                         </div>
                                     )}
@@ -728,7 +751,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     )}
 
                     {step === 3 && ticket && (
-                        <div className="text-center space-y-10 animate-in zoom-in-95 duration-500 py-4">
+                        <div className="text-center space-y-7 animate-in zoom-in-95 duration-500 py-3">
                             <div className="h-32 w-32 bg-primary rounded-[40px] flex items-center justify-center mx-auto shadow-2xl shadow-primary/20 relative group overflow-hidden">
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 {isAppointmentMode ? <Clock className="h-16 w-16 text-white" /> : <ShieldCheck className="h-16 w-16 text-white" />}
@@ -738,11 +761,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
                                     {isAppointmentMode ? i18n.t(lang, 'public.request_sent') || "Request Sent!" : i18n.t(lang, 'public.check_in_successful') || "Check-in Successful!"}
                                 </h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">
                                     {i18n.t(lang, 'public.welcome_to')} <span className="text-slate-900">{business.name}</span>.<br />
                                     {isAppointmentMode ? i18n.t(lang, 'public.appointment_request_for') || "Your appointment request has been sent." : i18n.t(lang, 'public.service_pass_generated') || "Your service pass has been generated."}
                                 </p>
-                                <p className="text-xs font-semibold text-slate-600">
+                                <p className="text-xs font-semibold text-slate-700">
                                     {isAppointmentMode
                                         ? (i18n.t(lang, 'public.owner_will_review') || "Thank you. We will notify you on WhatsApp once your appointment is confirmed.")
                                         : (i18n.t(lang, 'public.we_will_notify') || "Thank you. We will notify you on WhatsApp when your turn is near.")}

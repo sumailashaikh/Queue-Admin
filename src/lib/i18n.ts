@@ -95,6 +95,7 @@ const dictionaries: Record<string, Dictionary> = {
             message_official: "Message Official",
             concierge_protocol: "QueueUp Concierge Protocol",
             force_refresh: "Tap to force refresh",
+            thank_you: "Thank you! We will notify you.",
             wa_checking_status: "Hello, I'm checking my status for ticket"
         },
         login: {
@@ -271,6 +272,7 @@ const dictionaries: Record<string, Dictionary> = {
             message_official: "Mensaje Oficial",
             concierge_protocol: "Protocolo de Conserjería QueueUp",
             force_refresh: "Toca para forzar recarga",
+            thank_you: "Gracias. Te notificaremos por WhatsApp.",
             wa_checking_status: "Hola, estoy revisando el estado de mi boleto"
         },
         login: {
@@ -377,6 +379,7 @@ const dictionaries: Record<string, Dictionary> = {
             message_official: "अधिकारी को संदेश दें",
             concierge_protocol: "QueueUp कंसीयज प्रोटोकॉल",
             force_refresh: "रीफ्रेश करने के लिए टैप करें",
+            thank_you: "धन्यवाद! हम आपको व्हाट्सएप पर सूचित करेंगे।",
             wa_checking_status: "नमस्ते, मैं अपने टिकट की स्थिति जांच रहा हूं"
         },
         login: {
@@ -553,6 +556,7 @@ const dictionaries: Record<string, Dictionary> = {
             message_official: "رسالة رسمية",
             concierge_protocol: "بروتوكول QueueUp",
             force_refresh: "انقر للتحديث",
+            thank_you: "شكراً لك! سنقوم بإشعارك عبر واتساب.",
             wa_checking_status: "مرحباً، أتحقق من حالة تذكرتي"
         },
         login: {
