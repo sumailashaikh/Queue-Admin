@@ -15,6 +15,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
     const [business, setBusiness] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [origin, setOrigin] = useState("");
 
     const isRTL = language === 'ar';
 
@@ -23,11 +24,15 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         return () => clearInterval(timer);
     }, []);
 
+    useEffect(() => {
+        if (typeof window !== "undefined") setOrigin(window.location.origin);
+    }, []);
+
     const fetchDisplayData = useCallback(async () => {
         try {
             const res = await businessService.getBusinessDisplayData(slug);
             setBusiness(res.business);
-            setEntries(res.entries);
+            setEntries(Array.isArray(res.entries) ? res.entries.filter(Boolean) : []);
             setError(null);
 
             // Auto-set language to business language if defined (do not persist locally to user)
@@ -96,8 +101,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         );
     }
 
-    const servingEntries = useMemo(() => entries.filter(e => e.status === 'serving').slice(0, 6), [entries]);
-    const waitingEntries = useMemo(() => entries.filter(e => e.status === 'waiting' || e.status === 'checked_in'), [entries]);
+    const safeEntries = useMemo(() => (Array.isArray(entries) ? entries.filter(Boolean) : []), [entries]);
+    const servingEntries = useMemo(() => safeEntries.filter(e => e.status === 'serving').slice(0, 6), [safeEntries]);
+    const waitingEntries = useMemo(() => safeEntries.filter(e => e.status === 'waiting' || e.status === 'checked_in'), [safeEntries]);
     const nextEntries = waitingEntries.slice(0, 3);
     const waitingOverflow = waitingEntries.slice(3);
     const hasActiveGuests = waitingEntries.length > 0 || servingEntries.length > 0;
@@ -236,9 +242,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
 
                     <div className="p-3 bg-slate-900 rounded-[20px] flex items-center gap-3 text-white shadow-xl relative overflow-hidden">
                         <div className="h-16 w-16 bg-white p-2 rounded-xl shadow-xl relative z-10 shrink-0">
-                            {typeof window !== 'undefined' && (
+                            {!!origin && (
                                 <QRCodeSVG
-                                    value={`${window.location.origin}/${slug}`}
+                                    value={`${origin}/${slug}`}
                                     size={96}
                                     level="H"
                                     className="w-full h-full"

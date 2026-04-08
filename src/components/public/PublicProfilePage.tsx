@@ -80,7 +80,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
 
-    const lang = customerLangOverride || 'en';
+    const lang = customerLangOverride || business?.language || 'en';
     const currency = business?.currency || 'USD';
 
     const formatCurrency = (amount: number) => {
@@ -98,10 +98,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
     const formatMinutesHuman = (totalMins?: number) => {
         const mins = Math.max(0, Number(totalMins || 0));
-        if (mins < 60) return `${mins} min`;
+        if (mins < 60) return `${mins} ${i18n.t(lang, 'public.minute_short') || 'min'}`;
         const h = Math.floor(mins / 60);
         const m = mins % 60;
-        return m ? `${h} hr ${m} min` : `${h} hr`;
+        const hLabel = i18n.t(lang, 'public.hour_short') || 'hr';
+        const mLabel = i18n.t(lang, 'public.minute_short') || 'min';
+        return m ? `${h} ${hLabel} ${m} ${mLabel}` : `${h} ${hLabel}`;
     };
 
     const averageServiceMinutes = Math.max(
@@ -141,6 +143,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 setBusiness(data);
                 const providers = await businessService.getPublicProviders(slug);
                 setProviderInsights(providers);
+                if (!customerLangOverride && typeof window !== "undefined") {
+                    const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
+                    const supported = ['en', 'es', 'hi', 'ar'];
+                    if (supported.includes(browser)) setCustomerLangOverride(browser);
+                }
             } catch (err: any) {
                 setError(i18n.t(lang, 'public.err_load_business'));
             } finally {
@@ -552,7 +559,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                             <div className="space-y-2 pt-1">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                                    Select Provider (Optional)
+                                    {i18n.t(lang, 'public.select_provider_optional') || 'Select Provider (Optional)'}
                                 </label>
                                 <select
                                     value={selectedProviderId}
@@ -562,14 +569,14 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     }}
                                     className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm outline-none"
                                 >
-                                    <option value="">Auto assign best available</option>
+                                    <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Auto assign best available'}</option>
                                     {eligibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {p.name} {p.is_on_leave
-                                                ? "(Unavailable today)"
+                                                ? `(${i18n.t(lang, 'public.status_unavailable_today') || 'Unavailable today'})`
                                                 : p.is_available_now
-                                                    ? "(Available)"
-                                                    : `(Busy - ${Math.max(0, p.queue_ahead || 0)} in queue)`}
+                                                    ? `(${i18n.t(lang, 'public.status_available_now') || 'Available now'})`
+                                                    : `(${i18n.t(lang, 'public.status_busy') || 'Busy'} - ${Math.max(0, p.queue_ahead || 0)} ${i18n.t(lang, 'public.in_queue_suffix') || 'in queue'})`}
                                         </option>
                                     ))}
                                 </select>
@@ -578,16 +585,16 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
                                         <p className="font-bold text-slate-900">{selectedProvider.name}</p>
                                         <p className="mt-1">
-                                            Status: {selectedProvider.is_on_leave ? "Unavailable now" : selectedProvider.is_available_now ? "Available now" : "Busy"}
+                                            {i18n.t(lang, 'public.status_label') || 'Status'}: {selectedProvider.is_on_leave ? (i18n.t(lang, 'public.status_unavailable_now') || 'Unavailable now') : selectedProvider.is_available_now ? (i18n.t(lang, 'public.status_available_now') || 'Available now') : (i18n.t(lang, 'public.status_busy') || 'Busy')}
                                         </p>
                                         <p>
-                                            Next Available: {selectedProvider.is_available_now
-                                                ? "Now"
+                                            {i18n.t(lang, 'public.next_available') || 'Next Available'}: {selectedProvider.is_available_now
+                                                ? (i18n.t(lang, 'public.now_label') || 'Now')
                                                 : formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}
                                         </p>
-                                        <p>Customers Ahead: {Math.max(0, selectedProvider.queue_ahead || 0)}</p>
+                                        <p>{i18n.t(lang, 'public.customers_ahead') || 'Customers Ahead'}: {Math.max(0, selectedProvider.queue_ahead || 0)}</p>
                                         <p>
-                                            Estimated Wait Time: {formatMinutesHuman(Math.max(
+                                            {i18n.t(lang, 'public.estimated_wait_time') || 'Estimated Wait Time'}: {formatMinutesHuman(Math.max(
                                                 Number(selectedProvider.estimated_wait_minutes || 0),
                                                 Math.max(0, Number(selectedProvider.queue_ahead || 0)) * averageServiceMinutes
                                             ))}
@@ -621,12 +628,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 {(() => {
                                                     const slots: string[] = [];
                                                     if (!business || !bookingDate) return null;
-                                                    if (selectedProviderId) {
+                                                    if (selectedProviderId && totalDuration > 0) {
                                                         if (providerSlotsLoading) {
-                                                            return <option value="" disabled>Loading available time slots...</option>;
+                                                            return <option value="" disabled>{i18n.t(lang, 'public.loading_slots') || 'Loading available time slots...'}</option>;
                                                         }
                                                         if (providerSlots.length === 0) {
-                                                            return <option value="" disabled>No available slots for selected provider. Try another provider/date.</option>;
+                                                            return <option value="" disabled>{i18n.t(lang, 'public.no_slots_for_provider') || 'No available slots for selected provider. Try another provider/date.'}</option>;
                                                         }
                                                         return providerSlots.map((s) => (
                                                             <option key={s} value={s}>{formatTime12(s)}</option>
@@ -665,9 +672,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     ));
                                                 })()}
                                             </select>
-                                            {selectedProviderId && !providerSlotsLoading && providerSlots.length === 0 && (
+                                            {selectedProviderId && totalDuration > 0 && !providerSlotsLoading && providerSlots.length === 0 && (
                                                 <p className="mt-1 text-[11px] text-amber-700 font-semibold">
-                                                    No slots found for this provider on selected date. Choose another provider or date.
+                                                    {i18n.t(lang, 'public.no_slots_hint') || 'No slots found for this provider on selected date. Choose another provider or date.'}
                                                 </p>
                                             )}
                                         </div>
@@ -743,14 +750,14 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                                     {selectedProvider && (
                                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Provider</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.selected_provider') || 'Selected Provider'}</p>
                                             <p className="mt-1 text-sm font-bold text-slate-900">{selectedProvider.name}</p>
                                             <p className="mt-1 text-xs text-slate-600">
                                                 {selectedProvider.is_on_leave
-                                                    ? `Unavailable now`
+                                                    ? (i18n.t(lang, 'public.status_unavailable_now') || 'Unavailable now')
                                                     : selectedProvider.is_available_now
-                                                        ? "Available now"
-                                                        : `Next free in ${formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}`}
+                                                        ? (i18n.t(lang, 'public.status_available_now') || 'Available now')
+                                                        : `${i18n.t(lang, 'public.next_available') || 'Next Available'} ${formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}`}
                                             </p>
                                         </div>
                                     )}
