@@ -73,7 +73,8 @@ const dictionaries: Record<string, Dictionary> = {
             no_services_title: "No services available yet",
             no_services_hint: "This business has not listed any services on its booking page. Please contact the salon directly or check back later.",
             closed_suggest_appointment: "Walk-in queue may be closed right now, but you can request an appointment for another day (for example tomorrow).",
-            book_appointment_next_open: "Book an appointment"
+            book_appointment_next_open: "Book an appointment",
+            language_label: "Language"
         },
         status: {
             access_denied: "Access Denied",
@@ -248,7 +249,8 @@ const dictionaries: Record<string, Dictionary> = {
             no_services_title: "Aún no hay servicios",
             no_services_hint: "Este negocio no ha publicado servicios en su página. Contacte al salón directamente o vuelva más tarde.",
             closed_suggest_appointment: "La fila puede estar cerrada ahora, pero puede solicitar una cita para otro día (por ejemplo mañana).",
-            book_appointment_next_open: "Reservar una cita"
+            book_appointment_next_open: "Reservar una cita",
+            language_label: "Idioma"
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -353,7 +355,8 @@ const dictionaries: Record<string, Dictionary> = {
             no_services_title: "अभी कोई सेवा सूचीबद्ध नहीं है",
             no_services_hint: "इस व्यवसाय ने अपनी सार्वजनिक पृष्ठ पर कोई सेवा नहीं जोड़ी है। कृपया सैलून से संपर्क करें या बाद में देखें।",
             closed_suggest_appointment: "लाइव कतार अभी बंद हो सकती है, लेकिन आप दूसरे दिन (जैसे कल) के लिए अपॉइंटमेंट का अनुरोध कर सकते हैं।",
-            book_appointment_next_open: "अपॉइंटमेंट बुक करें"
+            book_appointment_next_open: "अपॉइंटमेंट बुक करें",
+            language_label: "भाषा"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -528,7 +531,8 @@ const dictionaries: Record<string, Dictionary> = {
             no_services_title: "لا توجد خدمات متاحة بعد",
             no_services_hint: "لم يضف هذا العمل أي خدمات على صفحة الحجز. يُرجى التواصل مباشرةً أو المحاولة لاحقاً.",
             closed_suggest_appointment: "قد يكون الطابور المباشر مغلقاً الآن، لكن يمكنك طلب موعد ليوم آخر (مثلاً غداً).",
-            book_appointment_next_open: "احجز موعداً"
+            book_appointment_next_open: "احجز موعداً",
+            language_label: "اللغة"
         },
         status: {
             access_denied: "تم رفض الوصول",

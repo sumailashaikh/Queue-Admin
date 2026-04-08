@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
     Users,
@@ -78,18 +78,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const selectedProvider = providerInsights.find((p) => p.id === selectedProviderId) || null;
 
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
-    const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-    const langDropdownRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
-                setLangDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     const lang = customerLangOverride || 'en';
     const currency = business?.currency || 'USD';
@@ -347,26 +335,19 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                             {business.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="relative" ref={langDropdownRef}>
-                                <button
-                                    onClick={() => setLangDropdownOpen(open => !open)}
-                                    className="h-8 w-8 rounded-full bg-slate-800/50 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                            <div className="rounded-xl border border-slate-700 bg-slate-800/60 px-2 py-1.5 flex items-center gap-2">
+                                <Globe className="h-3.5 w-3.5 text-slate-300" />
+                                <select
+                                    aria-label={i18n.t(lang, 'public.language_label') || 'Language'}
+                                    value={lang}
+                                    onChange={(e) => setCustomerLangOverride(e.target.value)}
+                                    className="bg-transparent text-[11px] font-bold text-white outline-none pr-1"
                                 >
-                                    <Globe className="h-4 w-4" />
-                                </button>
-                                {langDropdownOpen && (
-                                    <div className="absolute right-0 top-10 w-32 bg-white rounded-xl shadow-xl border border-slate-100 z-[100] overflow-hidden">
-                                        {['en', 'es', 'hi', 'ar'].map(l => (
-                                            <button
-                                                key={l}
-                                                onClick={() => { setCustomerLangOverride(l); setLangDropdownOpen(false); }}
-                                                className={cn("w-full text-left px-4 py-3 text-xs font-bold uppercase tracking-widest transition-colors", lang === l ? "text-primary bg-primary/5 border-l-4 border-primary" : "text-slate-600 hover:bg-slate-50")}
-                                            >
-                                                {l === 'en' ? 'English' : l === 'es' ? 'Español' : l === 'hi' ? 'हिंदी' : 'العربية'}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+                                    <option value="en" className="text-slate-900">English</option>
+                                    <option value="es" className="text-slate-900">Español</option>
+                                    <option value="hi" className="text-slate-900">हिंदी</option>
+                                    <option value="ar" className="text-slate-900">العربية</option>
+                                </select>
                             </div>
                             <div className={cn(
                                 "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border",
@@ -563,7 +544,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <option value="">Auto assign best available</option>
                                     {eligibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.name} {p.is_available_now ? "(Available)" : `(Busy: ${p.queue_ahead} ahead)`}
+                                            {p.name} {p.is_on_leave ? "(On Leave)" : p.is_available_now ? "(Available)" : `(Busy: ${p.busy_source || 'queue'})`}
                                         </option>
                                     ))}
                                 </select>
@@ -572,10 +553,15 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
                                         <p className="font-bold text-slate-900">{selectedProvider.name}</p>
                                         <p className="mt-1">
-                                            Status: {selectedProvider.is_available_now ? "Available now" : "Busy"}
+                                            Status: {selectedProvider.is_on_leave ? "On leave" : selectedProvider.is_available_now ? "Available now" : "Busy"}
                                         </p>
+                                        {!selectedProvider.is_available_now && (
+                                            <p>
+                                                Next free in: {selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes || 0} min
+                                            </p>
+                                        )}
                                         <p>Queue ahead: {selectedProvider.queue_ahead}</p>
-                                        <p>Estimated wait: {selectedProvider.estimated_wait_minutes} min</p>
+                                        <p>Busy reason: {selectedProvider.busy_source || "free"}</p>
                                         <p>Active appointments: {selectedProvider.active_appointments}</p>
                                     </div>
                                 )}
@@ -720,9 +706,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected employee</p>
                                             <p className="mt-1 text-sm font-bold text-slate-900">{selectedProvider.name}</p>
                                             <p className="mt-1 text-xs text-slate-600">
-                                                {selectedProvider.is_available_now
-                                                    ? "Available now"
-                                                    : `Estimated wait ${selectedProvider.estimated_wait_minutes} min`}
+                                                {selectedProvider.is_on_leave
+                                                    ? `On leave`
+                                                    : selectedProvider.is_available_now
+                                                        ? "Available now"
+                                                        : `Next free in ${selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes || 0} min`}
                                             </p>
                                         </div>
                                     )}
@@ -753,6 +741,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
                                     {i18n.t(lang, 'public.welcome_to')} <span className="text-slate-900">{business.name}</span>.<br />
                                     {isAppointmentMode ? i18n.t(lang, 'public.appointment_request_for') || "Your appointment request has been sent." : i18n.t(lang, 'public.service_pass_generated') || "Your service pass has been generated."}
+                                </p>
+                                <p className="text-xs font-semibold text-slate-600">
+                                    {isAppointmentMode
+                                        ? (i18n.t(lang, 'public.owner_will_review') || "Thank you. We will notify you on WhatsApp once your appointment is confirmed.")
+                                        : (i18n.t(lang, 'public.we_will_notify') || "Thank you. We will notify you on WhatsApp when your turn is near.")}
                                 </p>
                             </div>
 

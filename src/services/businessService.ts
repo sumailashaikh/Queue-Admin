@@ -27,6 +27,9 @@ export interface PublicProviderInsight {
     estimated_wait_minutes: number;
     active_appointments: number;
     is_available_now: boolean;
+    is_on_leave?: boolean;
+    busy_source?: 'on_leave' | 'queue' | 'appointment' | 'free';
+    next_available_in_minutes?: number;
 }
 
 export const businessService = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use, useCallback } from "react";
-import { Users, Clock, Loader2, Monitor, Play, Wifi, Calendar } from "lucide-react";
+import { Users, Clock, Loader2, Monitor, Play, Wifi } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
 import { businessService } from "@/services/businessService";
 import { QRCodeSVG } from "qrcode.react";
@@ -75,20 +75,6 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         };
     }, [slug, fetchDisplayData]);
 
-    const getTranslatedServiceName = (item: any) => {
-        if (!item.translations || item.translations.length === 0) return item.service_name;
-
-        // Since item.translations is an array of translation objects from multiple services
-        // we map them.
-        const translatedNames = item.translations.map((trans: any) => {
-            if (trans && trans[language]) return trans[language];
-            return null;
-        }).filter(Boolean);
-
-        if (translatedNames.length > 0) return translatedNames.join(', ');
-        return item.service_name;
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-6">
@@ -112,7 +98,6 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
 
     const servingEntries = entries.filter(e => e.status === 'serving').slice(0, 3);
     const waitingEntries = entries.filter(e => e.status === 'waiting' || e.status === 'checked_in');
-    const completedEntriesCount = entries.filter(e => e.status === 'completed').length;
     const hasActiveGuests = waitingEntries.length > 0;
 
     return (
@@ -142,7 +127,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
                     <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('display.now_serving')}</p>
                     <p className="text-2xl md:text-4xl font-black text-slate-900">{servingEntries.length}</p>
@@ -150,10 +135,6 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
                     <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.active_guests')}</p>
                     <p className="text-2xl md:text-4xl font-black text-slate-900">{waitingEntries.length}</p>
-                </div>
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl px-4 py-3 shadow-sm">
-                    <p className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">{t('dashboard.completed')}</p>
-                    <p className="text-2xl md:text-4xl font-black text-emerald-600">{completedEntriesCount}</p>
                 </div>
             </div>
 
@@ -186,19 +167,12 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                         : "bg-white border-slate-100 text-slate-900 shadow-xl opacity-60"
                                 )}>
                                     <div className="space-y-4 md:space-y-6 text-center md:text-left">
-                                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3">
-                                            <span className="px-3 py-1 md:px-5 md:py-2 bg-slate-100 rounded-full text-[10px] md:text-base font-black text-slate-500 uppercase tracking-widest">
-                                                {getTranslatedServiceName(item) || t('services.default_desc')}
-                                            </span>
-                                            {idx === 0 && (
-                                                <span className="px-3 py-1 md:px-5 md:py-2 bg-emerald-500 rounded-full text-[10px] md:text-base font-black text-white uppercase tracking-widest animate-pulse">
-                                                    {t('admin.active')}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-2xl md:text-6xl font-black tracking-tighter capitalize leading-none break-words max-w-[200px] md:max-w-none">
-                                            {t('display.guest_name') || 'Guest'}
-                                        </p>
+                                        <span className={cn(
+                                            "px-3 py-1 md:px-5 md:py-2 rounded-full text-[10px] md:text-base font-black uppercase tracking-widest",
+                                            idx === 0 ? "bg-emerald-500 text-white animate-pulse" : "bg-slate-100 text-slate-500"
+                                        )}>
+                                            {t('status.serving')}
+                                        </span>
                                     </div>
                                     <div className={cn(
                                         "h-20 md:h-44 w-32 md:w-60 rounded-[16px] md:rounded-[32px] flex flex-col items-center justify-center font-black shadow-2xl px-2 md:px-4 text-center border-2 md:border-4",
@@ -243,10 +217,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                         {waitingEntries.length > 0 ? waitingEntries.slice(0, 8).map((item) => (
                             <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group w-full overflow-hidden gap-2">
                                 <div className="space-y-0.5 flex-1 min-w-0 pr-2">
-                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize truncate">
-                                        {t('display.guest_name') || 'Guest'}
+                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors uppercase truncate">
+                                        {t('status.waiting')}
                                     </p>
-                                    <p className="text-[9px] md:text-sm font-black text-slate-400 uppercase tracking-[0.1em] truncate">{getTranslatedServiceName(item)}</p>
                                 </div>
                                 <div className="h-7 md:h-14 min-w-[2.5rem] md:min-w-[6rem] flex-shrink-0 w-auto px-2 md:px-4 bg-white rounded-[6px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-xs md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">
                                     {item.display_token}
