@@ -110,7 +110,6 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                 : servingCount <= 4
                     ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
                     : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6";
-    const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
     return (
         <div className={cn(
@@ -200,7 +199,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                         </div>
                     </div>
 
-                    {(!isMobile || waitingOverflow.length <= 6) && (
+                    {!(waitingOverflow.length > 6) && (
                         <div className="rounded-[20px] border border-amber-100 bg-amber-50 p-3 flex-1 min-h-0">
                             <div className="flex items-center gap-2 mb-2">
                                 <Users className="h-4 w-4 text-amber-800" />
@@ -215,6 +214,22 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                 )) : (
                                     <div className="rounded-xl bg-white border border-amber-100 p-3 text-xs font-bold text-amber-900">No waiting tokens</div>
                                 )}
+                            </div>
+                        </div>
+                    )}
+                    {(waitingOverflow.length > 6) && (
+                        <div className="rounded-[20px] border border-amber-100 bg-amber-50 p-3 flex-1 min-h-0 hidden md:block">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Users className="h-4 w-4 text-amber-800" />
+                                <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-amber-900">{t('status.waiting')}</h3>
+                            </div>
+                            <div className="space-y-2 overflow-y-auto max-h-[34vh] md:max-h-[44vh] pr-1 scrollbar-hide">
+                                {waitingOverflow.map((item) => (
+                                    <div key={item.id} className="rounded-xl bg-amber-100 text-amber-900 px-3 py-2 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{t('status.waiting')}</span>
+                                        <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item.display_token}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

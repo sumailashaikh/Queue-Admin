@@ -57,6 +57,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [providerInsights, setProviderInsights] = useState<PublicProviderInsight[]>([]);
     const [selectedProviderId, setSelectedProviderId] = useState("");
     const [providerSlots, setProviderSlots] = useState<string[]>([]);
+    const [providerSlotsLoading, setProviderSlotsLoading] = useState(false);
 
     const toggleService = (service: any) => {
         const isSelected = selectedServices.find(s => s.id === service.id);
@@ -152,9 +153,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     useEffect(() => {
         if (!selectedProviderId || activeView !== 'appointment' || !bookingDate || !totalDuration) {
             setProviderSlots([]);
+            setProviderSlotsLoading(false);
             return;
         }
         let mounted = true;
+        setProviderSlotsLoading(true);
         businessService
             .getPublicProviderSlots(slug, selectedProviderId, bookingDate, totalDuration)
             .then((slots) => {
@@ -162,6 +165,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             })
             .catch(() => {
                 if (mounted) setProviderSlots([]);
+            })
+            .finally(() => {
+                if (mounted) setProviderSlotsLoading(false);
             });
         return () => {
             mounted = false;
@@ -616,6 +622,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     const slots: string[] = [];
                                                     if (!business || !bookingDate) return null;
                                                     if (selectedProviderId) {
+                                                        if (providerSlotsLoading) {
+                                                            return <option value="" disabled>Loading available time slots...</option>;
+                                                        }
+                                                        if (providerSlots.length === 0) {
+                                                            return <option value="" disabled>No available slots for selected provider. Try another provider/date.</option>;
+                                                        }
                                                         return providerSlots.map((s) => (
                                                             <option key={s} value={s}>{formatTime12(s)}</option>
                                                         ));
@@ -653,6 +665,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     ));
                                                 })()}
                                             </select>
+                                            {selectedProviderId && !providerSlotsLoading && providerSlots.length === 0 && (
+                                                <p className="mt-1 text-[11px] text-amber-700 font-semibold">
+                                                    No slots found for this provider on selected date. Choose another provider or date.
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
