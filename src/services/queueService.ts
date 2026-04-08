@@ -109,6 +109,7 @@ export const queueService = {
         phone?: string,
         service_name?: string,
         service_ids?: string[],
+        provider_id?: string,
         entry_source?: 'online' | 'qr_walkin' | 'manual',
         ui_language?: string
     }): Promise<QueueEntry> {

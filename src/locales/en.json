@@ -643,7 +643,8 @@
     "welcome": "Welcome To",
     "please_wait": "Please Wait For Your Turn",
     "estimated_wait": "Estimated Max Wait",
-    "min": "Mins"
+    "min": "Mins",
+    "guest_name": "Guest"
   },
   "status": {
     "paid": "Paid",

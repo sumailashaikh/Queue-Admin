@@ -24,7 +24,7 @@ import {
     QrCode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { businessService, Business } from "@/services/businessService";
+import { businessService, Business, PublicProviderInsight } from "@/services/businessService";
 import { queueService, QueueEntry } from "@/services/queueService";
 import { appointmentService } from "@/services/appointmentService";
 import { formatGlobalPhone } from "@/lib/phoneUtils";
@@ -54,6 +54,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ticket, setTicket] = useState<QueueEntry | null>(null);
     const [isAppointmentMode, setIsAppointmentMode] = useState(false);
+    const [providerInsights, setProviderInsights] = useState<PublicProviderInsight[]>([]);
+    const [selectedProviderId, setSelectedProviderId] = useState("");
+    const [providerSlots, setProviderSlots] = useState<string[]>([]);
 
     const toggleService = (service: any) => {
         const isSelected = selectedServices.find(s => s.id === service.id);
@@ -66,6 +69,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
     const totalDuration = selectedServices.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
     const totalPrice = selectedServices.reduce((acc, s) => acc + (s.price || 0), 0);
+    const selectedServiceIds = selectedServices.map((s) => s.id);
+    const eligibleProviders = providerInsights.filter((p) => {
+        if (!selectedServiceIds.length) return true;
+        if (!p.service_ids || p.service_ids.length === 0) return true;
+        return selectedServiceIds.every((sid) => p.service_ids.includes(sid));
+    });
+    const selectedProvider = providerInsights.find((p) => p.id === selectedProviderId) || null;
 
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
     const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -125,6 +135,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             try {
                 const data = await businessService.getBusinessBySlug(slug);
                 setBusiness(data);
+                const providers = await businessService.getPublicProviders(slug);
+                setProviderInsights(providers);
             } catch (err: any) {
                 setError(i18n.t(lang, 'public.err_load_business'));
             } finally {
@@ -133,6 +145,32 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         };
         loadBusiness();
     }, [slug]);
+
+    useEffect(() => {
+        if (!selectedProviderId || activeView !== 'appointment' || !bookingDate || !totalDuration) {
+            setProviderSlots([]);
+            return;
+        }
+        let mounted = true;
+        businessService
+            .getPublicProviderSlots(slug, selectedProviderId, bookingDate, totalDuration)
+            .then((slots) => {
+                if (mounted) setProviderSlots(slots);
+            })
+            .catch(() => {
+                if (mounted) setProviderSlots([]);
+            });
+        return () => {
+            mounted = false;
+        };
+    }, [slug, selectedProviderId, bookingDate, totalDuration, activeView]);
+
+    useEffect(() => {
+        if (selectedProviderId && !eligibleProviders.some((p) => p.id === selectedProviderId)) {
+            setSelectedProviderId("");
+            setBookingTime("");
+        }
+    }, [eligibleProviders, selectedProviderId]);
 
     // Auto-select first available date logic
     useEffect(() => {
@@ -209,6 +247,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     customer_name: name,
                     phone: formattedPhone,
                     service_ids: service_ids,
+                    provider_id: selectedProviderId || undefined,
                     ui_language: lang // Persist selected language
                 });
                 setTicket(entry);
@@ -222,6 +261,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     start_time: startTime.toISOString(),
                     customer_name: name,
                     phone: formattedPhone,
+                    provider_id: selectedProviderId || undefined,
                     ui_language: lang // Persist selected language
                 });
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
@@ -508,6 +548,39 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 )}
                             </div>
 
+                            <div className="space-y-3 pt-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                                    Select Employee (Optional)
+                                </label>
+                                <select
+                                    value={selectedProviderId}
+                                    onChange={(e) => {
+                                        setSelectedProviderId(e.target.value);
+                                        setBookingTime("");
+                                    }}
+                                    className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm outline-none"
+                                >
+                                    <option value="">Auto assign best available</option>
+                                    {eligibleProviders.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name} {p.is_available_now ? "(Available)" : `(Busy: ${p.queue_ahead} ahead)`}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {selectedProvider && (
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700">
+                                        <p className="font-bold text-slate-900">{selectedProvider.name}</p>
+                                        <p className="mt-1">
+                                            Status: {selectedProvider.is_available_now ? "Available now" : "Busy"}
+                                        </p>
+                                        <p>Queue ahead: {selectedProvider.queue_ahead}</p>
+                                        <p>Estimated wait: {selectedProvider.estimated_wait_minutes} min</p>
+                                        <p>Active appointments: {selectedProvider.active_appointments}</p>
+                                    </div>
+                                )}
+                            </div>
+
                             {activeView === 'appointment' && (
                                 <div className="space-y-6 pt-6 border-t border-slate-100">
                                     <div className="grid grid-cols-2 gap-4">
@@ -531,8 +604,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             >
                                                 <option value="">{i18n.t(lang, 'public.select_time')}</option>
                                                 {(() => {
-                                                    const slots = [];
+                                                    const slots: string[] = [];
                                                     if (!business || !bookingDate) return null;
+                                                    if (selectedProviderId) {
+                                                        return providerSlots.map((s) => (
+                                                            <option key={s} value={s}>{formatTime12(s)}</option>
+                                                        ));
+                                                    }
                                                     const parseToMins = (t: string) => {
                                                         const [h, m] = t.split(':').map(Number);
                                                         return h * 60 + m;
@@ -636,6 +714,18 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             />
                                         </div>
                                     </div>
+
+                                    {selectedProvider && (
+                                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected employee</p>
+                                            <p className="mt-1 text-sm font-bold text-slate-900">{selectedProvider.name}</p>
+                                            <p className="mt-1 text-xs text-slate-600">
+                                                {selectedProvider.is_available_now
+                                                    ? "Available now"
+                                                    : `Estimated wait ${selectedProvider.estimated_wait_minutes} min`}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <button

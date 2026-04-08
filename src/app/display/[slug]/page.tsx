@@ -196,7 +196,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-2xl md:text-6xl font-black tracking-tighter capitalize leading-none break-words max-w-[200px] md:max-w-none">{item.customer_name}</p>
+                                        <p className="text-2xl md:text-6xl font-black tracking-tighter capitalize leading-none break-words max-w-[200px] md:max-w-none">
+                                            {t('display.guest_name') || 'Guest'}
+                                        </p>
                                     </div>
                                     <div className={cn(
                                         "h-20 md:h-44 w-32 md:w-60 rounded-[16px] md:rounded-[32px] flex flex-col items-center justify-center font-black shadow-2xl px-2 md:px-4 text-center border-2 md:border-4",
@@ -241,7 +243,9 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                         {waitingEntries.length > 0 ? waitingEntries.slice(0, 8).map((item) => (
                             <div key={item.id} className="flex items-center justify-between px-3 py-2 md:px-8 md:py-6 bg-slate-50/50 rounded-[12px] md:rounded-[24px] border border-slate-100 hover:border-slate-900 transition-all hover:bg-white group w-full overflow-hidden gap-2">
                                 <div className="space-y-0.5 flex-1 min-w-0 pr-2">
-                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize truncate">{item.customer_name}</p>
+                                    <p className="text-sm md:text-2xl font-black text-slate-900 group-hover:text-black transition-colors capitalize truncate">
+                                        {t('display.guest_name') || 'Guest'}
+                                    </p>
                                     <p className="text-[9px] md:text-sm font-black text-slate-400 uppercase tracking-[0.1em] truncate">{getTranslatedServiceName(item)}</p>
                                 </div>
                                 <div className="h-7 md:h-14 min-w-[2.5rem] md:min-w-[6rem] flex-shrink-0 w-auto px-2 md:px-4 bg-white rounded-[6px] md:rounded-[16px] border border-slate-100 flex items-center justify-center text-xs md:text-xl font-black text-slate-900 shadow-sm group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all">

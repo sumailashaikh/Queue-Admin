@@ -17,6 +17,18 @@ export interface Business {
     language?: string;
 }
 
+export interface PublicProviderInsight {
+    id: string;
+    name: string;
+    role?: string;
+    department?: string;
+    service_ids: string[];
+    queue_ahead: number;
+    estimated_wait_minutes: number;
+    active_appointments: number;
+    is_available_now: boolean;
+}
+
 export const businessService = {
     async getMyBusiness(): Promise<Business | null> {
         try {
@@ -58,6 +70,18 @@ export const businessService = {
     async getBusinessDisplayData(slug: string): Promise<{ business: Business & { queues: any[] }, entries: any[] }> {
         const result = await api.get<{ business: Business & { queues: any[] }, entries: any[] }>(`/public/business/${slug}/display-data`);
         return result.data;
+    },
+
+    async getPublicProviders(slug: string): Promise<PublicProviderInsight[]> {
+        const result = await api.get<PublicProviderInsight[]>(`/public/business/${slug}/providers`);
+        return result.data || [];
+    },
+
+    async getPublicProviderSlots(slug: string, providerId: string, date: string, durationMinutes: number): Promise<string[]> {
+        const result = await api.get<{ date: string; slots: string[] }>(
+            `/public/business/${slug}/providers/${providerId}/slots?date=${encodeURIComponent(date)}&duration_minutes=${durationMinutes}`
+        );
+        return result.data?.slots || [];
     },
 
     async inviteEmployee(data: { name: string, phone: string, business_id: string, role?: string, custom_message?: string }): Promise<any> {

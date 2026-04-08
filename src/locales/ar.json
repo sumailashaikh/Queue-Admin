@@ -559,7 +559,8 @@
     "welcome": "أهلاً بك في",
     "please_wait": "الرجاء انتظار دورك",
     "estimated_wait": "أقصى انتظار متوقع",
-    "min": "دقيقة"
+    "min": "دقيقة",
+    "guest_name": "ضيف"
   },
   "status": {
     "paid": "مدفوع",

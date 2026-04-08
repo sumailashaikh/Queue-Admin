@@ -563,7 +563,8 @@
     "welcome": "Bienvenido a",
     "please_wait": "Por favor, espera tu turno",
     "estimated_wait": "Espera m?xima estimada",
-    "min": "min"
+    "min": "min",
+    "guest_name": "Invitado"
   },
   "status": {
     "paid": "Pagado",
