@@ -698,6 +698,12 @@
     "resignation_sent": "Resignation request submitted successfully.",
     "rejection_feedback_label": "Message from your manager"
     ,
-    "joined_at": "Joined At"
+    "joined_at": "Joined At",
+    "today_assigned_work": "Today Assigned Work",
+    "join_queue": "Join Queue",
+    "no_appointments_today": "No appointments assigned for today",
+    "upcoming_assigned": "Upcoming Assigned",
+    "plan_leave_safely": "Plan your leave safely",
+    "no_join_queue_today": "No join queue tasks assigned for today"
   }
 }

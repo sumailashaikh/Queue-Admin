@@ -609,7 +609,13 @@
     "submit_resignation": "इस्तीफा जमा करें",
     "resignation_sent": "इस्तीफा अनुरोध सफलतापूर्वक जमा किया गया।",
     "rejection_feedback_label": "आपके प्रबंधक का संदेश",
-    "joined_at": "जॉइन समय"
+    "joined_at": "जॉइन समय",
+    "today_assigned_work": "आज का असाइन किया गया कार्य",
+    "join_queue": "जॉइन क्यू",
+    "no_appointments_today": "आज के लिए कोई अपॉइंटमेंट असाइन नहीं है",
+    "upcoming_assigned": "आगामी असाइनमेंट",
+    "plan_leave_safely": "अपनी छुट्टी सुरक्षित रूप से प्लान करें",
+    "no_join_queue_today": "आज के लिए कोई जॉइन क्यू कार्य असाइन नहीं है"
   }
   ,
   "login": {

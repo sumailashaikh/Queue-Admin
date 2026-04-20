@@ -591,7 +591,13 @@
     "leave_notify_owner_failed": "Permiso guardado, pero no pudimos enviar SMS/WhatsApp al responsable. Puede verlo en Proveedores ? Gestionar permiso.",
     "leave_owner_no_phone_hint": "Permiso guardado. Falta tel?fono del negocio para alertas: pida al propietario agregarlo en Configuraci?n.",
     "rejection_feedback_label": "Mensaje de su responsable",
-    "joined_at": "Hora de ingreso"
+    "joined_at": "Hora de ingreso",
+    "today_assigned_work": "Trabajo asignado hoy",
+    "join_queue": "Cola en vivo",
+    "no_appointments_today": "No hay citas asignadas para hoy",
+    "upcoming_assigned": "Próximas asignaciones",
+    "plan_leave_safely": "Planifica tu permiso de forma segura",
+    "no_join_queue_today": "No hay tareas de cola en vivo asignadas para hoy"
   },
   "login": {
     "title": "Acceso de Negocio",

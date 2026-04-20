@@ -610,7 +610,13 @@
     "submit_resignation": "إرسال الاستقالة",
     "resignation_sent": "تم إرسال طلب الاستقالة بنجاح.",
     "rejection_feedback_label": "رسالة من المدير",
-    "joined_at": "وقت الانضمام"
+    "joined_at": "وقت الانضمام",
+    "today_assigned_work": "العمل المخصص اليوم",
+    "join_queue": "الطابور المباشر",
+    "no_appointments_today": "لا توجد مواعيد مخصصة لليوم",
+    "upcoming_assigned": "المخصص القادم",
+    "plan_leave_safely": "خطط لإجازتك بأمان",
+    "no_join_queue_today": "لا توجد مهام طابور مباشر مخصصة لليوم"
   },
   "login": {
     "title": "تسجيل دخول النشاط",

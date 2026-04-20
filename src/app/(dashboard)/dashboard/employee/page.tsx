@@ -159,6 +159,13 @@ function EmployeeDashboardContent() {
         }
         return normalized.replace(/_/g, " ");
     };
+    const queueTaskServiceLabel = (task: QueueEntry) => {
+        const serviceNames = (task.queue_entry_services || [])
+            .map((s: any) => getLocalizedLabel(s?.services?.name, 'services.title'))
+            .filter((name: string) => !!name && name !== t('services.title'));
+        if (serviceNames.length > 0) return serviceNames.join(", ");
+        return getLocalizedLabel(task.service_name, 'services.title');
+    };
 
     const fetchData = useCallback(async () => {
         try {
@@ -363,7 +370,9 @@ function EmployeeDashboardContent() {
     );
     const todaysAppointments = sortedAppointments.filter((a: any) => toDayKey(a?.start_time) === todayStr);
     const upcomingAppointments = sortedAppointments.filter((a: any) => toDayKey(a?.start_time) > todayStr);
-    const todayQueueTasks = tasks.filter((task: any) => toDayKey(task?.joined_at || new Date()) === todayStr);
+    // Backend /queues/my-tasks already returns current open tasks for today in business timezone.
+    // Avoid extra date filtering here to prevent hiding valid assigned tasks.
+    const todayQueueTasks = tasks;
     const todayAssignedWorkCount = todayQueueTasks.length + todaysAppointments.length;
 
     return (
@@ -491,7 +500,7 @@ function EmployeeDashboardContent() {
                                         <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Today Assigned Work</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.today_assigned_work')}</p>
                                                     <p className="text-2xl font-black text-slate-900 mt-1">{todayAssignedWorkCount}</p>
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('dashboard.today')}</p>
                                                 </div>
@@ -501,7 +510,7 @@ function EmployeeDashboardContent() {
                                             </div>
                                             <div className="mt-4 grid grid-cols-2 gap-3">
                                                 <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Join Queue</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.join_queue')}</p>
                                                     <p className="text-lg font-black text-slate-900 mt-1">{todayQueueTasks.length}</p>
                                                 </div>
                                                 <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
@@ -528,7 +537,7 @@ function EmployeeDashboardContent() {
                                             )}
                                             {todaysAppointments.length === 0 && (
                                                 <p className="mt-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                    No appointments assigned for today
+                                                    {t('employee.no_appointments_today')}
                                                 </p>
                                             )}
                                         </div>
@@ -537,9 +546,9 @@ function EmployeeDashboardContent() {
                                             <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upcoming Assigned</p>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.upcoming_assigned')}</p>
                                                         <p className="text-2xl font-black text-slate-900 mt-1">{upcomingAppointments.length}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plan your leave safely</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('employee.plan_leave_safely')}</p>
                                                     </div>
                                                     <div className="h-12 w-12 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-600">
                                                         <CalendarClock className="h-6 w-6" />
@@ -589,7 +598,7 @@ function EmployeeDashboardContent() {
                                                     </h3>
                                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                                                         <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                                                        {getLocalizedLabel(task.service_name, 'services.title')}
+                                                        {queueTaskServiceLabel(task)}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
@@ -625,7 +634,7 @@ function EmployeeDashboardContent() {
                                         {todayQueueTasks.length === 0 && (
                                             <div className="rounded-[32px] border border-slate-100 bg-white px-6 py-8 text-center">
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                    No join queue tasks assigned for today
+                                                    {t('employee.no_join_queue_today')}
                                                 </p>
                                             </div>
                                         )}
