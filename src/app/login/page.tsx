@@ -136,6 +136,9 @@ export default function LoginPage() {
         ) {
             return "Sign-in is temporarily unavailable. Please try again in a few minutes.";
         }
+        if (lower.includes('error generating sms template') || lower.includes('sms template')) {
+            return "OTP service is temporarily unavailable. Please try again shortly.";
+        }
         const technicalKeywords = [
             'schema', 'column', 'database', 'supabase', 'postgrest', 
             'cache', 'relation', 'table', 'trigger', 'procedure',
