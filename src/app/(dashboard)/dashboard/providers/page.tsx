@@ -971,13 +971,6 @@ export default function ProvidersPage() {
                                                     <CheckCircle2 className="h-4 w-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => openImpactModal(leave)}
-                                                    className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                                    title={tt('providers.impact_view', 'View impact')}
-                                                >
-                                                    <ShieldCheck className="h-4 w-4" />
-                                                </button>
-                                                <button
                                                     onClick={() => setRejectModal({
                                                         isOpen: true,
                                                         leaveId: leave.id,
@@ -989,15 +982,6 @@ export default function ProvidersPage() {
                                                     <X className="h-4 w-4" />
                                                 </button>
                                             </>
-                                        )}
-                                        {!isPending && (
-                                            <button
-                                                onClick={() => openImpactModal(leave)}
-                                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                                title={tt('providers.impact_view', 'View impact')}
-                                            >
-                                                <ShieldCheck className="h-4 w-4" />
-                                            </button>
                                         )}
                                         <button
                                             onClick={() => handleDeleteLeave(leave.id)}

@@ -120,6 +120,26 @@ function EmployeeDashboardContent() {
         return t("providers.full_day");
     };
 
+    const getLocalizedLabel = (value: any, fallbackKey: string) => {
+        if (!value) return t(fallbackKey as any);
+        if (typeof value === "string") return value;
+        if (typeof value === "object") {
+            const langValue = value?.[language];
+            if (typeof langValue === "string" && langValue.trim()) return langValue;
+            const firstString = Object.values(value).find((v) => typeof v === "string" && String(v).trim());
+            if (firstString) return String(firstString);
+        }
+        return t(fallbackKey as any);
+    };
+
+    const localizedStatus = (rawStatus: any) => {
+        const normalized = String(rawStatus || "")
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, "_");
+        return t(`status.${normalized}` as any);
+    };
+
     const fetchData = useCallback(async () => {
         try {
             const [profileData, tasksData, apptsData] = await Promise.all([
@@ -133,7 +153,8 @@ function EmployeeDashboardContent() {
             setProfile(profileData);
             setTasks(tasksData);
             setAppointments(apptsData || []);
-            setLeaves((leavesData || []).filter((l: any) => String(l?.status || "").toUpperCase() !== "REJECTED"));
+            // Keep rejected items visible so employee can read manager feedback/rejection reason.
+            setLeaves(leavesData || []);
         } catch (error) {
             console.error("Failed to fetch employee data:", error);
         } finally {
@@ -234,8 +255,13 @@ function EmployeeDashboardContent() {
                 return;
             }
 
-            await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
+            const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
             showToast(t('employee.leave_success'));
+            if (resp?.owner_phone_configured === false) {
+                showToast(t('employee.leave_owner_no_phone_hint'), "error");
+            } else if (resp?.notification_sent === false) {
+                showToast(t('employee.leave_notify_owner_failed'), "error");
+            }
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error) {
@@ -249,10 +275,15 @@ function EmployeeDashboardContent() {
         if (!profile?.id) return;
         setIsSubmitting(true);
         try {
-            await providerService.addLeave(profile.id, { ...leaveFormData, allow_owner_approval: true, ui_language: language } as any);
+            const resp = await providerService.addLeave(profile.id, { ...leaveFormData, allow_owner_approval: true, ui_language: language } as any);
             setIsImpactModalOpen(false);
             setLeaveImpact(null);
             showToast(t('employee.leave_success'));
+            if (resp?.owner_phone_configured === false) {
+                showToast(t('employee.leave_owner_no_phone_hint'), "error");
+            } else if (resp?.notification_sent === false) {
+                showToast(t('employee.leave_notify_owner_failed'), "error");
+            }
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error: any) {
@@ -266,10 +297,15 @@ function EmployeeDashboardContent() {
         if (!profile?.id) return;
         setIsSubmitting(true);
         try {
-            await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language } as any);
+            const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language } as any);
             setIsImpactModalOpen(false);
             setLeaveImpact(null);
             showToast(t('employee.leave_success'));
+            if (resp?.owner_phone_configured === false) {
+                showToast(t('employee.leave_owner_no_phone_hint'), "error");
+            } else if (resp?.notification_sent === false) {
+                showToast(t('employee.leave_notify_owner_failed'), "error");
+            }
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error: any) {
@@ -456,11 +492,11 @@ function EmployeeDashboardContent() {
                                                             <div className="min-w-0">
                                                                 <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
                                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                                    {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {a?.service?.name || t('services.title')}
+                                                                    {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getLocalizedLabel(a?.service?.translations || a?.service?.name, 'services.title')}
                                                                 </p>
                                                             </div>
                                                             <span className="text-[10px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                                                                {String(a.appointment_state || '').toLowerCase()}
+                                                                {localizedStatus(a.appointment_state || a.status)}
                                                             </span>
                                                         </div>
                                                     ))}
@@ -494,7 +530,7 @@ function EmployeeDashboardContent() {
                                                     </h3>
                                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                                                         <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                                                        {task.service_name || 'Service'}
+                                                        {getLocalizedLabel(task.service_name, 'services.title')}
                                                     </p>
                                                 </div>
                                                 <div className="text-right">
