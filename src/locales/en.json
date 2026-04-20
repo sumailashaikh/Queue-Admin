@@ -658,6 +658,7 @@
     "pending": "Pending",
     "waiting": "Waiting",
     "serving": "Serving",
+    "in_service": "In Service",
     "no_show": "No Show",
     "skipped": "Skipped",
     "confirmed": "Confirmed",

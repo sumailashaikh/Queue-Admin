@@ -94,7 +94,8 @@ const dictionaries: Record<string, Dictionary> = {
             hour_short: "hr",
             minute_short: "min",
             provider_busy_until: "This provider is likely busy until {{time}}. Please choose a time after that.",
-            provider_busy_choose_later: "This provider is currently busy. Please choose a later time."
+            provider_busy_choose_later: "This provider is currently busy. Please choose a later time.",
+            provider_selected_for_date: "Provider selected for your appointment date and time."
         },
         status: {
             access_denied: "Access Denied",
@@ -291,7 +292,8 @@ const dictionaries: Record<string, Dictionary> = {
             hour_short: "h",
             minute_short: "min",
             provider_busy_until: "Es probable que este proveedor esté ocupado hasta las {{time}}. Elige un horario después de ese momento.",
-            provider_busy_choose_later: "Este proveedor está ocupado en este momento. Elige un horario más tarde."
+            provider_busy_choose_later: "Este proveedor está ocupado en este momento. Elige un horario más tarde.",
+            provider_selected_for_date: "Proveedor seleccionado para la fecha y hora de su cita."
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -418,7 +420,8 @@ const dictionaries: Record<string, Dictionary> = {
             hour_short: "घं",
             minute_short: "मिनट",
             provider_busy_until: "यह प्रदाता संभवतः {{time}} तक व्यस्त रहेगा। कृपया इसके बाद का समय चुनें।",
-            provider_busy_choose_later: "यह प्रदाता अभी व्यस्त है। कृपया बाद का समय चुनें।"
+            provider_busy_choose_later: "यह प्रदाता अभी व्यस्त है। कृपया बाद का समय चुनें।",
+            provider_selected_for_date: "यह प्रदाता आपकी चुनी हुई तारीख और समय के लिए चयनित है।"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -615,7 +618,8 @@ const dictionaries: Record<string, Dictionary> = {
             hour_short: "سا",
             minute_short: "د",
             provider_busy_until: "من المحتمل أن يكون مقدم الخدمة مشغولاً حتى {{time}}. يرجى اختيار وقت بعد ذلك.",
-            provider_busy_choose_later: "مقدم الخدمة مشغول حالياً. يرجى اختيار وقت لاحق."
+            provider_busy_choose_later: "مقدم الخدمة مشغول حالياً. يرجى اختيار وقت لاحق.",
+            provider_selected_for_date: "تم اختيار مقدم الخدمة لموعدك في التاريخ والوقت المحددين."
         },
         status: {
             access_denied: "تم رفض الوصول",

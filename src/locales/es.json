@@ -578,6 +578,7 @@
     "pending": "Pendiente",
     "waiting": "En Espera",
     "serving": "Sirviendo",
+    "in_service": "En servicio",
     "no_show": "No se present?",
     "skipped": "Omitido",
     "confirmed": "Confirmado",

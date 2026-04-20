@@ -87,6 +87,10 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const formatCurrency = (amount: number) => {
         return globalFormatCurrency(amount, currency, lang);
     };
+    const tSafe = (key: string, fallback: string, params?: Record<string, any>) => {
+        const translated = i18n.t(lang, key, params);
+        return translated && translated !== key ? translated : fallback;
+    };
 
     const todayInBusinessTz = business?.timezone
         ? new Date().toLocaleDateString('en-CA', { timeZone: business.timezone })
@@ -631,7 +635,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         <p className="font-bold text-slate-900">{selectedProvider.name}</p>
                                         {isFutureAppointmentDate ? (
                                             <p className="mt-1">
-                                                {i18n.t(lang, 'public.provider_selected_for_date') || 'Selected for your chosen date and time'}
+                                                {tSafe('public.provider_selected_for_date', 'Provider selected for your appointment date and time.')}
                                             </p>
                                         ) : (
                                             <>

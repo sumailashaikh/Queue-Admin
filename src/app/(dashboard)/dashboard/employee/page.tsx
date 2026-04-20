@@ -149,7 +149,15 @@ function EmployeeDashboardContent() {
             .trim()
             .toLowerCase()
             .replace(/\s+/g, "_");
-        return t(`status.${normalized}` as any);
+        const key = `status.${normalized}` as any;
+        const translated = t(key);
+        if (translated && translated !== key) return translated;
+        if (normalized === "in_service") {
+            const serving = t("status.serving" as any);
+            if (serving && serving !== "status.serving") return serving;
+            return "In Service";
+        }
+        return normalized.replace(/_/g, " ");
     };
 
     const fetchData = useCallback(async () => {
