@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface ServiceExecutionStripProps {
     services: QueueEntryService[];
     providers: any[];
+    preselectedProviderId?: string;
     entryJoinedAt: string;
     expectedStartTime?: string;
     now: number;
@@ -31,6 +32,7 @@ interface ServiceExecutionStripProps {
 export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     services,
     providers,
+    preselectedProviderId,
     onAssignProvider,
     onStartTask,
     onCompleteTask,
@@ -46,6 +48,11 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     }, [language]);
 
     const [isInitializing, setIsInitializing] = React.useState(false);
+    const preselectedProvider = React.useMemo(() => {
+        if (!preselectedProviderId) return null;
+        return providers.find((p) => String(p.id) === String(preselectedProviderId)) || null;
+    }, [providers, preselectedProviderId]);
+
     const [isPaymentMenuOpen, setIsPaymentMenuOpen] = React.useState(false);
     const paymentButtonRef = React.useRef<HTMLButtonElement | null>(null);
     const [paymentMenuPos, setPaymentMenuPos] = React.useState<{ top: number; left: number; width: number; placement: 'top' | 'bottom' } | null>(null);
@@ -204,6 +211,30 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
 
     // Case: No services yet (Waiting state)
     if (!services || services.length === 0) {
+        if (preselectedProviderId) {
+            return (
+                <div className="flex flex-col gap-1.5 w-full animate-in fade-in duration-500">
+                    <div className="h-10 bg-indigo-50/60 border border-indigo-100 rounded-2xl px-4 flex items-center justify-between">
+                        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">
+                            {getProviderName(preselectedProvider) || t('queue.assigned_expert') || 'Assigned Expert'}
+                        </span>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setIsInitializing(true);
+                            onInitialize?.(preselectedProviderId);
+                        }}
+                        disabled={isInitializing}
+                        className="w-full h-10 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-slate-200 flex items-center justify-center gap-2"
+                    >
+                        <Play className="h-3 w-3 fill-current" />
+                        {isInitializing ? (t('queue.starting') || 'Starting...') : t('queue.start_service')}
+                    </button>
+                    {isPendingPayment && renderPaymentAction()}
+                </div>
+            );
+        }
+
         return (
             <div className="flex flex-col gap-1.5 w-full animate-in fade-in duration-500">
                 <div className="relative group">

@@ -56,6 +56,7 @@ export default function LiveQueuePage() {
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -409,6 +410,24 @@ export default function LiveQueuePage() {
         showToast(t('queue.link_copied'));
     };
 
+    const handleAddWalkIn = async (payload: { name: string; phone?: string | null }) => {
+        if (!selectedQueue?.id) return;
+        try {
+            await queueService.joinQueue({
+                queue_id: selectedQueue.id,
+                customer_name: payload.name.trim(),
+                phone: payload.phone || undefined,
+                entry_source: 'manual'
+            });
+            await fetchEntries(selectedQueue.id);
+            showToast(t('queue.success_create'));
+            setIsWalkInModalOpen(false);
+        } catch (error: any) {
+            const msg = String(error?.response?.data?.message || error?.message || "").trim();
+            showToast(msg || t('queue.err_create'), "error");
+        }
+    };
+
 
     const handleUpdateQueue = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -586,6 +605,15 @@ export default function LiveQueuePage() {
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                     {t('queue.next_customer')}
+                                </button>
+                            )}
+                            {business && (
+                                <button
+                                    onClick={() => setIsWalkInModalOpen(true)}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 rounded-2xl text-sm font-semibold tracking-wide transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span className="hidden sm:inline">{t('queue.add_walk_in')}</span>
                                 </button>
                             )}
                             {business && (
@@ -840,10 +868,88 @@ export default function LiveQueuePage() {
                 onClose={() => setIsInviteModalOpen(false)}
                 business={business}
             />
+            <WalkInModal
+                isOpen={isWalkInModalOpen}
+                onClose={() => setIsWalkInModalOpen(false)}
+                onSubmit={handleAddWalkIn}
+            />
 
         </div >
     );
 }
+
+const WalkInModal = ({ isOpen, onClose, onSubmit }: any) => {
+    const { t } = useLanguage();
+    const [data, setData] = useState({ name: "", phone: "", noPhone: false });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!data.name.trim()) return;
+        setIsSubmitting(true);
+        try {
+            await onSubmit({
+                name: data.name,
+                phone: data.noPhone ? null : (data.phone || null)
+            });
+            setData({ name: "", phone: "", noPhone: false });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('queue.add_walk_in')}</h2>
+                    <button onClick={onClose} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.customer_name')}</label>
+                        <input
+                            required
+                            type="text"
+                            placeholder={t('queue.customer_name_placeholder')}
+                            value={data.name}
+                            onChange={(e) => setData({ ...data, name: e.target.value })}
+                            className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
+                        />
+                    </div>
+                    {!data.noPhone && (
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
+                            <CountryPhoneInput
+                                value={data.phone}
+                                onChange={(full) => setData({ ...data, phone: full })}
+                                placeholder={t('queue.whatsapp_number_placeholder')}
+                            />
+                        </div>
+                    )}
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={data.noPhone}
+                            onChange={(e) => setData({ ...data, noPhone: e.target.checked })}
+                        />
+                        {t('queue.no_phone')}
+                    </label>
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full py-5 bg-primary hover:bg-primary-hover text-white rounded-2xl text-xs font-bold uppercase tracking-wider shadow-xl shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('queue.add_walk_in')}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
 
 const InviteModal = ({ isOpen, onClose, business }: any) => {
     const { t } = useLanguage();

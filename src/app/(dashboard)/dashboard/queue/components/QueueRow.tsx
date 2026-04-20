@@ -293,6 +293,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                         <ServiceExecutionStrip
                             services={item.queue_entry_services || []}
                             providers={providers}
+                            preselectedProviderId={item.assigned_provider_id}
                             entryJoinedAt={item.joined_at}
                             now={now}
                             onAssignProvider={onAssignTaskProvider}
