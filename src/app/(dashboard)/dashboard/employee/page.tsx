@@ -561,7 +561,7 @@ function EmployeeDashboardContent() {
                                                     ))}
                                                 </div>
                                             </div>
-                                        </div>
+                                        )}
 
                                         {todayQueueTasks.map((task, idx) => (
                                         <motion.div 
