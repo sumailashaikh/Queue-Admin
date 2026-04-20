@@ -376,6 +376,7 @@
     "desktop_chrome": "Escritorio / Chrome",
     "step_1_desc": "Toque el bot?n Compartir y seleccione Agregar a la pantalla de inicio.",
     "step_2_desc": "Haga clic en el ?cono de instalaci?n en la barra de URL o toque el Men? (?) y seleccione Instalar aplicaci?n.",
+    "today": "Hoy",
     "pending_leave_alert": "Tienes {{count}} solicitud(es) de permiso pendientes",
     "pending_leave_alert_hint": "Rev?alas en Proveedores para aprobar o rechazar y que el personal reciba SMS/WhatsApp.",
     "pending_leave_alert_cta": "Abrir Proveedores"

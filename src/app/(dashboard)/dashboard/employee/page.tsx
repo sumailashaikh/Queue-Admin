@@ -100,9 +100,9 @@ function EmployeeDashboardContent() {
         if (!raw) return t(fallbackKey as any);
         if (raw.includes(".")) {
             const localized = t(raw as any, error?.response?.data);
-            return localized !== raw ? localized : raw;
+            return localized !== raw ? localized : t(fallbackKey as any);
         }
-        return raw;
+        return t(fallbackKey as any);
     };
 
     const leaveTypeLabel = (leaveType?: string) => {

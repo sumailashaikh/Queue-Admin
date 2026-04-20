@@ -42,14 +42,23 @@ export default function AppointmentsPage() {
 
     const isRTL = language === 'ar';
 
+    const getServiceLabel = (value: any): string | null => {
+        if (!value) return null;
+        if (typeof value === 'string') return value.trim() || null;
+        if (typeof value === 'object') {
+            const langValue = value[language];
+            if (typeof langValue === 'string' && langValue.trim()) return langValue.trim();
+            const firstString = Object.values(value).find((v) => typeof v === 'string' && String(v).trim());
+            return firstString ? String(firstString).trim() : null;
+        }
+        return String(value).trim() || null;
+    };
+
     const getTranslatedServiceNames = (apt: Appointment) => {
         if (!apt.appointment_services) return 'Service';
 
         return apt.appointment_services.map(as => {
-            if (as.services?.translations && as.services.translations[language]) {
-                return as.services.translations[language];
-            }
-            return as.services?.name;
+            return getServiceLabel(as.services?.translations) || getServiceLabel(as.services?.name);
         }).filter(Boolean).join(', ') || 'Service';
     };
 
@@ -98,21 +107,6 @@ export default function AppointmentsPage() {
             if (process.env.NODE_ENV === 'development') {
                 console.error("Full Appointment Status Update Error:", err);
             }
-            showError(err.message || t('common.error_updating'));
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
-    const handleUpdatePayment = async (id: string, method: 'cash' | 'qr' | 'card' | 'unpaid') => {
-        setActionLoading(`payment-${id}-${method}`);
-        try {
-            await appointmentService.updatePayment(id, method);
-            setAppointments(prev => prev.map(a => a.id === id ? { ...a, payment_method: method } : a));
-            const translatedMethod = method === 'qr' ? t('queue.qr_upi') : (t(`queue.${method}`) || method);
-            showSuccess(t('appointments.payment_marked', { method: translatedMethod }));
-            await fetchAppointments();
-        } catch (err: any) {
             showError(err.message || t('common.error_updating'));
         } finally {
             setActionLoading(null);
@@ -412,37 +406,11 @@ export default function AppointmentsPage() {
                                             </span>
                                         </div>
 
-                                        {/* Payment UI */}
-                                        {apt.payment_status === 'paid' ? (
+                                        {apt.payment_status === 'paid' && (
                                             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl text-xs font-bold shadow-sm">
                                                 <CheckCheck className="h-3.5 w-3.5" />
-                                                <span className="capitalize">{apt.payment_method}</span> {t('status.paid')}
+                                                <span>{t('status.paid')}</span>
                                             </div>
-                                        ) : (
-                                            /* Hide payment buttons if checked in or in service */
-                                            (apt.status !== 'checked_in' && apt.status !== 'in_service') ? (
-                                                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                                                    <span className="px-2 text-[10px] font-bold text-slate-400 uppercase">{t('appointments.pay')}:</span>
-                                                    <button
-                                                        disabled={actionLoading === `payment-${apt.id}-cash`}
-                                                        onClick={() => handleUpdatePayment(apt.id, 'cash')}
-                                                        className="px-4 py-2 bg-white text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 active:scale-95 rounded-xl text-xs font-black border border-emerald-200 hover:border-emerald-300 shadow-sm transition-all flex items-center justify-center gap-2 min-w-[80px] disabled:opacity-70"
-                                                    >
-                                                        {actionLoading === `payment-${apt.id}-cash` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '💵 Cash'}
-                                                    </button>
-                                                    <button
-                                                        disabled={actionLoading === `payment-${apt.id}-qr`}
-                                                        onClick={() => handleUpdatePayment(apt.id, 'qr')}
-                                                        className="px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 active:bg-blue-100 active:scale-95 rounded-xl text-xs font-black border border-blue-200 hover:border-blue-300 shadow-sm transition-all flex items-center justify-center gap-2 min-w-[80px] disabled:opacity-70"
-                                                    >
-                                                        {actionLoading === `payment-${apt.id}-qr` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : '📱 UPI'}
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-xl text-[10px] font-bold shadow-sm uppercase">
-                                                    {t('appointments.payment_in_queue')}
-                                                </div>
-                                            )
                                         )}
                                     </div>
 

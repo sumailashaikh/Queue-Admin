@@ -19,21 +19,25 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
+    const { user, business } = useAuth();
     const [language, setLangState] = useState('en');
     const [isTemporary, setIsTemporary] = useState(false);
 
     useEffect(() => {
         if (isTemporary) return; // Do not clobber temporary display languages
 
-        if (user && user.ui_language) {
+        // Business language is owner-controlled and should drive staff portal language.
+        if (business?.language) {
+            setLangState(business.language);
+            localStorage.setItem('ui_language', business.language);
+        } else if (user && user.ui_language) {
             setLangState(user.ui_language);
             localStorage.setItem('ui_language', user.ui_language);
         } else {
             const saved = localStorage.getItem('ui_language');
             if (saved) setLangState(saved);
         }
-    }, [user, isTemporary]);
+    }, [user, business?.language, isTemporary]);
 
     const setLanguage = async (newLang: string, persist: boolean = true) => {
         setLangState(newLang);

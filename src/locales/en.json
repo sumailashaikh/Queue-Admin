@@ -442,6 +442,7 @@
     "desktop_chrome": "Desktop / Chrome",
     "step_1_desc": "Tap the Share button then select Add to Home Screen.",
     "step_2_desc": "Click the install icon in the URL bar, or tap the Menu (⋮) and select Install app.",
+    "today": "Today",
     "pending_leave_alert": "You have {{count}} pending leave request(s)",
     "pending_leave_alert_hint": "Review and approve or reject them on the Providers page so staff get SMS/WhatsApp updates.",
     "pending_leave_alert_cta": "Open Providers"
