@@ -354,8 +354,17 @@ function EmployeeDashboardContent() {
 
     const completedToday = tasks.filter(t => t.status === 'completed').length;
     const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
-    const todayStr = new Date().toLocaleDateString('en-CA');
-    const todaysAppointments = appointments.filter((a: any) => String(a?.start_time || '').slice(0, 10) === todayStr);
+    const businessTimeZone = business?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const toDayKey = (value: Date | string) =>
+        new Intl.DateTimeFormat("en-CA", { timeZone: businessTimeZone }).format(new Date(value));
+    const todayStr = toDayKey(new Date());
+    const sortedAppointments = [...appointments].sort(
+        (a: any, b: any) => new Date(a?.start_time || 0).getTime() - new Date(b?.start_time || 0).getTime()
+    );
+    const todaysAppointments = sortedAppointments.filter((a: any) => toDayKey(a?.start_time) === todayStr);
+    const upcomingAppointments = sortedAppointments.filter((a: any) => toDayKey(a?.start_time) > todayStr);
+    const todayQueueTasks = tasks.filter((task: any) => toDayKey(task?.joined_at || new Date()) === todayStr);
+    const todayAssignedWorkCount = todayQueueTasks.length + todaysAppointments.length;
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24 md:pb-8">
@@ -469,7 +478,7 @@ function EmployeeDashboardContent() {
                                 exit={{ opacity: 0, x: 10 }}
                                 className="space-y-4"
                             >
-                                {tasks.length === 0 ? (
+                                {tasks.length === 0 && todaysAppointments.length === 0 ? (
                                     <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
                                         <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
                                             <LayoutDashboard className="h-10 w-10" />
@@ -482,17 +491,27 @@ function EmployeeDashboardContent() {
                                         <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('appointments.title')}</p>
-                                                    <p className="text-2xl font-black text-slate-900 mt-1">{todaysAppointments.length}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Today Assigned Work</p>
+                                                    <p className="text-2xl font-black text-slate-900 mt-1">{todayAssignedWorkCount}</p>
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('dashboard.today')}</p>
                                                 </div>
                                                 <div className="h-12 w-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
                                                     <CalendarClock className="h-6 w-6" />
                                                 </div>
                                             </div>
-                                            {appointments.length > 0 && (
+                                            <div className="mt-4 grid grid-cols-2 gap-3">
+                                                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Join Queue</p>
+                                                    <p className="text-lg font-black text-slate-900 mt-1">{todayQueueTasks.length}</p>
+                                                </div>
+                                                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('appointments.title')}</p>
+                                                    <p className="text-lg font-black text-slate-900 mt-1">{todaysAppointments.length}</p>
+                                                </div>
+                                            </div>
+                                            {todaysAppointments.length > 0 && (
                                                 <div className="mt-5 space-y-3">
-                                                    {(appointments || []).slice(0, 3).map((a: any) => (
+                                                    {todaysAppointments.slice(0, 3).map((a: any) => (
                                                         <div key={a.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                                                             <div className="min-w-0">
                                                                 <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
@@ -507,9 +526,44 @@ function EmployeeDashboardContent() {
                                                     ))}
                                                 </div>
                                             )}
+                                            {todaysAppointments.length === 0 && (
+                                                <p className="mt-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    No appointments assigned for today
+                                                </p>
+                                            )}
                                         </div>
 
-                                        {tasks.map((task, idx) => (
+                                        {upcomingAppointments.length > 0 && (
+                                            <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upcoming Assigned</p>
+                                                        <p className="text-2xl font-black text-slate-900 mt-1">{upcomingAppointments.length}</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Plan your leave safely</p>
+                                                    </div>
+                                                    <div className="h-12 w-12 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-600">
+                                                        <CalendarClock className="h-6 w-6" />
+                                                    </div>
+                                                </div>
+                                                <div className="mt-5 space-y-3">
+                                                    {upcomingAppointments.slice(0, 3).map((a: any) => (
+                                                        <div key={`upcoming-${a.id}`} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    {new Date(a.start_time).toLocaleDateString([], { day: '2-digit', month: 'short' })} • {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getLocalizedLabel(a?.service?.translations || a?.service?.name, 'services.title')}
+                                                                </p>
+                                                            </div>
+                                                            <span className="text-[10px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                                                {localizedStatus(a.appointment_state || a.status)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {todayQueueTasks.map((task, idx) => (
                                         <motion.div 
                                             key={task.id}
                                             initial={{ opacity: 0, y: 10 }}
@@ -568,6 +622,13 @@ function EmployeeDashboardContent() {
                                             </div>
                                         </motion.div>
                                         ))}
+                                        {todayQueueTasks.length === 0 && (
+                                            <div className="rounded-[32px] border border-slate-100 bg-white px-6 py-8 text-center">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    No join queue tasks assigned for today
+                                                </p>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </motion.div>
