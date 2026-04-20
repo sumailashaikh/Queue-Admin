@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Phone, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { authService } from "@/services/authService";
@@ -27,7 +27,14 @@ export default function LoginPage() {
     const [regionSettings, setRegionSettings] = useState<any>(null);
     const [resendTimer, setResendTimer] = useState(0);
     const [otpListenNonce, setOtpListenNonce] = useState(0);
+    const otpInputRef = useRef<HTMLInputElement | null>(null);
     const router = useRouter();
+
+    const extractOtpDigits = (value: unknown): string | null => {
+        const text = String(value ?? "");
+        const match = text.match(/\b(\d{6})\b/);
+        return match ? match[1] : null;
+    };
 
     useEffect(() => {
         let timer: any;
@@ -69,10 +76,11 @@ export default function LoginPage() {
         navigator.credentials
             .get(req)
             .then((cred) => {
-                const code = cred && "code" in cred ? (cred as { code?: string }).code : undefined;
-                if (code) {
-                    const digits = String(code).replace(/\D/g, "").slice(0, 6);
-                    if (digits.length === 6) setOtp(digits);
+                const webOtpCode = cred && "code" in cred ? (cred as { code?: string }).code : undefined;
+                const digits = extractOtpDigits(webOtpCode) || extractOtpDigits(webOtpCode ? "" : cred);
+                if (digits) {
+                    setOtp(digits);
+                    otpInputRef.current?.focus();
                 }
             })
             .catch(() => {
@@ -81,6 +89,11 @@ export default function LoginPage() {
 
         return () => ac.abort();
     }, [step, otpListenNonce]);
+
+    useEffect(() => {
+        if (step !== 2) return;
+        otpInputRef.current?.focus();
+    }, [step]);
 
     useEffect(() => {
         let currentRegion = REGIONS.find(r => r.code === "IN");
@@ -282,14 +295,23 @@ export default function LoginPage() {
                                     type="text"
                                     name="otp"
                                     id="otp"
+                                    ref={otpInputRef}
                                     required
                                     autoFocus
                                     maxLength={6}
                                     autoComplete="one-time-code"
                                     inputMode="numeric"
-                                        enterKeyHint="done"
+                                    enterKeyHint="done"
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                    onPaste={(e) => {
+                                        const pasted = e.clipboardData?.getData("text");
+                                        const digits = extractOtpDigits(pasted);
+                                        if (digits) {
+                                            e.preventDefault();
+                                            setOtp(digits);
+                                        }
+                                    }}
                                     placeholder="000000"
                                     className="w-full px-4 py-4 bg-slate-50 border-none rounded-2xl text-center text-3xl font-black tracking-[0.5em] focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                 />
