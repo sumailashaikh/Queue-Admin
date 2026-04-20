@@ -39,7 +39,7 @@ interface QueueRowProps {
     onNoShow: (id: string) => void;
     onRestore: (id: string) => void;
     onSkip: (id: string) => void;
-    onInitializeTasks: (providerId?: string) => void;
+    onInitializeTasks: (providerId?: string) => Promise<void> | void;
     onShowToast: (message: string, type?: 'success' | 'error') => void;
 }
 

@@ -24,7 +24,7 @@ interface ServiceExecutionStripProps {
     onAssignProvider: (taskId: string, providerId: string) => void;
     onStartTask: (taskId: string) => void;
     onCompleteTask: (taskId: string) => void;
-    onInitialize?: (providerId?: string) => void;
+    onInitialize?: (providerId?: string) => Promise<void> | void;
     isPendingPayment?: boolean;
     onUpdatePayment?: (method: 'cash' | 'qr' | 'card' | 'unpaid') => void;
 }
@@ -244,7 +244,8 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                         onChange={(e) => {
                             if (e.target.value) {
                                 setIsInitializing(true);
-                                onInitialize?.(e.target.value);
+                                Promise.resolve(onInitialize?.(e.target.value))
+                                    .finally(() => setIsInitializing(false));
                             }
                         }}
                         className={cn(
