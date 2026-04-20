@@ -487,7 +487,7 @@ function EmployeeDashboardContent() {
                                 exit={{ opacity: 0, x: 10 }}
                                 className="space-y-4"
                             >
-                                {tasks.length === 0 && todaysAppointments.length === 0 ? (
+                                {tasks.length === 0 && todaysAppointments.length === 0 && upcomingAppointments.length === 0 ? (
                                     <div className="py-20 flex flex-col items-center justify-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
                                         <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
                                             <LayoutDashboard className="h-10 w-10" />
@@ -571,6 +571,13 @@ function EmployeeDashboardContent() {
                                                 </div>
                                             </div>
                                         )}
+
+                                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                {t('employee.current_queue')}
+                                            </p>
+                                            <p className="text-2xl font-black text-slate-900 mt-1">{todayQueueTasks.length}</p>
+                                        </div>
 
                                         {todayQueueTasks.map((task, idx) => (
                                         <motion.div 

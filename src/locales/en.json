@@ -704,6 +704,7 @@
     "no_appointments_today": "No appointments assigned for today",
     "upcoming_assigned": "Upcoming Assigned",
     "plan_leave_safely": "Plan your leave safely",
-    "no_join_queue_today": "No join queue tasks assigned for today"
+    "no_join_queue_today": "No join queue tasks assigned for today",
+    "current_queue": "Current Queue"
   }
 }

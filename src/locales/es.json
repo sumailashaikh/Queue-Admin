@@ -597,7 +597,8 @@
     "no_appointments_today": "No hay citas asignadas para hoy",
     "upcoming_assigned": "Próximas asignaciones",
     "plan_leave_safely": "Planifica tu permiso de forma segura",
-    "no_join_queue_today": "No hay tareas de cola en vivo asignadas para hoy"
+    "no_join_queue_today": "No hay tareas de cola en vivo asignadas para hoy",
+    "current_queue": "Cola actual"
   },
   "login": {
     "title": "Acceso de Negocio",

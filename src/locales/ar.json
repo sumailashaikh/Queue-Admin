@@ -616,7 +616,8 @@
     "no_appointments_today": "لا توجد مواعيد مخصصة لليوم",
     "upcoming_assigned": "المخصص القادم",
     "plan_leave_safely": "خطط لإجازتك بأمان",
-    "no_join_queue_today": "لا توجد مهام طابور مباشر مخصصة لليوم"
+    "no_join_queue_today": "لا توجد مهام طابور مباشر مخصصة لليوم",
+    "current_queue": "الطابور الحالي"
   },
   "login": {
     "title": "تسجيل دخول النشاط",

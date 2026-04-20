@@ -615,7 +615,8 @@
     "no_appointments_today": "आज के लिए कोई अपॉइंटमेंट असाइन नहीं है",
     "upcoming_assigned": "आगामी असाइनमेंट",
     "plan_leave_safely": "अपनी छुट्टी सुरक्षित रूप से प्लान करें",
-    "no_join_queue_today": "आज के लिए कोई जॉइन क्यू कार्य असाइन नहीं है"
+    "no_join_queue_today": "आज के लिए कोई जॉइन क्यू कार्य असाइन नहीं है",
+    "current_queue": "वर्तमान क्यू"
   }
   ,
   "login": {
