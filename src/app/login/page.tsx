@@ -127,13 +127,22 @@ export default function LoginPage() {
 
     const maskTechnicalError = (message: string) => {
         if (!message) return null;
+        const lower = message.toLowerCase();
+        if (
+            lower.includes('fetch failed') ||
+            lower.includes('failed to fetch') ||
+            lower.includes('networkerror') ||
+            lower.includes('load failed')
+        ) {
+            return "Sign-in is temporarily unavailable. Please try again in a few minutes.";
+        }
         const technicalKeywords = [
             'schema', 'column', 'database', 'supabase', 'postgrest', 
             'cache', 'relation', 'table', 'trigger', 'procedure',
             '500', 'internal server error', 'undefined'
         ];
         
-        const isTechnical = technicalKeywords.some(kw => message.toLowerCase().includes(kw));
+        const isTechnical = technicalKeywords.some(kw => lower.includes(kw));
         
         if (isTechnical) {
             return "Service configuration error. Please try again later or contact support.";
