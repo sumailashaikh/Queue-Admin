@@ -240,7 +240,7 @@ export default function LiveQueuePage() {
         try {
             await queueService.initializeEntryTasks(entryId, providerId);
             if (selectedQueue?.id) fetchEntries(selectedQueue.id);
-            showToast(t('queue.success_initialized'));
+            showToast(providerId ? t('queue.success_assign') : t('queue.success_initialized'));
         } catch (error: any) {
             console.error("Failed to initialize tasks:", error);
             showToast(t('queue.err_initialize'), "error");
@@ -763,53 +763,54 @@ export default function LiveQueuePage() {
 
             {/* Dashboard List Container */}
             <div className="space-y-4">
-                {entriesLoading ? (
-                    <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-white rounded-[32px] border-2 border-slate-50">
-                        <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-                        {filteredEntries.length === 0 ? (
-                            <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100 col-span-full">
-                                <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
-                                    <div className="h-24 w-24 bg-slate-50 rounded-[40px] flex items-center justify-center text-slate-300">
-                                        <Users className="h-12 w-12" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <p className="text-xl font-black text-slate-900">{t('queue.queue_is_clear')}</p>
-                                        <p className="text-sm font-bold text-slate-400 leading-relaxed">
-                                            {selectedQueue
-                                                ? t('queue.no_customers')
-                                                : t('queue.select_queue_hint')}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                {filteredEntries.map((item) => (
-                                    <QueueRow
-                                        key={item.id}
-                                        item={item}
-                                        business={business}
-                                        providers={providers}
-                                        onAssignTaskProvider={handleAssignTaskProvider}
-                                        onStartTask={handleStartTask}
-                                        onCompleteTask={handleCompleteTask}
-                                        onUpdateStatus={handleUpdateStatus}
-                                        onUpdatePayment={handleUpdatePayment}
-                                        onNoShow={handleNoShow}
-                                        onRestore={handleRestore}
-                                        onSkip={handleSkip}
-                                        onInitializeTasks={() => handleInitializeTasks(item.id)}
-                                        onShowToast={showToast}
-                                    />
-                                ))}
-                            </>
-                        )}
+                {entriesLoading && (
+                    <div className="flex items-center justify-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('queue.refreshing_live_queue')}</p>
+                        </div>
                     </div>
                 )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+                    {filteredEntries.length === 0 ? (
+                        <div className="py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100 col-span-full">
+                            <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
+                                <div className="h-24 w-24 bg-slate-50 rounded-[40px] flex items-center justify-center text-slate-300">
+                                    <Users className="h-12 w-12" />
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="text-xl font-black text-slate-900">{t('queue.queue_is_clear')}</p>
+                                    <p className="text-sm font-bold text-slate-400 leading-relaxed">
+                                        {selectedQueue
+                                            ? t('queue.no_customers')
+                                            : t('queue.select_queue_hint')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {filteredEntries.map((item) => (
+                                <QueueRow
+                                    key={item.id}
+                                    item={item}
+                                    business={business}
+                                    providers={providers}
+                                    onAssignTaskProvider={handleAssignTaskProvider}
+                                    onStartTask={handleStartTask}
+                                    onCompleteTask={handleCompleteTask}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onUpdatePayment={handleUpdatePayment}
+                                    onNoShow={handleNoShow}
+                                    onRestore={handleRestore}
+                                    onSkip={handleSkip}
+                                    onInitializeTasks={(providerId?: string) => handleInitializeTasks(item.id, providerId)}
+                                    onShowToast={showToast}
+                                />
+                            ))}
+                        </>
+                    )}
+                </div>
 
             </div>
 

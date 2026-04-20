@@ -88,6 +88,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         return globalFormatCurrency(amount, currency, lang);
     };
 
+    const todayInBusinessTz = business?.timezone
+        ? new Date().toLocaleDateString('en-CA', { timeZone: business.timezone })
+        : '';
+    const isFutureAppointmentDate = activeView === 'appointment' && !!bookingDate && !!todayInBusinessTz && bookingDate !== todayInBusinessTz;
+
     const formatTime12 = (timeStr: string) => {
         if (!timeStr) return "";
         const [hours, minutes] = timeStr.split(':');
@@ -610,7 +615,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Auto assign best available'}</option>
                                     {visibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.name} {p.is_on_leave
+                                            {p.name} {isFutureAppointmentDate
+                                                ? ''
+                                                : p.is_on_leave
                                                 ? `(${i18n.t(lang, 'public.status_unavailable_today') || 'Unavailable today'})`
                                                 : p.is_available_now
                                                     ? `(${i18n.t(lang, 'public.status_available_now') || 'Available now'})`
@@ -622,21 +629,29 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 {selectedProvider && (
                                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
                                         <p className="font-bold text-slate-900">{selectedProvider.name}</p>
-                                        <p className="mt-1">
-                                            {i18n.t(lang, 'public.status_label') || 'Status'}: {selectedProvider.is_on_leave ? (i18n.t(lang, 'public.status_unavailable_now') || 'Unavailable now') : selectedProvider.is_available_now ? (i18n.t(lang, 'public.status_available_now') || 'Available now') : (i18n.t(lang, 'public.status_busy') || 'Busy')}
-                                        </p>
-                                        <p>
-                                            {i18n.t(lang, 'public.next_available') || 'Next Available'}: {selectedProvider.is_available_now
-                                                ? (i18n.t(lang, 'public.now_label') || 'Now')
-                                                : formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}
-                                        </p>
-                                        <p>{i18n.t(lang, 'public.customers_ahead') || 'Customers Ahead'}: {Math.max(0, selectedProvider.queue_ahead || 0)}</p>
-                                        <p>
-                                            {i18n.t(lang, 'public.estimated_wait_time') || 'Estimated Wait Time'}: {formatMinutesHuman(Math.max(
-                                                Number(selectedProvider.estimated_wait_minutes || 0),
-                                                Math.max(0, Number(selectedProvider.queue_ahead || 0)) * averageServiceMinutes
-                                            ))}
-                                        </p>
+                                        {isFutureAppointmentDate ? (
+                                            <p className="mt-1">
+                                                {i18n.t(lang, 'public.provider_selected_for_date') || 'Selected for your chosen date and time'}
+                                            </p>
+                                        ) : (
+                                            <>
+                                                <p className="mt-1">
+                                                    {i18n.t(lang, 'public.status_label') || 'Status'}: {selectedProvider.is_on_leave ? (i18n.t(lang, 'public.status_unavailable_now') || 'Unavailable now') : selectedProvider.is_available_now ? (i18n.t(lang, 'public.status_available_now') || 'Available now') : (i18n.t(lang, 'public.status_busy') || 'Busy')}
+                                                </p>
+                                                <p>
+                                                    {i18n.t(lang, 'public.next_available') || 'Next Available'}: {selectedProvider.is_available_now
+                                                        ? (i18n.t(lang, 'public.now_label') || 'Now')
+                                                        : formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}
+                                                </p>
+                                                <p>{i18n.t(lang, 'public.customers_ahead') || 'Customers Ahead'}: {Math.max(0, selectedProvider.queue_ahead || 0)}</p>
+                                                <p>
+                                                    {i18n.t(lang, 'public.estimated_wait_time') || 'Estimated Wait Time'}: {formatMinutesHuman(Math.max(
+                                                        Number(selectedProvider.estimated_wait_minutes || 0),
+                                                        Math.max(0, Number(selectedProvider.queue_ahead || 0)) * averageServiceMinutes
+                                                    ))}
+                                                </p>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -796,13 +811,15 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.selected_provider') || 'Selected Provider'}</p>
                                             <p className="mt-1 text-sm font-bold text-slate-900">{selectedProvider.name}</p>
-                                            <p className="mt-1 text-xs text-slate-600">
-                                                {selectedProvider.is_on_leave
-                                                    ? (i18n.t(lang, 'public.status_unavailable_now') || 'Unavailable now')
-                                                    : selectedProvider.is_available_now
-                                                        ? (i18n.t(lang, 'public.status_available_now') || 'Available now')
-                                                        : `${i18n.t(lang, 'public.next_available') || 'Next Available'} ${formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}`}
-                                            </p>
+                                            {!isFutureAppointmentDate && (
+                                                <p className="mt-1 text-xs text-slate-600">
+                                                    {selectedProvider.is_on_leave
+                                                        ? (i18n.t(lang, 'public.status_unavailable_now') || 'Unavailable now')
+                                                        : selectedProvider.is_available_now
+                                                            ? (i18n.t(lang, 'public.status_available_now') || 'Available now')
+                                                            : `${i18n.t(lang, 'public.next_available') || 'Next Available'} ${formatMinutesHuman(selectedProvider.next_available_in_minutes || selectedProvider.estimated_wait_minutes)}`}
+                                                </p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
