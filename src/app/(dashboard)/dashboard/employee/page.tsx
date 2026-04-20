@@ -95,6 +95,18 @@ function EmployeeDashboardContent() {
         setTimeout(() => setToast(null), 4000);
     };
 
+    const showLeaveSubmitResult = (resp: any) => {
+        if (resp?.owner_phone_configured === false) {
+            showToast(t('employee.leave_owner_no_phone_hint'), "error");
+            return;
+        }
+        if (resp?.notification_sent === false) {
+            showToast(t('employee.leave_notify_owner_failed'), "error");
+            return;
+        }
+        showToast(t('employee.leave_success'));
+    };
+
     const parseApiMessage = (error: any, fallbackKey: string) => {
         const raw = String(error?.response?.data?.message || error?.message || "").trim();
         if (!raw) return t(fallbackKey as any);
@@ -256,12 +268,7 @@ function EmployeeDashboardContent() {
             }
 
             const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
-            showToast(t('employee.leave_success'));
-            if (resp?.owner_phone_configured === false) {
-                showToast(t('employee.leave_owner_no_phone_hint'), "error");
-            } else if (resp?.notification_sent === false) {
-                showToast(t('employee.leave_notify_owner_failed'), "error");
-            }
+            showLeaveSubmitResult(resp);
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error) {
@@ -278,12 +285,7 @@ function EmployeeDashboardContent() {
             const resp = await providerService.addLeave(profile.id, { ...leaveFormData, allow_owner_approval: true, ui_language: language } as any);
             setIsImpactModalOpen(false);
             setLeaveImpact(null);
-            showToast(t('employee.leave_success'));
-            if (resp?.owner_phone_configured === false) {
-                showToast(t('employee.leave_owner_no_phone_hint'), "error");
-            } else if (resp?.notification_sent === false) {
-                showToast(t('employee.leave_notify_owner_failed'), "error");
-            }
+            showLeaveSubmitResult(resp);
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error: any) {
@@ -300,12 +302,7 @@ function EmployeeDashboardContent() {
             const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language } as any);
             setIsImpactModalOpen(false);
             setLeaveImpact(null);
-            showToast(t('employee.leave_success'));
-            if (resp?.owner_phone_configured === false) {
-                showToast(t('employee.leave_owner_no_phone_hint'), "error");
-            } else if (resp?.notification_sent === false) {
-                showToast(t('employee.leave_notify_owner_failed'), "error");
-            }
+            showLeaveSubmitResult(resp);
             setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error: any) {
