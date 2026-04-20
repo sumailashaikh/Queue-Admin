@@ -166,6 +166,12 @@ function EmployeeDashboardContent() {
         if (serviceNames.length > 0) return serviceNames.join(", ");
         return getLocalizedLabel(task.service_name, 'services.title');
     };
+    const appointmentCustomerLabel = (a: any) =>
+        a?.customer?.full_name ||
+        a?.customer?.name ||
+        a?.guest_name ||
+        a?.customer_name ||
+        t('admin.customer');
 
     const fetchData = useCallback(async () => {
         try {
@@ -508,7 +514,7 @@ function EmployeeDashboardContent() {
                                                     <CalendarClock className="h-6 w-6" />
                                                 </div>
                                             </div>
-                                            <div className="mt-4 grid grid-cols-2 gap-3">
+                                            <div className="mt-4 grid grid-cols-3 gap-3">
                                                 <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.join_queue')}</p>
                                                     <p className="text-lg font-black text-slate-900 mt-1">{todayQueueTasks.length}</p>
@@ -517,13 +523,28 @@ function EmployeeDashboardContent() {
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('appointments.title')}</p>
                                                     <p className="text-lg font-black text-slate-900 mt-1">{todaysAppointments.length}</p>
                                                 </div>
+                                                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('employee.upcoming_assigned')}</p>
+                                                    <p className="text-lg font-black text-slate-900 mt-1">{upcomingAppointments.length}</p>
+                                                </div>
                                             </div>
-                                            {todaysAppointments.length > 0 && (
+                                        </div>
+
+                                        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                    {t('appointments.title')} • {t('dashboard.today')}
+                                                </p>
+                                                <span className="text-[10px] font-black bg-slate-900 text-white px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                                    {todaysAppointments.length}
+                                                </span>
+                                            </div>
+                                            {todaysAppointments.length > 0 ? (
                                                 <div className="mt-5 space-y-3">
-                                                    {todaysAppointments.slice(0, 3).map((a: any) => (
+                                                    {todaysAppointments.slice(0, 5).map((a: any) => (
                                                         <div key={a.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
+                                                                <p className="text-sm font-bold text-slate-900 truncate">{appointmentCustomerLabel(a)}</p>
                                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                                                     {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getLocalizedLabel(a?.service?.translations || a?.service?.name, 'services.title')}
                                                                 </p>
@@ -534,8 +555,7 @@ function EmployeeDashboardContent() {
                                                         </div>
                                                     ))}
                                                 </div>
-                                            )}
-                                            {todaysAppointments.length === 0 && (
+                                            ) : (
                                                 <p className="mt-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                                     {t('employee.no_appointments_today')}
                                                 </p>
@@ -558,7 +578,7 @@ function EmployeeDashboardContent() {
                                                     {upcomingAppointments.slice(0, 3).map((a: any) => (
                                                         <div key={`upcoming-${a.id}`} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                                                             <div className="min-w-0">
-                                                                <p className="text-sm font-bold text-slate-900 truncate">{a?.customer?.full_name || t('admin.customer')}</p>
+                                                                <p className="text-sm font-bold text-slate-900 truncate">{appointmentCustomerLabel(a)}</p>
                                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                                                     {new Date(a.start_time).toLocaleDateString([], { day: '2-digit', month: 'short' })} • {new Date(a.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getLocalizedLabel(a?.service?.translations || a?.service?.name, 'services.title')}
                                                                 </p>
