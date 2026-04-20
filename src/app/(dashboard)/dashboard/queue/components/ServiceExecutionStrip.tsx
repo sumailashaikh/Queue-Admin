@@ -314,11 +314,15 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
                             >
                                 <option value="" className="text-slate-400">{t('queue.select_expert')}</option>
                                 {providers.filter(p => p.is_active || p.id === s.assigned_provider_id).map(p => {
+                                    const isSelected = String(p.id) === String(s.assigned_provider_id || "");
                                     const isBusy = p.current_tasks_count > 0;
                                     const onLeave = p.is_available === false;
+                                    const availabilitySuffix = !isSelected
+                                        ? (isBusy ? `· ${t('queue.busy')}` : onLeave ? `· ${t('queue.away')}` : "")
+                                        : "";
                                     return (
                                         <option key={p.id} value={p.id} className="font-sans py-2 text-slate-900">
-                                            {getProviderName(p)} {isBusy ? `· ${t('queue.busy')}` : onLeave ? `· ${t('queue.away')}` : ""}
+                                            {getProviderName(p)} {availabilitySuffix}
                                         </option>
                                     );
                                 })}
