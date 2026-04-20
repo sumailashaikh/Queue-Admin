@@ -26,6 +26,7 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [regionSettings, setRegionSettings] = useState<any>(null);
     const [resendTimer, setResendTimer] = useState(0);
+    const [otpListenNonce, setOtpListenNonce] = useState(0);
     const router = useRouter();
 
     useEffect(() => {
@@ -79,7 +80,7 @@ export default function LoginPage() {
             });
 
         return () => ac.abort();
-    }, [step]);
+    }, [step, otpListenNonce]);
 
     useEffect(() => {
         let currentRegion = REGIONS.find(r => r.code === "IN");
@@ -116,6 +117,8 @@ export default function LoginPage() {
             const formattedPhone = phone.startsWith('+') ? phone : `${dialCode}${phone}`;
             await authService.sendOTP(formattedPhone);
             setStep(2);
+            // Re-arm WebOTP listener on every fresh OTP send/resend.
+            setOtpListenNonce((prev) => prev + 1);
             setResendTimer(60); // Start 60s countdown
             localStorage.setItem('last_login_phone', phone);
         } catch (err: any) {
