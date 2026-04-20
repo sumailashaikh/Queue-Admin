@@ -94,7 +94,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl z-[110] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl z-220 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
                             {COUNTRIES.map((c) => (
                                 <button
@@ -150,7 +150,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
             {/* Backdrop for closing dropdown */}
             {isOpen && (
                 <div 
-                    className="fixed inset-0 z-[105]" 
+                    className="fixed inset-0 z-210" 
                     onClick={() => setIsOpen(false)}
                 />
             )}

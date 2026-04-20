@@ -901,7 +901,7 @@ const WalkInModal = ({ isOpen, onClose, onSubmit }: any) => {
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
+            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-visible p-8 space-y-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('queue.add_walk_in')}</h2>
                     <button onClick={onClose} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">
