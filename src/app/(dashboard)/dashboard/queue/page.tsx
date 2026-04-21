@@ -28,7 +28,7 @@ import {
     Calendar,
     Wallet
 } from "lucide-react";
-import { cn, formatCurrency, formatDuration } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { queueService, QueueEntry, Queue } from "@/services/queueService";
 import { businessService } from "@/services/businessService";
@@ -38,12 +38,14 @@ import { QRCodeSVG } from "qrcode.react";
 import { QueueRow } from "./components/QueueRow";
 import { useLanguage } from "@/context/LanguageContext";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
+import { useBusinessCurrency } from "@/hooks/useBusinessCurrency";
 
 // Local types have been replaced by imports from @/services/queueService
 
 export default function LiveQueuePage() {
     const { business } = useAuth();
     const { t, language } = useLanguage();
+    const { format } = useBusinessCurrency(business?.currency, language);
     const [queues, setQueues] = useState<Queue[]>([]);
     const [selectedQueue, setSelectedQueue] = useState<Queue | null>(null);
     const [entries, setEntries] = useState<QueueEntry[]>([]);
@@ -734,14 +736,10 @@ export default function LiveQueuePage() {
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-0.5">{t('queue.payment_received')}</p>
                             <p className="text-2xl font-black text-slate-900 leading-tight tabular-nums">
-                                {formatCurrency(
-                                    entries.reduce((acc, e) => {
-                                        const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.price || 0), 0) || (selectedQueue?.services?.price || 0);
-                                        return acc + entryPrice;
-                                    }, 0),
-                                    business?.currency || 'USD',
-                                    language
-                                )}
+                                {format(entries.reduce((acc, e) => {
+                                    const entryPrice = e.queue_entry_services?.reduce((sAcc, s) => sAcc + (s.price || 0), 0) || (selectedQueue?.services?.price || 0);
+                                    return acc + entryPrice;
+                                }, 0))}
                             </p>
                         </div>
                     </div>
@@ -886,11 +884,17 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
     const { t } = useLanguage();
     const [data, setData] = useState({ name: "", phone: "", noPhone: false, serviceIds: [] as string[], providerId: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [localError, setLocalError] = useState<string | null>(null);
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!data.name.trim()) return;
+        if (!data.serviceIds || data.serviceIds.length === 0) {
+            setLocalError("Please select at least one service");
+            return;
+        }
+        setLocalError(null);
         setIsSubmitting(true);
         try {
             await onSubmit({
@@ -915,6 +919,11 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {localError && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+                            {localError}
+                        </div>
+                    )}
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.customer_name')}</label>
                         <input
@@ -981,7 +990,7 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
                     </div>
                     <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || data.serviceIds.length === 0}
                         className="w-full py-5 bg-primary hover:bg-primary-hover text-white rounded-2xl text-xs font-bold uppercase tracking-wider shadow-xl shadow-primary/10 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('queue.add_walk_in')}

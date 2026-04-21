@@ -29,7 +29,7 @@ import { queueService, QueueEntry } from "@/services/queueService";
 import { appointmentService } from "@/services/appointmentService";
 import { formatGlobalPhone } from "@/lib/phoneUtils";
 import { i18n } from "@/lib/i18n";
-import { formatCurrency as globalFormatCurrency } from "@/lib/utils";
+import { useBusinessCurrency } from "@/hooks/useBusinessCurrency";
 
 interface PublicProfilePageProps {
     slug: string;
@@ -82,14 +82,23 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
 
     const lang = customerLangOverride || business?.language || 'en';
-    const currency = business?.currency || 'USD';
+    const { currency, format } = useBusinessCurrency(business?.currency, lang);
 
     const formatCurrency = (amount: number) => {
-        return globalFormatCurrency(amount, currency, lang);
+        return format(amount);
     };
     const tSafe = (key: string, fallback: string, params?: Record<string, any>) => {
         const translated = i18n.t(lang, key, params);
         return translated && translated !== key ? translated : fallback;
+    };
+    const confirmationMessages: Record<string, string> = {
+        en: "Thank you! We will notify you shortly.",
+        hi: "धन्यवाद! हम आपको जल्द ही सूचित करेंगे।",
+        gu: "આભાર! અમે તમને જલ્દી જ જાણ કરીશું."
+    };
+    const getConfirmationMessage = (languageCode?: string | null) => {
+        const key = String(languageCode || "en").toLowerCase();
+        return confirmationMessages[key] || confirmationMessages.en;
     };
 
     const todayInBusinessTz = business?.timezone
@@ -192,7 +201,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 setProviderInsights(providers);
                 if (!customerLangOverride && typeof window !== "undefined") {
                     const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
-                    const supported = ['en', 'es', 'hi', 'ar'];
+                    const supported = ['en', 'es', 'hi', 'ar', 'gu'];
                     if (supported.includes(browser)) setCustomerLangOverride(browser);
                 }
             } catch (err: any) {
@@ -311,7 +320,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     phone: formattedPhone,
                     service_ids: service_ids,
                     provider_id: selectedProviderId || undefined,
-                    ui_language: lang // Persist selected language
+                    ui_language: lang, // Backward compatibility
+                    language_code: lang
                 });
                 setTicket(entry);
             } else {
@@ -325,7 +335,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     customer_name: name,
                     phone: formattedPhone,
                     provider_id: selectedProviderId || undefined,
-                    ui_language: lang // Persist selected language
+                    ui_language: lang, // Backward compatibility
+                    language_code: lang
                 });
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
                 setIsAppointmentMode(true);
@@ -421,6 +432,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <option value="en" className="text-slate-900">English</option>
                                     <option value="es" className="text-slate-900">Español</option>
                                     <option value="hi" className="text-slate-900">हिंदी</option>
+                                    <option value="gu" className="text-slate-900">ગુજરાતી</option>
                                     <option value="ar" className="text-slate-900">العربية</option>
                                 </select>
                             </div>
@@ -855,9 +867,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     {isAppointmentMode ? i18n.t(lang, 'public.appointment_request_for') || "Your appointment request has been sent." : i18n.t(lang, 'public.service_pass_generated') || "Your service pass has been generated."}
                                 </p>
                                 <p className="text-xs font-semibold text-slate-700">
-                                    {isAppointmentMode
-                                        ? (i18n.t(lang, 'public.owner_will_review') || "Thank you. We will notify you on WhatsApp once your appointment is confirmed.")
-                                        : (i18n.t(lang, 'public.we_will_notify') || "Thank you. We will notify you on WhatsApp when your turn is near.")}
+                                    {getConfirmationMessage(lang)}
                                 </p>
                             </div>
 

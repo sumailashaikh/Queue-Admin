@@ -7,11 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Currency symbol helper with language-based fallback. */
 export function getCurrencySymbol(currency?: string | null, language: string = "en"): string {
-    const languageToCurrency: Record<string, string> = { en: "USD", es: "EUR", hi: "INR", ar: "AED" };
-    const baseLang = (language || "en").split("-")[0].toLowerCase();
-    const fallbackByLang = languageToCurrency[baseLang] || "USD";
     const raw = currency != null ? String(currency).trim() : "";
-    const code = !raw || raw.toLowerCase() === "null" ? fallbackByLang : raw.toUpperCase();
+    const code = !raw || raw.toLowerCase() === "null" ? "USD" : raw.toUpperCase();
     try {
         const part = new Intl.NumberFormat("en", {
             style: "currency",
@@ -40,23 +37,14 @@ export function getCurrencySymbol(currency?: string | null, language: string = "
 }
 
 export function formatCurrency(amount: number, currencyCodeParam: string = 'USD', language: string = 'en') {
-    const languageToCurrency: Record<string, string> = {
-        'en': 'USD',
-        'es': 'EUR',
-        'hi': 'INR',
-        'ar': 'AED'
-    };
-
     const baseLang = (language || 'en').split('-')[0].toLowerCase();
     const param = currencyCodeParam != null ? String(currencyCodeParam).trim() : '';
-    const hasExplicitCurrency =
+    let currencyCode =
         param !== '' &&
         param.toLowerCase() !== 'null' &&
-        /^[A-Z]{3}$/i.test(param);
-
-    // Per current UX: selected app language decides display currency.
-    // If language is unknown, explicit currency param is used as fallback.
-    let currencyCode = languageToCurrency[baseLang] || (hasExplicitCurrency ? param.toUpperCase() : 'USD');
+        /^[A-Z]{3}$/i.test(param)
+            ? param.toUpperCase()
+            : 'USD';
 
     if (!currencyCode || currencyCode === 'NULL') currencyCode = 'USD';
 

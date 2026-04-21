@@ -111,7 +111,8 @@ export const queueService = {
         service_ids?: string[],
         provider_id?: string,
         entry_source?: 'online' | 'qr_walkin' | 'manual',
-        ui_language?: string
+        ui_language?: string,
+        language_code?: string
     }): Promise<QueueEntry> {
         const result = await api.post<QueueEntry>('/public/queue/join', data);
         return result.data;
