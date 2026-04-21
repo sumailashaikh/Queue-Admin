@@ -95,7 +95,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const confirmationMessages: Record<string, string> = {
         en: "Thank you! We will notify you shortly.",
         hi: "धन्यवाद! हम आपको जल्द ही सूचित करेंगे।",
-        gu: "આભાર! અમે તમને જલ્દી જ જાણ કરીશું."
+        ar: "شكرا لك! سنقوم بإبلاغك قريبًا."
     };
     const getConfirmationMessage = (languageCode?: string | null) => {
         const key = String(languageCode || "en").toLowerCase();
@@ -202,7 +202,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 setProviderInsights(providers);
                 if (!customerLangOverride && typeof window !== "undefined") {
                     const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
-                    const supported = ['en', 'es', 'hi', 'ar', 'gu'];
+                    const supported = ['en', 'es', 'hi', 'ar'];
                     if (supported.includes(browser)) setCustomerLangOverride(browser);
                 }
             } catch (err: any) {
@@ -442,7 +442,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <option value="en" className="text-slate-900">English</option>
                                     <option value="es" className="text-slate-900">Español</option>
                                     <option value="hi" className="text-slate-900">हिंदी</option>
-                                    <option value="gu" className="text-slate-900">ગુજરાતી</option>
                                     <option value="ar" className="text-slate-900">العربية</option>
                                 </select>
                             </div>
@@ -864,7 +863,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     {step === 3 && ticket && (
                         <div className="text-center space-y-7 animate-in zoom-in-95 duration-500 py-3">
                             {showThankYouPopup && (
-                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-sm px-4">
                                     <div className="w-full max-w-md rounded-[28px] border border-slate-100 bg-white p-7 text-center shadow-2xl">
                                         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                                             <CheckCircle2 className="h-7 w-7" />
