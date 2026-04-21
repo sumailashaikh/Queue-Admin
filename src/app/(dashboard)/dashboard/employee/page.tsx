@@ -53,6 +53,9 @@ function EmployeeDashboardContent() {
     const [tasks, setTasks] = useState<QueueEntry[]>([]);
     const [appointments, setAppointments] = useState<any[]>([]);
     const [leaves, setLeaves] = useState<any[]>([]);
+    const [weeklySchedule, setWeeklySchedule] = useState<any[]>([]);
+    const [myDayOffs, setMyDayOffs] = useState<any[]>([]);
+    const [myBlockTimes, setMyBlockTimes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'work' | 'leave'>(tabParam === 'leave' ? 'leave' : 'work');
@@ -182,14 +185,22 @@ function EmployeeDashboardContent() {
                 queueService.getMyTasks(),
                 appointmentService.getMyAssignedAppointments()
             ]);
-            const leavesData = profileData?.id
-                ? await providerService.getLeaves(profileData.id)
-                : [];
+            const [leavesData, availabilityData, dayOffData, blockData] = profileData?.id
+                ? await Promise.all([
+                    providerService.getLeaves(profileData.id),
+                    providerService.getAvailability(profileData.id),
+                    providerService.getDayOffs(profileData.id),
+                    providerService.getBlockTimes(profileData.id)
+                ])
+                : [[], [], [], []];
             setProfile(profileData);
             setTasks(tasksData);
             setAppointments(apptsData || []);
             // Keep rejected items visible so employee can read manager feedback/rejection reason.
             setLeaves(leavesData || []);
+            setWeeklySchedule(availabilityData || []);
+            setMyDayOffs(dayOffData || []);
+            setMyBlockTimes(blockData || []);
         } catch (error) {
             console.error("Failed to fetch employee data:", error);
         } finally {
@@ -845,6 +856,42 @@ function EmployeeDashboardContent() {
                                             </div>
                                         )})
                                     )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">My Schedule</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {(weeklySchedule || []).map((s: any) => (
+                                            <div key={`${s.day_of_week}-${s.id || ''}`} className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Day {s.day_of_week}</p>
+                                                <p className="text-sm font-bold text-slate-900 mt-1">
+                                                    {s.is_available ? `${String(s.start_time || '').slice(0, 5)} - ${String(s.end_time || '').slice(0, 5)}` : 'Off'}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upcoming Day Offs</p>
+                                            <div className="mt-2 space-y-1">
+                                                {(myDayOffs || []).slice(0, 5).map((d: any) => (
+                                                    <p key={d.id} className="text-xs font-semibold text-slate-700">
+                                                        {d.day_off_date} {d.day_off_type === 'partial' ? `(${String(d.start_time || '').slice(0, 5)}-${String(d.end_time || '').slice(0, 5)})` : '(Full day)'}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Blocked Slots</p>
+                                            <div className="mt-2 space-y-1">
+                                                {(myBlockTimes || []).slice(0, 5).map((b: any) => (
+                                                    <p key={b.id} className="text-xs font-semibold text-slate-700">
+                                                        {b.block_date} ({String(b.start_time || '').slice(0, 5)}-{String(b.end_time || '').slice(0, 5)})
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </motion.div>
                         )}

@@ -72,6 +72,34 @@ export const providerService = {
         await api.put(`/service-providers/${providerId}/availability`, { availability });
     },
 
+    async getDayOffs(providerId: string): Promise<any[]> {
+        const result = await api.get<any[]>(`/service-providers/${providerId}/day-offs`);
+        return result.data || [];
+    },
+
+    async addDayOff(providerId: string, data: { day_off_date: string; day_off_type?: 'full_day' | 'partial'; start_time?: string; end_time?: string; reason?: string }): Promise<any> {
+        const result = await api.post<any>(`/service-providers/${providerId}/day-offs`, data);
+        return result.data;
+    },
+
+    async deleteDayOff(dayOffId: string): Promise<void> {
+        await api.delete(`/service-providers/day-offs/${dayOffId}`);
+    },
+
+    async getBlockTimes(providerId: string): Promise<any[]> {
+        const result = await api.get<any[]>(`/service-providers/${providerId}/block-times`);
+        return result.data || [];
+    },
+
+    async addBlockTime(providerId: string, data: { block_date: string; start_time: string; end_time: string; reason?: string }): Promise<any> {
+        const result = await api.post<any>(`/service-providers/${providerId}/block-times`, data);
+        return result.data;
+    },
+
+    async deleteBlockTime(blockId: string): Promise<void> {
+        await api.delete(`/service-providers/block-times/${blockId}`);
+    },
+
     // --- Provider Leaves ---
 
     async getLeaves(providerId: string, businessId?: string): Promise<any[]> {

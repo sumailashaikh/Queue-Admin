@@ -44,6 +44,10 @@ export default function ProvidersPage() {
     const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
     const [assignedServiceIds, setAssignedServiceIds] = useState<string[]>([]);
     const [availabilityData, setAvailabilityData] = useState<any[]>([]);
+    const [dayOffData, setDayOffData] = useState<any[]>([]);
+    const [blockTimeData, setBlockTimeData] = useState<any[]>([]);
+    const [dayOffForm, setDayOffForm] = useState({ day_off_date: "", day_off_type: "full_day", start_time: "", end_time: "", reason: "" });
+    const [blockForm, setBlockForm] = useState({ block_date: "", start_time: "", end_time: "", reason: "" });
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; provider: ServiceProvider | null }>({ isOpen: false, provider: null });
 
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -377,8 +381,14 @@ export default function ProvidersPage() {
     const openAvailabilityModal = async (provider: ServiceProvider) => {
         setSelectedProvider(provider);
         try {
-            const data = await providerService.getAvailability(provider.id);
+            const [data, offs, blocks] = await Promise.all([
+                providerService.getAvailability(provider.id),
+                providerService.getDayOffs(provider.id),
+                providerService.getBlockTimes(provider.id)
+            ]);
             setAvailabilityData(data.length ? data : Array.from({ length: 7 }, (_, i) => ({ day_of_week: i, start_time: "09:00", end_time: "18:00", is_available: true })));
+            setDayOffData(offs || []);
+            setBlockTimeData(blocks || []);
             setIsAvailabilityModalOpen(true);
         } catch (error) {
             showToast(t('providers.err_load_availability'), "error");
@@ -413,6 +423,66 @@ export default function ProvidersPage() {
             const data = error.response?.data;
             const msg = data?.message || 'providers.err_availability';
             showToast(msg.includes('.') ? t(msg as any, data) : msg, "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleAddDayOff = async () => {
+        if (!selectedProvider || !dayOffForm.day_off_date) return;
+        if (dayOffForm.day_off_type === "partial" && (!dayOffForm.start_time || !dayOffForm.end_time)) {
+            showToast("Start/end time required for partial day off", "error");
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await providerService.addDayOff(selectedProvider.id, dayOffForm as any);
+            setDayOffData(await providerService.getDayOffs(selectedProvider.id));
+            setDayOffForm({ day_off_date: "", day_off_type: "full_day", start_time: "", end_time: "", reason: "" });
+            showToast("Day off added");
+        } catch (error: any) {
+            showToast(error?.response?.data?.message || "Failed to add day off", "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteDayOff = async (id: string) => {
+        if (!selectedProvider) return;
+        setIsSubmitting(true);
+        try {
+            await providerService.deleteDayOff(id);
+            setDayOffData(await providerService.getDayOffs(selectedProvider.id));
+        } catch (error: any) {
+            showToast(error?.response?.data?.message || "Failed to delete day off", "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleAddBlockTime = async () => {
+        if (!selectedProvider || !blockForm.block_date || !blockForm.start_time || !blockForm.end_time) return;
+        setIsSubmitting(true);
+        try {
+            await providerService.addBlockTime(selectedProvider.id, blockForm as any);
+            setBlockTimeData(await providerService.getBlockTimes(selectedProvider.id));
+            setBlockForm({ block_date: "", start_time: "", end_time: "", reason: "" });
+            showToast("Block time added");
+        } catch (error: any) {
+            showToast(error?.response?.data?.message || "Failed to add block time", "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteBlockTime = async (id: string) => {
+        if (!selectedProvider) return;
+        setIsSubmitting(true);
+        try {
+            await providerService.deleteBlockTime(id);
+            setBlockTimeData(await providerService.getBlockTimes(selectedProvider.id));
+        } catch (error: any) {
+            showToast(error?.response?.data?.message || "Failed to delete block time", "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -876,6 +946,55 @@ export default function ProvidersPage() {
                                     {!slot.is_available && <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('providers.off_day')}</span>}
                                 </div>
                             ))}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 space-y-3">
+                                <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Day Off (Specific Date)</h4>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input type="date" value={dayOffForm.day_off_date} onChange={(e) => setDayOffForm({ ...dayOffForm, day_off_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                    <select value={dayOffForm.day_off_type} onChange={(e) => setDayOffForm({ ...dayOffForm, day_off_type: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold">
+                                        <option value="full_day">Full Day</option>
+                                        <option value="partial">Partial</option>
+                                    </select>
+                                </div>
+                                {dayOffForm.day_off_type === "partial" && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input type="time" value={dayOffForm.start_time} onChange={(e) => setDayOffForm({ ...dayOffForm, start_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                        <input type="time" value={dayOffForm.end_time} onChange={(e) => setDayOffForm({ ...dayOffForm, end_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                    </div>
+                                )}
+                                <input type="text" placeholder="Reason (optional)" value={dayOffForm.reason} onChange={(e) => setDayOffForm({ ...dayOffForm, reason: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                <button onClick={handleAddDayOff} disabled={isSubmitting} className="w-full py-2.5 rounded-xl bg-amber-600 text-white text-xs font-black uppercase tracking-wider">Add Day Off</button>
+                                <div className="max-h-32 overflow-y-auto space-y-1">
+                                    {dayOffData.map((d: any) => (
+                                        <div key={d.id} className="flex items-center justify-between text-[11px] font-bold bg-white border border-slate-100 rounded-lg px-2 py-1.5">
+                                            <span>{d.day_off_date} {d.day_off_type === 'partial' ? `(${String(d.start_time || '').slice(0, 5)}-${String(d.end_time || '').slice(0, 5)})` : '(Full day)'}</span>
+                                            <button onClick={() => handleDeleteDayOff(d.id)} className="text-rose-600">Remove</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 space-y-3">
+                                <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Block Time</h4>
+                                <div className="grid grid-cols-1 gap-2">
+                                    <input type="date" value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <input type="time" value={blockForm.start_time} onChange={(e) => setBlockForm({ ...blockForm, start_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                        <input type="time" value={blockForm.end_time} onChange={(e) => setBlockForm({ ...blockForm, end_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                    </div>
+                                </div>
+                                <input type="text" placeholder="Reason (optional)" value={blockForm.reason} onChange={(e) => setBlockForm({ ...blockForm, reason: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                <button onClick={handleAddBlockTime} disabled={isSubmitting} className="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-wider">Add Block</button>
+                                <div className="max-h-32 overflow-y-auto space-y-1">
+                                    {blockTimeData.map((b: any) => (
+                                        <div key={b.id} className="flex items-center justify-between text-[11px] font-bold bg-white border border-slate-100 rounded-lg px-2 py-1.5">
+                                            <span>{b.block_date} ({String(b.start_time || '').slice(0, 5)}-{String(b.end_time || '').slice(0, 5)})</span>
+                                            <button onClick={() => handleDeleteBlockTime(b.id)} className="text-rose-600">Remove</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                         <button disabled={isSubmitting} onClick={handleUpdateAvailability} className="w-full py-5 bg-slate-900 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">
                             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />}
