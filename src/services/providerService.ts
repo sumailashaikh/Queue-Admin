@@ -38,6 +38,13 @@ export const providerService = {
         return typeof n === 'number' ? n : 0;
     },
 
+    async getLeaveAlerts(businessId: string): Promise<any[]> {
+        const result = await api.get<any[]>(
+            `/service-providers/leaves/alerts?business_id=${encodeURIComponent(businessId)}`
+        );
+        return result.data || [];
+    },
+
     async createProvider(data: Partial<ServiceProvider>): Promise<any> {
         const result = await api.post<ServiceProvider>('/service-providers', data);
         return result;

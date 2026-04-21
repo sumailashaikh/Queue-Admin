@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, Users, Share2, QrCode, Monitor, X, Printer, CheckCircle2, Bell } from "lucide-react";
+import { CalendarCheck, Users, Share2, QrCode, Monitor, X, Printer, CheckCircle2, Bell, Clock } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +29,7 @@ export default function DashboardPage() {
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
+    const [leaveAlerts, setLeaveAlerts] = useState<any[]>([]);
 
     useEffect(() => {
         const handler = (e: any) => {
@@ -65,11 +66,15 @@ export default function DashboardPage() {
                     try {
                         const n = await providerService.getPendingLeaveCount(myBusiness.id);
                         setPendingLeaveCount(n);
+                        const alerts = await providerService.getLeaveAlerts(myBusiness.id);
+                        setLeaveAlerts(alerts || []);
                     } catch {
                         setPendingLeaveCount(0);
+                        setLeaveAlerts([]);
                     }
                 } else {
                     setPendingLeaveCount(0);
+                    setLeaveAlerts([]);
                 }
 
                 const queues = await queueService.getMyQueues();
@@ -166,6 +171,30 @@ export default function DashboardPage() {
                         >
                             {t('dashboard.pending_leave_alert_cta')}
                         </Link>
+                    </div>
+                )}
+
+                {user?.role === "owner" && leaveAlerts.length > 0 && (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
+                        <div className="mb-3 flex items-center justify-between">
+                            <p className="text-sm font-bold text-rose-950">Leave Alerts</p>
+                            <Link
+                                href="/dashboard/providers"
+                                className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-[11px] font-bold uppercase tracking-wider text-white"
+                            >
+                                Manage
+                            </Link>
+                        </div>
+                        <div className="space-y-2">
+                            {leaveAlerts.slice(0, 5).map((a: any) => (
+                                <div key={a.leave_id} className="rounded-xl border border-rose-100 bg-white px-3 py-3">
+                                    <p className="text-xs font-bold text-slate-900">{a.employee_name} - {a.leave_date}</p>
+                                    <p className="mt-1 text-[11px] font-semibold text-slate-600">
+                                        Tasks: {a.affected_tasks} | Appointments: {a.affected_appointments}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 

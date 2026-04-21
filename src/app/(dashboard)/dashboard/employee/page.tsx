@@ -72,7 +72,7 @@ function EmployeeDashboardContent() {
     const [leaveFormData, setLeaveFormData] = useState({
         start_date: "",
         end_date: "",
-        leave_type: "holiday",
+        leave_type: "planned",
         leave_kind: "FULL_DAY",
         start_time: "",
         end_time: "",
@@ -119,6 +119,7 @@ function EmployeeDashboardContent() {
 
     const leaveTypeLabel = (leaveType?: string) => {
         const v = String(leaveType || "").toLowerCase();
+        if (v === "planned") return "Planned";
         if (v === "holiday") return t("providers.holiday");
         if (v === "sick") return t("providers.sick");
         if (v === "emergency") return t("providers.emergency");
@@ -290,7 +291,7 @@ function EmployeeDashboardContent() {
 
             const resp = await providerService.addLeave(profile.id, { ...leaveFormData, ui_language: language });
             showLeaveSubmitResult(resp);
-            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "planned", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error) {
             showToast(parseApiMessage(error as any, 'providers.err_add_leave'), "error");
@@ -307,7 +308,7 @@ function EmployeeDashboardContent() {
             setIsImpactModalOpen(false);
             setLeaveImpact(null);
             showLeaveSubmitResult(resp);
-            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "planned", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error: any) {
             showToast(parseApiMessage(error, 'providers.err_add_leave'), "error");
@@ -324,7 +325,7 @@ function EmployeeDashboardContent() {
             setIsImpactModalOpen(false);
             setLeaveImpact(null);
             showLeaveSubmitResult(resp);
-            setLeaveFormData({ start_date: "", end_date: "", leave_type: "holiday", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
+            setLeaveFormData({ start_date: "", end_date: "", leave_type: "planned", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "" } as any);
             fetchData();
         } catch (error: any) {
             showToast(parseApiMessage(error, 'providers.err_add_leave'), "error");
@@ -721,10 +722,8 @@ function EmployeeDashboardContent() {
                                             onChange={e => setLeaveFormData({...leaveFormData, leave_type: e.target.value})}
                                             className="w-full px-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all appearance-none"
                                         >
-                                            <option value="holiday">{t('providers.holiday')}</option>
-                                            <option value="sick">{t('providers.sick')}</option>
-                                            <option value="emergency">{t('providers.emergency')}</option>
-                                            <option value="other">{t('providers.other')}</option>
+                                            <option value="planned">Planned</option>
+                                            <option value="emergency">Emergency</option>
                                         </select>
                                     </div>
 
