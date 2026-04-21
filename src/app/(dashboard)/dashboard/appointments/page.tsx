@@ -39,6 +39,7 @@ export default function AppointmentsPage() {
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const [cancelModal, setCancelModal] = useState({ isOpen: false, aptId: null as string | null });
     const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, aptId: null as string | null, dateTime: '' });
+    const [search, setSearch] = useState("");
 
     const isRTL = language === 'ar';
 
@@ -216,11 +217,24 @@ export default function AppointmentsPage() {
     };
 
     const filteredAppointments = appointments.filter(a => {
+        const customer = (a.profiles?.full_name || a.guest_name || "").toLowerCase();
+        const service = getTranslatedServiceNames(a).toLowerCase();
+        const q = search.trim().toLowerCase();
+        if (q && !customer.includes(q) && !service.includes(q)) return false;
         if (activeTab === 'today') return isToday(a.start_time);
         if (activeTab === 'upcoming') return isUpcoming(a.start_time);
         if (activeTab === 'past') return isPast(a.start_time) || a.status === 'completed';
         return true;
     }).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+    const tabCounts = {
+        today: appointments.filter(a => isToday(a.start_time)).length,
+        upcoming: appointments.filter(a => isUpcoming(a.start_time)).length,
+        past: appointments.filter(a => isPast(a.start_time) || a.status === 'completed').length,
+    };
+    const confirmedCount = filteredAppointments.filter(a => ["confirmed", "scheduled", "checked_in"].includes(String(a.status || "").toLowerCase())).length;
+    const attentionCount = filteredAppointments.filter(a => ["pending", "requested", "rescheduled", "needs_attention"].includes(String(a.status || "").toLowerCase())).length;
+    const completedCount = filteredAppointments.filter(a => String(a.status || "").toLowerCase() === "completed").length;
 
     const formatDateTime = (dateString: string) => {
         const d = new Date(dateString);
@@ -241,22 +255,48 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className={cn("space-y-10 max-w-5xl mx-auto pb-20 animate-in fade-in duration-1000 font-inter", isRTL && "font-arabic")} dir={isRTL ? "rtl" : "ltr"}>
+        <div className={cn("space-y-8 max-w-6xl mx-auto pb-20 animate-in fade-in duration-700 font-inter", isRTL && "font-arabic")} dir={isRTL ? "rtl" : "ltr"}>
             {/* Header */}
-            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-10">
+            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
                 <div className="space-y-4">
                     <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-100 rounded-full border border-slate-200">
                         <Calendar className="h-4 w-4 text-slate-900" />
                         <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">{t('appointments.title')}</span>
                     </div>
                     <div className="space-y-2 text-slate-900 text-left">
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                        <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
                             {t('appointments.subtitle')}
                         </h1>
                         <p className="text-sm font-bold text-slate-500 max-w-xl leading-relaxed">
                             {t('appointments.desc')}
                         </p>
                     </div>
+                </div>
+                <div className="w-full xl:w-auto">
+                    <div className="relative w-full xl:w-[320px]">
+                        <input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder={t('appointments.search_placeholder') || "Search customer or service"}
+                            className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                        />
+                        <User className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('appointments.total') || "Total"}</p>
+                    <p className="text-2xl font-black text-slate-900 mt-1">{filteredAppointments.length}</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">{t('appointments.confirmed') || "Confirmed"}</p>
+                    <p className="text-2xl font-black text-emerald-900 mt-1">{confirmedCount}</p>
+                </div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">{t('appointments.needs_action') || "Needs Action"}</p>
+                    <p className="text-2xl font-black text-amber-900 mt-1">{attentionCount}</p>
                 </div>
             </div>
 
@@ -272,19 +312,22 @@ export default function AppointmentsPage() {
             )}
 
             {/* Tabs */}
-            <div className="flex items-center p-1.5 bg-slate-100/50 backdrop-blur-sm rounded-[24px] w-fit border border-slate-200/50">
+            <div className="flex items-center p-1.5 bg-slate-100/70 backdrop-blur-sm rounded-[20px] w-fit border border-slate-200/60">
                 {(['today', 'upcoming', 'past'] as const).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={cn(
-                            "px-6 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300",
+                            "px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center gap-2",
                             activeTab === tab
                                 ? "bg-slate-900 text-white shadow-xl shadow-slate-900/10 scale-105"
                                 : "text-slate-500 hover:text-slate-900"
                         )}
                     >
                         {t(`appointments.${tab}`)}
+                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded-md", activeTab === tab ? "bg-white/20" : "bg-slate-200 text-slate-700")}>
+                            {tabCounts[tab]}
+                        </span>
                     </button>
                 ))}
             </div>
@@ -301,12 +344,12 @@ export default function AppointmentsPage() {
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 gap-4">
                     {filteredAppointments.map((apt) => {
                         const { date, time } = formatDateTime(apt.start_time);
 
                         return (
-                            <div key={apt.id} className="group relative bg-white border border-slate-100 rounded-[32px] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 flex flex-col md:flex-row md:items-center gap-8 overflow-hidden">
+                            <div key={apt.id} className="group relative bg-white border border-slate-200 rounded-3xl p-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col md:flex-row md:items-center gap-6 overflow-hidden">
                                 {/* Side Status Color */}
                                 <div className={cn(
                                     "absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-500",
@@ -318,7 +361,7 @@ export default function AppointmentsPage() {
                                 )} />
 
                                 {/* Time/Date Column */}
-                                <div className={cn("flex flex-col space-y-2 min-w-[140px] shrink-0 border-slate-50 pr-8", isRTL ? "md:border-l md:pl-8 border-l" : "md:border-r md:pr-8 border-r")}>
+                                <div className={cn("flex flex-col space-y-2 min-w-[130px] shrink-0 border-slate-100 pr-6", isRTL ? "md:border-l md:pl-6 border-l" : "md:border-r md:pr-6 border-r")}>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-1">{date}</p>
 
                                     <p className={cn("text-2xl font-black tracking-tighter tabular-nums leading-none", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
@@ -338,10 +381,10 @@ export default function AppointmentsPage() {
                                 </div>
 
                                 {/* Customer Info */}
-                                <div className="flex-1 space-y-4 text-left">
+                                <div className="flex-1 space-y-3 text-left">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t('common.status')}</p>
-                                        <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-4">
+                                        <h3 className="text-xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-3">
                                             <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || t('queue.guest')}</span>
 
                                             {(() => {
@@ -434,13 +477,13 @@ export default function AppointmentsPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className={cn("flex items-center gap-2 border-slate-100", isRTL ? "md:border-r md:pr-6 pr-0 border-none" : "md:border-l md:pl-6 pl-0 border-none")}>
+                                <div className={cn("flex items-center gap-2 border-slate-100 flex-wrap", isRTL ? "md:border-r md:pr-6 pr-0 border-none justify-start" : "md:border-l md:pl-6 pl-0 border-none justify-start md:justify-end")}>
                                     {(apt.status === 'pending' || apt.status === 'scheduled' || apt.status === 'requested' || apt.status === 'rescheduled') && (
                                         <>
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'confirmed')}
-                                                className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                                                className="h-10 px-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
                                             >
                                                 {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                 {t('common.confirm')}
@@ -500,7 +543,7 @@ export default function AppointmentsPage() {
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleUpdateStatus(apt.id, 'checked_in')}
-                                                className="h-10 px-6 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm ml-2"
+                                                className="h-10 px-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm ml-1"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
                                                 {apt.status === 'checked_in' ? t('appointments.sync_with_queue') || 'Sync Queue' : t('appointments.check_in')}
