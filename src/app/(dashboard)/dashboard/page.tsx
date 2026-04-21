@@ -31,6 +31,25 @@ export default function DashboardPage() {
     const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
     const [leaveAlerts, setLeaveAlerts] = useState<any[]>([]);
 
+    const refreshLeaveAlerts = async (businessId: string) => {
+        const n = await providerService.getPendingLeaveCount(businessId);
+        setPendingLeaveCount(n);
+        const alerts = await providerService.getLeaveAlerts(businessId);
+        setLeaveAlerts(alerts || []);
+    };
+
+    const handleLeaveAction = async (leaveId: string, action: 'APPROVED' | 'REJECTED') => {
+        if (!business?.id) return;
+        if (action === 'REJECTED') {
+            const reason = window.prompt("Enter rejection reason");
+            if (!reason || !reason.trim()) return;
+            await providerService.updateLeaveStatus(leaveId, action, reason.trim());
+        } else {
+            await providerService.updateLeaveStatus(leaveId, action);
+        }
+        await refreshLeaveAlerts(business.id);
+    };
+
     useEffect(() => {
         const handler = (e: any) => {
             e.preventDefault();
@@ -64,10 +83,7 @@ export default function DashboardPage() {
 
                 if (myBusiness?.id && user?.role === "owner") {
                     try {
-                        const n = await providerService.getPendingLeaveCount(myBusiness.id);
-                        setPendingLeaveCount(n);
-                        const alerts = await providerService.getLeaveAlerts(myBusiness.id);
-                        setLeaveAlerts(alerts || []);
+                        await refreshLeaveAlerts(myBusiness.id);
                     } catch {
                         setPendingLeaveCount(0);
                         setLeaveAlerts([]);
@@ -177,7 +193,7 @@ export default function DashboardPage() {
                 {user?.role === "owner" && leaveAlerts.length > 0 && (
                     <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
                         <div className="mb-3 flex items-center justify-between">
-                            <p className="text-sm font-bold text-rose-950">Leave Alerts</p>
+                            <p className="text-sm font-bold text-rose-950">Leave Requests</p>
                             <Link
                                 href="/dashboard/providers"
                                 className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-[11px] font-bold uppercase tracking-wider text-white"
@@ -188,10 +204,36 @@ export default function DashboardPage() {
                         <div className="space-y-2">
                             {leaveAlerts.slice(0, 5).map((a: any) => (
                                 <div key={a.leave_id} className="rounded-xl border border-rose-100 bg-white px-3 py-3">
-                                    <p className="text-xs font-bold text-slate-900">{a.employee_name} - {a.leave_date}</p>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-xs font-bold text-slate-900">{a.employee_name} - {a.leave_date}</p>
+                                        {a.high_priority && (
+                                            <span className="rounded-md bg-rose-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                                                Emergency
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="mt-1 text-[11px] font-semibold text-slate-600">
                                         Tasks: {a.affected_tasks} | Appointments: {a.affected_appointments}
                                     </p>
+                                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                        {a.leave_status === 'PENDING' ? 'New Leave Request' : 'Approved Leave'}
+                                    </p>
+                                    {a.leave_status === 'PENDING' && (
+                                        <div className="mt-2 flex gap-2">
+                                            <button
+                                                onClick={() => handleLeaveAction(a.leave_id, 'APPROVED')}
+                                                className="inline-flex h-8 items-center justify-center rounded-lg bg-emerald-600 px-3 text-[10px] font-bold uppercase tracking-wider text-white"
+                                            >
+                                                Approve
+                                            </button>
+                                            <button
+                                                onClick={() => handleLeaveAction(a.leave_id, 'REJECTED')}
+                                                className="inline-flex h-8 items-center justify-center rounded-lg bg-rose-600 px-3 text-[10px] font-bold uppercase tracking-wider text-white"
+                                            >
+                                                Reject
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
