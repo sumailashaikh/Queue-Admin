@@ -865,22 +865,22 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                         <div className="text-center space-y-7 animate-in zoom-in-95 duration-500 py-3">
                             {showThankYouPopup && (
                                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-                                    <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
-                                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                                            <CheckCircle2 className="h-6 w-6" />
+                                    <div className="w-full max-w-md rounded-[28px] border border-slate-100 bg-white p-7 text-center shadow-2xl">
+                                        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                            <CheckCircle2 className="h-7 w-7" />
                                         </div>
-                                        <h3 className="mb-2 text-lg font-bold text-slate-900">
-                                            {i18n.t(lang, 'public.thank_you') || "Thank you!"}
+                                        <h3 className="mb-2 text-xl font-bold text-slate-900 tracking-tight">
+                                            {tSafe('public.thank_you', 'Thank you!')}
                                         </h3>
-                                        <p className="text-sm font-medium text-slate-700">
+                                        <p className="text-sm font-medium leading-relaxed text-slate-600">
                                             {getConfirmationMessage(lang)}
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => setShowThankYouPopup(false)}
-                                            className="mt-5 w-full rounded-xl bg-[#0B1B3F] py-3 text-xs font-semibold uppercase tracking-wider text-white hover:bg-[#142A5A]"
+                                            className="mt-6 w-full rounded-xl bg-[#0B1B3F] py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-md transition-colors hover:bg-[#142A5A]"
                                         >
-                                            {i18n.t(lang, 'public.done') || "Done"}
+                                            {tSafe('public.done', 'Done')}
                                         </button>
                                     </div>
                                 </div>
@@ -897,9 +897,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">
                                     {i18n.t(lang, 'public.welcome_to')} <span className="text-slate-900">{business.name}</span>.<br />
                                     {isAppointmentMode ? i18n.t(lang, 'public.appointment_request_for') || "Your appointment request has been sent." : i18n.t(lang, 'public.service_pass_generated') || "Your service pass has been generated."}
-                                </p>
-                                <p className="text-xs font-semibold text-slate-700">
-                                    {getConfirmationMessage(lang)}
                                 </p>
                             </div>
 
