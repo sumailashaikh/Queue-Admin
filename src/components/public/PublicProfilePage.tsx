@@ -58,6 +58,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [selectedProviderId, setSelectedProviderId] = useState("");
     const [providerSlots, setProviderSlots] = useState<string[]>([]);
     const [providerSlotsLoading, setProviderSlotsLoading] = useState(false);
+    const [showThankYouPopup, setShowThankYouPopup] = useState(false);
 
     const toggleService = (service: any) => {
         const isSelected = selectedServices.find(s => s.id === service.id);
@@ -244,6 +245,14 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         }
     }, [visibleProviders, selectedProviderId]);
 
+    useEffect(() => {
+        if (!showThankYouPopup) return;
+        const timeout = setTimeout(() => {
+            setShowThankYouPopup(false);
+        }, 4000);
+        return () => clearTimeout(timeout);
+    }, [showThankYouPopup]);
+
     // Auto-select first available date logic
     useEffect(() => {
         if (activeView === 'appointment' && business && !bookingDate) {
@@ -342,6 +351,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 setIsAppointmentMode(true);
             }
             setStep(3);
+            setShowThankYouPopup(true);
         } catch (err: any) {
             setJoinError(err.message || i18n.t(lang, 'public.err_something_went_wrong'));
         } finally {
@@ -853,6 +863,28 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                     {step === 3 && ticket && (
                         <div className="text-center space-y-7 animate-in zoom-in-95 duration-500 py-3">
+                            {showThankYouPopup && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+                                    <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
+                                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                            <CheckCircle2 className="h-6 w-6" />
+                                        </div>
+                                        <h3 className="mb-2 text-lg font-bold text-slate-900">
+                                            {i18n.t(lang, 'public.thank_you') || "Thank you!"}
+                                        </h3>
+                                        <p className="text-sm font-medium text-slate-700">
+                                            {getConfirmationMessage(lang)}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowThankYouPopup(false)}
+                                            className="mt-5 w-full rounded-xl bg-[#0B1B3F] py-3 text-xs font-semibold uppercase tracking-wider text-white hover:bg-[#142A5A]"
+                                        >
+                                            {i18n.t(lang, 'public.done') || "Done"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                             <div className="h-32 w-32 bg-primary rounded-[40px] flex items-center justify-center mx-auto shadow-2xl shadow-primary/20 relative group overflow-hidden">
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 {isAppointmentMode ? <Clock className="h-16 w-16 text-white" /> : <ShieldCheck className="h-16 w-16 text-white" />}
