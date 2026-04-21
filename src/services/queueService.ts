@@ -117,6 +117,17 @@ export const queueService = {
         return result.data;
     },
 
+    async createWalkIn(data: {
+        queue_id: string,
+        customer_name: string,
+        phone?: string | null,
+        service_ids?: string[],
+        provider_id?: string
+    }): Promise<QueueEntry> {
+        const result = await api.post<QueueEntry>('/queues/walk-in', data);
+        return result.data;
+    },
+
     async nextEntry(queueId: string): Promise<void> {
         await api.post('/queues/next', { queue_id: queueId });
     },

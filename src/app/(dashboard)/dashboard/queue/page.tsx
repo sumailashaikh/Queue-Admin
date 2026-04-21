@@ -410,14 +410,15 @@ export default function LiveQueuePage() {
         showToast(t('queue.link_copied'));
     };
 
-    const handleAddWalkIn = async (payload: { name: string; phone?: string | null }) => {
+    const handleAddWalkIn = async (payload: { name: string; phone?: string | null; serviceIds?: string[]; providerId?: string }) => {
         if (!selectedQueue?.id) return;
         try {
-            await queueService.joinQueue({
+            await queueService.createWalkIn({
                 queue_id: selectedQueue.id,
                 customer_name: payload.name.trim(),
                 phone: payload.phone || undefined,
-                entry_source: 'manual'
+                service_ids: payload.serviceIds || [],
+                provider_id: payload.providerId || undefined
             });
             await fetchEntries(selectedQueue.id);
             showToast(t('queue.success_create'));
@@ -873,15 +874,17 @@ export default function LiveQueuePage() {
                 isOpen={isWalkInModalOpen}
                 onClose={() => setIsWalkInModalOpen(false)}
                 onSubmit={handleAddWalkIn}
+                services={services}
+                providers={providers}
             />
 
         </div >
     );
 }
 
-const WalkInModal = ({ isOpen, onClose, onSubmit }: any) => {
+const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] }: any) => {
     const { t } = useLanguage();
-    const [data, setData] = useState({ name: "", phone: "", noPhone: false });
+    const [data, setData] = useState({ name: "", phone: "", noPhone: false, serviceIds: [] as string[], providerId: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
     if (!isOpen) return null;
 
@@ -892,9 +895,11 @@ const WalkInModal = ({ isOpen, onClose, onSubmit }: any) => {
         try {
             await onSubmit({
                 name: data.name,
-                phone: data.noPhone ? null : (data.phone || null)
+                phone: data.noPhone ? null : (data.phone || null),
+                serviceIds: data.serviceIds,
+                providerId: data.providerId || undefined
             });
-            setData({ name: "", phone: "", noPhone: false });
+            setData({ name: "", phone: "", noPhone: false, serviceIds: [], providerId: "" });
         } finally {
             setIsSubmitting(false);
         }
@@ -939,6 +944,41 @@ const WalkInModal = ({ isOpen, onClose, onSubmit }: any) => {
                         />
                         {t('queue.no_phone')}
                     </label>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Services</label>
+                        <div className="max-h-36 overflow-auto bg-slate-50 rounded-2xl border border-slate-200 p-3 space-y-2">
+                            {services.map((s: any) => (
+                                <label key={s.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.serviceIds.includes(s.id)}
+                                        onChange={(e) => {
+                                            setData((prev: any) => ({
+                                                ...prev,
+                                                serviceIds: e.target.checked
+                                                    ? [...prev.serviceIds, s.id]
+                                                    : prev.serviceIds.filter((id: string) => id !== s.id)
+                                            }));
+                                        }}
+                                    />
+                                    {s.name}
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Assign Employee (Optional)</label>
+                        <select
+                            value={data.providerId}
+                            onChange={(e) => setData({ ...data, providerId: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 rounded-2xl text-sm font-semibold outline-none border border-slate-200"
+                        >
+                            <option value="">Unassigned</option>
+                            {providers.map((p: any) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
                     <button
                         type="submit"
                         disabled={isSubmitting}
