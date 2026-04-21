@@ -2,24 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, Clock, CalendarCheck, TrendingUp, Wallet, Share2, QrCode, Monitor, X, Printer, CheckCircle2, Bell } from "lucide-react";
+import { CalendarCheck, Users, Share2, QrCode, Monitor, X, Printer, CheckCircle2, Bell } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { cn, formatCurrency, formatDuration } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { analyticsService, DailySummary } from "@/services/analyticsService";
 import { queueService } from "@/services/queueService";
 import { businessService } from "@/services/businessService"; // Assuming businessService is needed for business data
 import { providerService } from "@/services/providerService";
+import { appointmentService } from "@/services/appointmentService";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardPage() {
     const { user } = useAuth();
     const { t, language } = useLanguage();
     const [stats, setStats] = useState([
-        { name: t('dashboard.total_visitors'), value: '0', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { name: t('dashboard.completed_visits'), value: '0', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-        { name: t('dashboard.today_revenue'), value: '0', icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-        { name: t('dashboard.avg_wait_time'), value: '0m', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { name: 'Future Appointments', value: '0', icon: CalendarCheck, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { name: 'Current Queue', value: '0', icon: Users, color: 'text-amber-600', bg: 'bg-amber-50' },
     ]);
     const [loading, setLoading] = useState(true);
     const [business, setBusiness] = useState<any>(null); // State to hold business data
@@ -30,9 +28,6 @@ export default function DashboardPage() {
     const [isCopied, setIsCopied] = useState(false);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-    // Live Analytics States
-    const [popularServices, setPopularServices] = useState<{ name: string, count: number, color: string }[]>([]);
-    const [queueHealth, setQueueHealth] = useState({ completed: 0, waiting: 0, serving: 0, skipped: 0 });
     const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
 
     useEffect(() => {
@@ -63,8 +58,6 @@ export default function DashboardPage() {
     useEffect(() => {
         async function fetchDashboardData() {
             try {
-                // Fetch daily summary
-                const summary = await analyticsService.getDailySummary();
                 const myBusiness = await businessService.getMyBusiness(); // Fetch business data
                 setBusiness(myBusiness);
 
@@ -79,56 +72,41 @@ export default function DashboardPage() {
                     setPendingLeaveCount(0);
                 }
 
-                // Fetch active queues to get serving/waiting counts
                 const queues = await queueService.getMyQueues();
-                // We calculate precise queue health
-                if (myBusiness) {
-                    try {
-                        const providerAnalytics = await analyticsService.getProviderAnalytics({
-                            business_id: myBusiness.id,
-                            range: 'daily'
-                        });
+                let currentQueueCount = 0;
+                try {
+                    const queueEntryLists = await Promise.all(
+                        queues.map((q: any) => queueService.getQueueEntriesToday(q.id))
+                    );
+                    currentQueueCount = queueEntryLists.reduce((acc, entries) => {
+                        const activeCount = (entries || []).filter(
+                            (e: any) => e.status === 'waiting' || e.status === 'serving'
+                        ).length;
+                        return acc + activeCount;
+                    }, 0);
+                } catch (err) {
+                    console.error("Failed to fetch current queue count:", err);
+                }
 
-                        const serviceMap: Record<string, number> = {};
-                        if (providerAnalytics && providerAnalytics.data) {
-                            providerAnalytics.data.forEach((p: any) => {
-                                p.service_breakdown?.forEach((s: any) => {
-                                    serviceMap[s.service_name] = (serviceMap[s.service_name] || 0) + s.count;
-                                });
-                            });
-                        }
-
-                        const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-purple-500'];
-                        const top = Object.entries(serviceMap)
-                            .map(([name, count]) => ({ name, count }))
-                            .sort((a, b) => b.count - a.count)
-                            .slice(0, 4)
-                            .map((s, i) => ({ ...s, color: colors[i] }));
-
-                        setPopularServices(top);
-
-                        if (queues.length > 0) {
-                            const entries = await queueService.getQueueEntriesToday(queues[0].id);
-                            // Set completed directly from summary since getQueueEntriesToday filters out paid ones
-                            const health = { completed: summary.completedVisits || 0, waiting: 0, serving: 0, skipped: 0 };
-                            entries.forEach((e: any) => {
-                                if (e.status === 'completed' && health.completed === 0) health.completed++; // fallback
-                                else if (e.status === 'waiting') health.waiting++;
-                                else if (e.status === 'serving') health.serving++;
-                                else if (e.status === 'skipped' || e.status === 'no_show') health.skipped++;
-                            });
-                            setQueueHealth(health);
-                        }
-                    } catch (err) {
-                        console.error("Failed fetching live analytics data:", err);
-                    }
+                let futureAppointments = 0;
+                try {
+                    const appointments = await appointmentService.getBusinessAppointments();
+                    const now = new Date();
+                    futureAppointments = (appointments || []).filter((appt: any) => {
+                        if (!appt?.start_time) return false;
+                        const startAt = new Date(appt.start_time);
+                        const status = String(appt.status || "").toLowerCase();
+                        const isFuture = startAt.getTime() > now.getTime();
+                        const isActiveAppointment = ['scheduled', 'confirmed', 'requested', 'pending', 'rescheduled'].includes(status);
+                        return isFuture && isActiveAppointment;
+                    }).length;
+                } catch (err) {
+                    console.error("Failed to fetch future appointments:", err);
                 }
 
                 setStats([
-                    { name: t('dashboard.total_visitors'), value: summary.totalCustomers.toString(), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                    { name: t('dashboard.completed_visits'), value: summary.completedVisits.toString(), icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-                    { name: t('dashboard.today_revenue'), value: formatCurrency(summary.totalRevenue, myBusiness?.currency, language), icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { name: t('dashboard.avg_wait_time'), value: formatDuration(summary.avgWaitTimeMinutes, t), icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { name: 'Future Appointments', value: futureAppointments.toString(), icon: CalendarCheck, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { name: 'Current Queue', value: currentQueueCount.toString(), icon: Users, color: 'text-amber-600', bg: 'bg-amber-50' },
                 ]);
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
@@ -140,7 +118,7 @@ export default function DashboardPage() {
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30s
         return () => clearInterval(interval);
-    }, [language, user?.id, user?.role]);
+    }, [user?.id, user?.role]);
 
     return (
         <div className="relative">
@@ -191,7 +169,7 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {stats.map((stat) => (
                         <div key={stat.name} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow group cursor-default">
                             <div className="flex items-center justify-between">
@@ -209,111 +187,7 @@ export default function DashboardPage() {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm flex flex-col min-h-[400px]">
-                        <div className="flex items-center justify-between gap-4 mb-6">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('dashboard.live_analytics')}</p>
-                                <p className="text-sm mt-1 font-medium text-slate-400">{t('dashboard.live_analytics_desc')}</p>
-                            </div>
-                            <div className="animate-pulse h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
-                            {/* Left: Queue Health */}
-                            <div className="flex flex-col gap-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t('dashboard.queue_health')}</p>
-                                {queueHealth.completed === 0 && queueHealth.waiting === 0 && queueHealth.serving === 0 && queueHealth.skipped === 0 ? (
-                                    <div className="flex-1 flex flex-col items-center justify-center opacity-40">
-                                        <TrendingUp className="h-8 w-8 text-slate-400 mb-2" />
-                                        <p className="text-xs font-medium text-slate-500">{t('dashboard.no_entries_today')}</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {/* Completed */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 shrink-0 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
-                                                <CalendarCheck className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900 leading-none">{t('dashboard.completed')}</p>
-                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
-                                                    <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (queueHealth.completed / 20) * 100)}%` }} />
-                                                </div>
-                                            </div>
-                                            <div className="text-lg font-bold text-slate-900">{queueHealth.completed}</div>
-                                        </div>
-                                        {/* Serving */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 shrink-0 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
-                                                <TrendingUp className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900 leading-none">{t('dashboard.in_service')}</p>
-                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
-                                                    <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${queueHealth.serving > 0 ? 100 : 0}%` }} />
-                                                </div>
-                                            </div>
-                                            <div className="text-lg font-bold text-slate-900">{queueHealth.serving}</div>
-                                        </div>
-                                        {/* Waiting */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 shrink-0 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
-                                                <Clock className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900 leading-none">{t('dashboard.waiting')}</p>
-                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
-                                                    <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (queueHealth.waiting / 20) * 100)}%` }} />
-                                                </div>
-                                            </div>
-                                            <div className="text-lg font-bold text-slate-900">{queueHealth.waiting}</div>
-                                        </div>
-                                        {/* Skipped */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 shrink-0 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
-                                                <X className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900 leading-none">{t('dashboard.dropped_no_show')}</p>
-                                                <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2">
-                                                    <div className="bg-rose-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (queueHealth.skipped / 20) * 100)}%` }} />
-                                                </div>
-                                            </div>
-                                            <div className="text-lg font-bold text-slate-900">{queueHealth.skipped}</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Right: Service Popularity */}
-                            <div className="flex flex-col gap-6 p-4 rounded-xl">
-                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t('dashboard.top_services_ranked')}</p>
-                                <div className="space-y-4">
-                                    {popularServices.length === 0 ? (
-                                        <p className="text-xs font-semibold text-slate-500 italic">{t('dashboard.no_services_completed')}</p>
-                                    ) : (
-                                        popularServices.map((s, idx) => {
-                                            const maxCount = popularServices[0].count;
-                                            const pct = Math.max(10, (s.count / maxCount) * 100);
-                                            return (
-                                                <div key={idx} className="flex flex-col gap-1">
-                                                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                                                        <span className="truncate pr-4">{s.name}</span>
-                                                        <span>{s.count}</span>
-                                                    </div>
-                                                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                                        <div className={cn("h-full rounded-full transition-all duration-1000", s.color)} style={{ width: `${pct}%` }} />
-                                                    </div>
-                                                </div>
-                                            )
-                                        })
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                <div className="grid grid-cols-1 gap-6">
                     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col">
                         <h3 className="text-sm font-semibold text-slate-900 mb-6 uppercase tracking-wider flex items-center gap-2">
                             <Monitor className="h-4 w-4 text-slate-500" />
