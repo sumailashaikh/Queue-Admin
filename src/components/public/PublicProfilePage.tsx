@@ -115,6 +115,10 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         const h12 = h % 12 || 12;
         return `${h12}:${minutes} ${ampm}`;
     };
+    const parseTimeToMinutes = (timeStr: string) => {
+        const [h, m] = String(timeStr || "00:00").split(":").map(Number);
+        return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
+    };
 
     const providerBusyUntilLabel = () => {
         if (!selectedProvider || selectedProvider.is_available_now) return "";
@@ -192,6 +196,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
     const isOpen = isStoreOpen();
     const hasOpenQueue = business?.queues?.some(q => q.status === 'open');
+    const closingMinutes = business ? parseTimeToMinutes(business.close_time || "21:00") : 0;
 
     useEffect(() => {
         const loadBusiness = async () => {
@@ -320,6 +325,25 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                 const openQueue = business!.queues?.find(q => q.status === 'open');
                 if (!openQueue) {
                     setJoinError('ERR_NO_QUEUE');
+                    return;
+                }
+                // Frontend precheck so users don't proceed when estimated completion crosses closing cutoff.
+                const nowLocal = new Date().toLocaleTimeString('en-GB', {
+                    timeZone: business?.timezone || 'UTC',
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const nowMins = parseTimeToMinutes(nowLocal);
+                const providerWait = selectedProviderId
+                    ? Number(selectedProvider?.next_available_in_minutes || selectedProvider?.estimated_wait_minutes || 0)
+                    : Math.min(
+                        ...((visibleProviders || []).map((p) => Number(p.next_available_in_minutes || p.estimated_wait_minutes || 0))),
+                        0
+                    );
+                const estimatedFinish = nowMins + Math.max(0, providerWait) + Math.max(0, Number(totalDuration || 0));
+                if (estimatedFinish > closingMinutes) {
+                    setJoinError("We’re fully booked for today. Please select a slot for tomorrow.");
                     return;
                 }
 
@@ -724,7 +748,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     const selectedDuration = Math.max(0, Number(totalDuration || 0));
                                                     const openMins = parseToMins(business.open_time || "09:00");
                                                     const closeMins = parseToMins(business.close_time || "21:00");
-                                                    const bufferLimit = closeMins - 10;
                                                     const tz = business?.timezone || 'UTC';
                                                     const today = new Date().toLocaleDateString('en-CA', { timeZone: tz });
                                                     let startMins = openMins;
@@ -740,15 +763,24 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                         startMins = Math.max(openMins, currentMins + 15);
                                                         startMins = Math.ceil(startMins / 15) * 15;
                                                     }
-                                                    for (let m = startMins; m + selectedDuration <= bufferLimit; m += 15) {
+                                                    for (let m = startMins; m <= closeMins; m += 15) {
                                                         const h = Math.floor(m / 60);
                                                         const mins = m % 60;
                                                         const timeStr = `${h.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
                                                         slots.push(timeStr);
                                                     }
-                                                    return slots.map(s => (
-                                                        <option key={s} value={s}>{formatTime12(s)}</option>
-                                                    ));
+                                                    return slots.map(s => {
+                                                        const slotStart = parseToMins(s);
+                                                        const slotEnd = slotStart + selectedDuration;
+                                                        const outsideBusinessHours = slotEnd > closeMins;
+                                                        return (
+                                                            <option key={s} value={s} disabled={outsideBusinessHours}>
+                                                                {outsideBusinessHours
+                                                                    ? `${formatTime12(s)} (${tSafe('public.outside_business_hours', 'Outside business hours')})`
+                                                                    : formatTime12(s)}
+                                                            </option>
+                                                        );
+                                                    });
                                                 })()}
                                             </select>
                                             {providerConflictMessage && (
@@ -759,6 +791,14 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             {selectedProviderId && totalDuration > 0 && !providerSlotsLoading && providerSlots.length === 0 && (
                                                 <p className="mt-1 text-[11px] text-amber-700 font-semibold">
                                                     {i18n.t(lang, 'public.no_slots_hint') || 'No slots found for this provider on selected date. Choose another provider or date.'}
+                                                </p>
+                                            )}
+                                            {activeView === 'appointment' && totalDuration > 0 && !!business?.close_time && (
+                                                <p className="mt-1 text-[11px] text-slate-500 font-semibold">
+                                                    {tSafe(
+                                                        'public.slot_cutoff_note',
+                                                        `Slots outside business hours are disabled. Closing time is ${formatTime12(business.close_time)}.`
+                                                    )}
                                                 </p>
                                             )}
                                         </div>
