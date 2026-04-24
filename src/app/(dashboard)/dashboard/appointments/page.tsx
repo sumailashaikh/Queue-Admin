@@ -42,6 +42,10 @@ export default function AppointmentsPage() {
     const [search, setSearch] = useState("");
 
     const isRTL = language === 'ar';
+    const tSafe = (key: string, fallback: string, params?: Record<string, any>) => {
+        const translated = t(key, params);
+        return translated === key ? fallback : translated;
+    };
 
     const getServiceLabel = (value: any): string | null => {
         if (!value) return null;
@@ -56,11 +60,11 @@ export default function AppointmentsPage() {
     };
 
     const getTranslatedServiceNames = (apt: Appointment) => {
-        if (!apt.appointment_services) return 'Service';
+        if (!apt.appointment_services) return tSafe('appointments.service_fallback', 'Service');
 
         return apt.appointment_services.map(as => {
             return getServiceLabel(as.services?.translations) || getServiceLabel(as.services?.name);
-        }).filter(Boolean).join(', ') || 'Service';
+        }).filter(Boolean).join(', ') || tSafe('appointments.service_fallback', 'Service');
     };
 
     const fetchAppointments = useCallback(async () => {
@@ -174,7 +178,7 @@ export default function AppointmentsPage() {
         const phone = apt.profiles?.phone || apt.guest_phone;
         if (!phone || !business) return;
 
-        const customerName = apt.profiles?.full_name || apt.guest_name || 'Guest';
+        const customerName = apt.profiles?.full_name || apt.guest_name || tSafe('queue.guest', 'Guest');
         const serviceNames = getTranslatedServiceNames(apt);
         // Fallback to customer language or current language
         const customerLang = (apt as any).profiles?.ui_language || language;
@@ -234,8 +238,6 @@ export default function AppointmentsPage() {
     };
     const confirmedCount = filteredAppointments.filter(a => ["confirmed", "scheduled", "checked_in"].includes(String(a.status || "").toLowerCase())).length;
     const attentionCount = filteredAppointments.filter(a => ["pending", "requested", "rescheduled", "needs_attention"].includes(String(a.status || "").toLowerCase())).length;
-    const completedCount = filteredAppointments.filter(a => String(a.status || "").toLowerCase() === "completed").length;
-
     const formatDateTime = (dateString: string) => {
         const d = new Date(dateString);
         const locale = language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN';
@@ -263,7 +265,7 @@ export default function AppointmentsPage() {
                         <Calendar className="h-4 w-4 text-slate-900" />
                         <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">{t('appointments.title')}</span>
                     </div>
-                    <div className="space-y-2 text-slate-900 text-left">
+                    <div className={cn("space-y-2 text-slate-900", isRTL ? "text-right" : "text-left")}>
                         <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
                             {t('appointments.subtitle')}
                         </h1>
@@ -277,25 +279,28 @@ export default function AppointmentsPage() {
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder={t('appointments.search_placeholder') || "Search customer or service"}
-                            className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                            placeholder={tSafe('appointments.search_placeholder', 'Search customer or service')}
+                            className={cn(
+                                "w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10",
+                                isRTL ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left"
+                            )}
                         />
-                        <User className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <User className={cn("h-4 w-4 text-slate-400 absolute top-1/2 -translate-y-1/2", isRTL ? "right-3" : "left-3")} />
                     </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('appointments.total') || "Total"}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{tSafe('appointments.total', 'Total')}</p>
                     <p className="text-2xl font-black text-slate-900 mt-1">{filteredAppointments.length}</p>
                 </div>
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">{t('appointments.confirmed') || "Confirmed"}</p>
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">{tSafe('appointments.confirmed', 'Confirmed')}</p>
                     <p className="text-2xl font-black text-emerald-900 mt-1">{confirmedCount}</p>
                 </div>
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">{t('appointments.needs_action') || "Needs Action"}</p>
+                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">{tSafe('appointments.needs_action', 'Needs Action')}</p>
                     <p className="text-2xl font-black text-amber-900 mt-1">{attentionCount}</p>
                 </div>
             </div>
@@ -303,7 +308,8 @@ export default function AppointmentsPage() {
             {/* Notification Bar (Replacement for alert) */}
             {message && (
                 <div className={cn(
-                    "fixed top-6 right-6 z-[200] px-6 py-4 rounded-[24px] shadow-2xl flex items-center gap-3 animate-in slide-in-from-right-10 duration-500",
+                    "fixed top-6 z-200 px-6 py-4 rounded-[24px] shadow-2xl flex items-center gap-3 animate-in duration-500",
+                    isRTL ? "left-6 slide-in-from-left-10" : "right-6 slide-in-from-right-10",
                     message.type === 'success' ? "bg-slate-900 text-white" : "bg-red-600 text-white"
                 )}>
                     {message.type === 'success' ? <CheckCheck className="h-5 w-5 text-emerald-400" /> : <AlertCircle className="h-5 w-5" />}
@@ -352,7 +358,8 @@ export default function AppointmentsPage() {
                             <div key={apt.id} className="group relative bg-white border border-slate-200 rounded-3xl p-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col md:flex-row md:items-center gap-6 overflow-hidden">
                                 {/* Side Status Color */}
                                 <div className={cn(
-                                    "absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-500",
+                                    "absolute top-0 bottom-0 w-1.5 transition-colors duration-500",
+                                    isRTL ? "right-0" : "left-0",
                                     (apt.status === 'confirmed' || apt.status === 'scheduled') ? "bg-emerald-500" :
                                         apt.status === 'cancelled' ? "bg-red-500" :
                                             apt.status === 'completed' ? "bg-blue-500" :
@@ -361,7 +368,7 @@ export default function AppointmentsPage() {
                                 )} />
 
                                 {/* Time/Date Column */}
-                                <div className={cn("flex flex-col space-y-2 min-w-[130px] shrink-0 border-slate-100 pr-6", isRTL ? "md:border-l md:pl-6 border-l" : "md:border-r md:pr-6 border-r")}>
+                                <div className={cn("flex flex-col space-y-2 min-w-[130px] shrink-0 border-slate-100", isRTL ? "md:border-l md:pl-6 border-l pr-0" : "md:border-r md:pr-6 border-r")}>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-1">{date}</p>
 
                                     <p className={cn("text-2xl font-black tracking-tighter tabular-nums leading-none", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
@@ -381,7 +388,7 @@ export default function AppointmentsPage() {
                                 </div>
 
                                 {/* Customer Info */}
-                                <div className="flex-1 space-y-3 text-left">
+                                <div className={cn("flex-1 space-y-3", isRTL ? "text-right" : "text-left")}>
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t('common.status')}</p>
                                         <h3 className="text-xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-3">
@@ -445,7 +452,7 @@ export default function AppointmentsPage() {
                                         <div className="flex items-center gap-2">
                                             <Timer className="h-4 w-4 text-slate-400" />
                                             <span className="text-xs font-bold text-slate-500">
-                                                {(apt as any).appointment_services?.reduce((acc: number, as: any) => acc + (as.services?.duration_minutes || 0), 0) || 30} mins
+                                                {(apt as any).appointment_services?.reduce((acc: number, as: any) => acc + (as.services?.duration_minutes || 0), 0) || 30} {tSafe('appointments.minutes_short', 'mins')}
                                             </span>
                                         </div>
 
@@ -546,7 +553,7 @@ export default function AppointmentsPage() {
                                                 className="h-10 px-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm ml-1"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
-                                                {apt.status === 'checked_in' ? t('appointments.sync_with_queue') || 'Sync Queue' : t('appointments.check_in')}
+                                                {apt.status === 'checked_in' ? tSafe('appointments.sync_with_queue', 'Sync Queue') : t('appointments.check_in')}
                                             </button>
                                         </div>
                                     )}
@@ -576,17 +583,17 @@ export default function AppointmentsPage() {
 
             {/* Modals */}
             {cancelModal.isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" dir={isRTL ? "rtl" : "ltr"}>
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" dir={isRTL ? "rtl" : "ltr"}>
                     <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
                         <div className="h-16 w-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
                             <XCircle className="h-8 w-8" />
                         </div>
-                        <h3 className="text-xl font-bold text-center text-slate-900 mb-2">{t('appointments.confirm_cancel') || 'Cancel Appointment?'}</h3>
-                        <p className="text-sm text-center font-medium text-slate-500 mb-8">{t('appointments.cancel_desc') || 'This action cannot be undone.'}</p>
+                        <h3 className="text-xl font-bold text-center text-slate-900 mb-2">{tSafe('appointments.confirm_cancel', 'Cancel Appointment?')}</h3>
+                        <p className="text-sm text-center font-medium text-slate-500 mb-8">{tSafe('appointments.cancel_desc', 'This action cannot be undone.')}</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setCancelModal({ isOpen: false, aptId: null })} className="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors">{t('common.cancel') || 'Abort'}</button>
+                            <button onClick={() => setCancelModal({ isOpen: false, aptId: null })} className="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors">{tSafe('common.cancel', 'Abort')}</button>
                             <button onClick={confirmCancel} className="flex-1 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-colors">
-                                {t('common.confirm') || 'Yes, Cancel'}
+                                {tSafe('common.confirm', 'Yes, Cancel')}
                             </button>
                         </div>
                     </div>
@@ -594,7 +601,7 @@ export default function AppointmentsPage() {
             )}
 
             {rescheduleModal.isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" dir={isRTL ? "rtl" : "ltr"}>
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" dir={isRTL ? "rtl" : "ltr"}>
                     <div className="bg-white rounded-[40px] p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
                         <div className="h-20 w-20 bg-indigo-50 text-indigo-600 rounded-[32px] flex items-center justify-center mb-8 mx-auto shadow-inner">
                             <CalendarDays className="h-10 w-10" />

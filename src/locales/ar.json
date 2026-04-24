@@ -497,6 +497,13 @@
     "today": "اليوم",
     "upcoming": "القادمة",
     "past": "السابقة",
+    "search_placeholder": "ابحث عن العميل أو الخدمة",
+    "total": "الإجمالي",
+    "confirmed": "مؤكد",
+    "needs_action": "يحتاج إجراء",
+    "service_fallback": "الخدمة",
+    "minutes_short": "دقيقة",
+    "cancel_desc": "لا يمكن التراجع عن هذا الإجراء.",
     "quiet_day": "يوم هادئ",
     "no_bookings": "لا توجد مواعيد مجدولة لـ {{tab}}.",
     "loading": "جاري تحميل المواعيد...",
@@ -580,6 +587,7 @@
     "confirmed": "تم التأكيد",
     "checked_in": "تم تسجيل الوصول",
     "unpaid": "غير مدفوع",
+    "needs_attention": "يحتاج متابعة",
     "late": "متأخر"
   },
   "employee": {

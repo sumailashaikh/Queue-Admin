@@ -502,6 +502,13 @@
     "today": "Hoy",
     "upcoming": "Pr?ximas",
     "past": "Pasadas",
+    "search_placeholder": "Buscar cliente o servicio",
+    "total": "Total",
+    "confirmed": "Confirmadas",
+    "needs_action": "Requiere acción",
+    "service_fallback": "Servicio",
+    "minutes_short": "min",
+    "cancel_desc": "Esta acción no se puede deshacer.",
     "quiet_day": "D?a Tranquilo",
     "no_bookings": "No hay citas programadas para {{tab}}.",
     "loading": "Cargando Citas...",
@@ -584,6 +591,7 @@
     "confirmed": "Confirmado",
     "checked_in": "Registrado",
     "unpaid": "No Pagado",
+    "needs_attention": "Requiere atención",
     "late": "Con retraso"
   },
   "employee": {
