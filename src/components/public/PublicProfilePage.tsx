@@ -83,6 +83,9 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
 
     const lang = customerLangOverride || business?.language || 'en';
+    // Staff-selected language from business settings (owner/employee side)
+    // is the source of truth for confirmation messaging.
+    const staffLang = business?.language || lang;
     const { currency, format } = useBusinessCurrency(business?.currency, lang);
 
     const formatCurrency = (amount: number) => {
@@ -94,12 +97,20 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     };
     const confirmationMessages: Record<string, string> = {
         en: "Thank you! We will notify you shortly.",
+        es: "¡Gracias! Te notificaremos en breve.",
         hi: "धन्यवाद! हम आपको जल्द ही सूचित करेंगे।",
         ar: "شكرا لك! سنقوم بإبلاغك قريبًا."
     };
     const getConfirmationMessage = (languageCode?: string | null) => {
         const key = String(languageCode || "en").toLowerCase();
         return confirmationMessages[key] || confirmationMessages.en;
+    };
+    const getThankYouTitle = (languageCode?: string | null) => {
+        const key = String(languageCode || "en").toLowerCase();
+        const translated = i18n.t(key, 'public.thank_you');
+        if (translated && translated !== 'public.thank_you') return translated;
+        const fallbackEn = i18n.t('en', 'public.thank_you');
+        return fallbackEn && fallbackEn !== 'public.thank_you' ? fallbackEn : 'Thank you!';
     };
 
     const todayInBusinessTz = business?.timezone
@@ -353,8 +364,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     phone: formattedPhone,
                     service_ids: service_ids,
                     provider_id: selectedProviderId || undefined,
-                    ui_language: lang, // Backward compatibility
-                    language_code: lang
+                    ui_language: staffLang, // Backward compatibility
+                    language_code: staffLang
                 });
                 setTicket(entry);
             } else {
@@ -368,8 +379,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     customer_name: name,
                     phone: formattedPhone,
                     provider_id: selectedProviderId || undefined,
-                    ui_language: lang, // Backward compatibility
-                    language_code: lang
+                    ui_language: staffLang, // Backward compatibility
+                    language_code: staffLang
                 });
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
                 setIsAppointmentMode(true);
@@ -377,7 +388,17 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             setStep(3);
             setShowThankYouPopup(true);
         } catch (err: any) {
-            setJoinError(err.message || i18n.t(lang, 'public.err_something_went_wrong'));
+            const rawMessage = String(err?.message || "");
+            const normalized = rawMessage.toLowerCase();
+            if (
+                normalized.includes("selected employee is currently unavailable") ||
+                normalized.includes("provider unavailable") ||
+                normalized.includes("currently unavailable")
+            ) {
+                setJoinError(i18n.t(lang, 'public.err_employee_unavailable'));
+            } else {
+                setJoinError(rawMessage || i18n.t(lang, 'public.err_something_went_wrong'));
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -909,10 +930,10 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             <CheckCircle2 className="h-7 w-7" />
                                         </div>
                                         <h3 className="mb-2 text-xl font-bold text-slate-900 tracking-tight">
-                                            {tSafe('public.thank_you', 'Thank you!')}
+                                            {getThankYouTitle(staffLang)}
                                         </h3>
                                         <p className="text-sm font-medium leading-relaxed text-slate-600">
-                                            {getConfirmationMessage(lang)}
+                                            {getConfirmationMessage(staffLang)}
                                         </p>
                                         <button
                                             type="button"
