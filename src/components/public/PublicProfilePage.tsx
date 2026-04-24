@@ -669,7 +669,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                             <div className="space-y-2 pt-1">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                                    {i18n.t(lang, 'public.select_provider_optional') || 'Select Provider (Optional)'}
+                                    {i18n.t(lang, 'public.select_provider_optional') || 'Select Staff (Optional)'}
                                 </label>
                                 <select
                                     value={selectedProviderId}
@@ -679,7 +679,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     }}
                                     className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm outline-none"
                                 >
-                                    <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Auto assign best available'}</option>
+                                    <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Select Staff (Optional)'}</option>
                                     {visibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {p.name} {isFutureAppointmentDate
