@@ -56,6 +56,20 @@ function EmployeeDashboardContent() {
     const [weeklySchedule, setWeeklySchedule] = useState<any[]>([]);
     const [myDayOffs, setMyDayOffs] = useState<any[]>([]);
     const [myBlockTimes, setMyBlockTimes] = useState<any[]>([]);
+    const [scheduleDraft, setScheduleDraft] = useState<any[]>([]);
+    const [dayOffForm, setDayOffForm] = useState({
+        day_off_date: "",
+        day_off_type: "full_day",
+        start_time: "",
+        end_time: "",
+        reason: ""
+    });
+    const [blockForm, setBlockForm] = useState({
+        block_date: "",
+        start_time: "",
+        end_time: "",
+        reason: ""
+    });
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'work' | 'leave'>(tabParam === 'leave' ? 'leave' : 'work');
@@ -92,6 +106,7 @@ function EmployeeDashboardContent() {
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     const minLeaveDate = useMemo(() => new Date().toLocaleDateString("en-CA"), []);
+    const dayNames = useMemo(() => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], []);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
@@ -199,6 +214,17 @@ function EmployeeDashboardContent() {
             // Keep rejected items visible so employee can read manager feedback/rejection reason.
             setLeaves(leavesData || []);
             setWeeklySchedule(availabilityData || []);
+            setScheduleDraft(
+                Array.from({ length: 7 }).map((_, day) => {
+                    const row = (availabilityData || []).find((a: any) => Number(a.day_of_week) === day);
+                    return {
+                        day_of_week: day,
+                        is_available: row ? !!row.is_available : true,
+                        start_time: row?.start_time ? String(row.start_time).slice(0, 5) : "10:00",
+                        end_time: row?.end_time ? String(row.end_time).slice(0, 5) : "20:00"
+                    };
+                })
+            );
             setMyDayOffs(dayOffData || []);
             setMyBlockTimes(blockData || []);
         } catch (error) {
@@ -362,6 +388,68 @@ function EmployeeDashboardContent() {
             fetchData();
         } catch (error: any) {
             showToast(parseApiMessage(error, 'providers.err_resignation'), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleSaveSchedule = async () => {
+        if (!profile?.id) return;
+        setIsSubmitting(true);
+        try {
+            await providerService.updateAvailability(profile.id, scheduleDraft);
+            showToast(t("providers.success_availability"));
+            fetchData();
+        } catch (error) {
+            showToast(t("providers.err_availability"), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleAddDayOff = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!profile?.id || !dayOffForm.day_off_date) return;
+        if (
+            dayOffForm.day_off_type === "partial" &&
+            (!dayOffForm.start_time || !dayOffForm.end_time)
+        ) {
+            showToast(t("providers.err_leave_time_required"), "error");
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await providerService.addDayOff(profile.id, dayOffForm as any);
+            showToast(t("providers.success_leave_add"));
+            setDayOffForm({
+                day_off_date: "",
+                day_off_type: "full_day",
+                start_time: "",
+                end_time: "",
+                reason: ""
+            });
+            fetchData();
+        } catch (error) {
+            showToast(t("providers.err_add_leave"), "error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleAddBlockTime = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!profile?.id || !blockForm.block_date || !blockForm.start_time || !blockForm.end_time) {
+            showToast(t("providers.all_fields_required"), "error");
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await providerService.addBlockTime(profile.id, blockForm as any);
+            showToast(t("providers.success_availability"));
+            setBlockForm({ block_date: "", start_time: "", end_time: "", reason: "" });
+            fetchData();
+        } catch (error) {
+            showToast(t("providers.err_availability"), "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -860,16 +948,61 @@ function EmployeeDashboardContent() {
 
                                 <div className="space-y-4">
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">My Schedule</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {(weeklySchedule || []).map((s: any) => (
-                                            <div key={`${s.day_of_week}-${s.id || ''}`} className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Day {s.day_of_week}</p>
-                                                <p className="text-sm font-bold text-slate-900 mt-1">
-                                                    {s.is_available ? `${String(s.start_time || '').slice(0, 5)} - ${String(s.end_time || '').slice(0, 5)}` : 'Off'}
-                                                </p>
+                                    <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3">
+                                        {(scheduleDraft || []).map((s: any, idx: number) => (
+                                            <div key={`${s.day_of_week}-${idx}`} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center border border-slate-100 rounded-xl p-3">
+                                                <p className="text-xs font-bold text-slate-700">{dayNames[Number(s.day_of_week)]}</p>
+                                                <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!s.is_available}
+                                                        onChange={(e) =>
+                                                            setScheduleDraft((prev: any[]) =>
+                                                                prev.map((row: any, rIdx: number) =>
+                                                                    rIdx === idx ? { ...row, is_available: e.target.checked } : row
+                                                                )
+                                                            )
+                                                        }
+                                                    />
+                                                    {s.is_available ? "Working" : "Off"}
+                                                </label>
+                                                <input
+                                                    type="time"
+                                                    disabled={!s.is_available}
+                                                    value={String(s.start_time || "").slice(0, 5)}
+                                                    onChange={(e) =>
+                                                        setScheduleDraft((prev: any[]) =>
+                                                            prev.map((row: any, rIdx: number) =>
+                                                                rIdx === idx ? { ...row, start_time: e.target.value } : row
+                                                            )
+                                                        )
+                                                    }
+                                                    className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold disabled:opacity-50"
+                                                />
+                                                <input
+                                                    type="time"
+                                                    disabled={!s.is_available}
+                                                    value={String(s.end_time || "").slice(0, 5)}
+                                                    onChange={(e) =>
+                                                        setScheduleDraft((prev: any[]) =>
+                                                            prev.map((row: any, rIdx: number) =>
+                                                                rIdx === idx ? { ...row, end_time: e.target.value } : row
+                                                            )
+                                                        )
+                                                    }
+                                                    className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold disabled:opacity-50"
+                                                />
                                             </div>
                                         ))}
                                     </div>
+                                    <button
+                                        type="button"
+                                        disabled={isSubmitting || !profile?.id}
+                                        onClick={handleSaveSchedule}
+                                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50"
+                                    >
+                                        {t("providers.save_schedule")}
+                                    </button>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upcoming Day Offs</p>
@@ -892,6 +1025,38 @@ function EmployeeDashboardContent() {
                                             </div>
                                         </div>
                                     </div>
+                                    <form onSubmit={handleAddDayOff} className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Add Day Off</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            <input type="date" value={dayOffForm.day_off_date} onChange={(e) => setDayOffForm({ ...dayOffForm, day_off_date: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                            <select value={dayOffForm.day_off_type} onChange={(e) => setDayOffForm({ ...dayOffForm, day_off_type: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold">
+                                                <option value="full_day">Full day</option>
+                                                <option value="partial">Partial</option>
+                                            </select>
+                                        </div>
+                                        {dayOffForm.day_off_type === "partial" && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <input type="time" value={dayOffForm.start_time} onChange={(e) => setDayOffForm({ ...dayOffForm, start_time: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                                <input type="time" value={dayOffForm.end_time} onChange={(e) => setDayOffForm({ ...dayOffForm, end_time: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                            </div>
+                                        )}
+                                        <input type="text" placeholder="Reason (optional)" value={dayOffForm.reason} onChange={(e) => setDayOffForm({ ...dayOffForm, reason: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                        <button type="submit" disabled={isSubmitting || !profile?.id} className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50">
+                                            Add Day Off
+                                        </button>
+                                    </form>
+                                    <form onSubmit={handleAddBlockTime} className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Add Block Time</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                            <input type="date" value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                            <input type="time" value={blockForm.start_time} onChange={(e) => setBlockForm({ ...blockForm, start_time: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                            <input type="time" value={blockForm.end_time} onChange={(e) => setBlockForm({ ...blockForm, end_time: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                        </div>
+                                        <input type="text" placeholder="Reason (optional)" value={blockForm.reason} onChange={(e) => setBlockForm({ ...blockForm, reason: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold" />
+                                        <button type="submit" disabled={isSubmitting || !profile?.id} className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50">
+                                            Add Block Time
+                                        </button>
+                                    </form>
                                 </div>
                             </motion.div>
                         )}
