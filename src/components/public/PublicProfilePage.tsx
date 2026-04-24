@@ -83,9 +83,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
 
     const lang = customerLangOverride || business?.language || 'en';
-    // Staff-selected language from business settings (owner/employee side)
-    // is the source of truth for confirmation messaging.
-    const staffLang = business?.language || lang;
     const { currency, format } = useBusinessCurrency(business?.currency, lang);
 
     const formatCurrency = (amount: number) => {
@@ -364,8 +361,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     phone: formattedPhone,
                     service_ids: service_ids,
                     provider_id: selectedProviderId || undefined,
-                    ui_language: staffLang, // Backward compatibility
-                    language_code: staffLang
+                    ui_language: lang, // Backward compatibility
+                    language_code: lang
                 });
                 setTicket(entry);
             } else {
@@ -379,8 +376,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     customer_name: name,
                     phone: formattedPhone,
                     provider_id: selectedProviderId || undefined,
-                    ui_language: staffLang, // Backward compatibility
-                    language_code: staffLang
+                    ui_language: lang, // Backward compatibility
+                    language_code: lang
                 });
                 setTicket({ ticket_number: 'APT-REQD', position: 0 } as any);
                 setIsAppointmentMode(true);
@@ -930,10 +927,10 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             <CheckCircle2 className="h-7 w-7" />
                                         </div>
                                         <h3 className="mb-2 text-xl font-bold text-slate-900 tracking-tight">
-                                            {getThankYouTitle(staffLang)}
+                                            {getThankYouTitle(lang)}
                                         </h3>
                                         <p className="text-sm font-medium leading-relaxed text-slate-600">
-                                            {getConfirmationMessage(staffLang)}
+                                            {getConfirmationMessage(lang)}
                                         </p>
                                         <button
                                             type="button"

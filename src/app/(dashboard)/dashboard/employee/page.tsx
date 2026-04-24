@@ -736,7 +736,7 @@ function EmployeeDashboardContent() {
                                             </div>
 
                                             <div className="mt-6 flex gap-3">
-                                                {task.status === 'waiting' && (
+                                                {(task.status === 'waiting' || task.status === 'pending') && (
                                                     <button 
                                                         disabled={isSubmitting}
                                                         onClick={() => handleStartTask(task)}
