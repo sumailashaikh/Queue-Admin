@@ -1,112 +1,168 @@
 import { api } from "@/lib/api";
 
 export interface Appointment {
+  id: string;
+  business_id: string;
+  service_id: string;
+  customer_id: string;
+  start_time: string;
+  end_time: string;
+  status:
+    | "requested"
+    | "scheduled"
+    | "confirmed"
+    | "in_queue"
+    | "serving"
+    | "completed"
+    | "cancelled"
+    | "no_show"
+    | "rescheduled"
+    | "pending"
+    | "checked_in"
+    | "in_service"
+    | "expired";
+  guest_name?: string;
+  guest_phone?: string;
+  total_price?: number;
+  total_duration_minutes?: number;
+  delay_minutes?: number;
+  expected_start_at?: string;
+  expected_end_at?: string;
+  is_delayed?: boolean;
+  is_late?: boolean;
+  late_minutes?: number;
+  appointment_state?: string;
+  payment_method?: "cash" | "qr" | "card" | "unpaid";
+  payment_status?: "unpaid" | "paid" | "partially_paid";
+  employee_id?: string | null;
+  employee?: {
     id: string;
-    business_id: string;
-    service_id: string;
-    customer_id: string;
-    start_time: string;
-    end_time: string;
-    status: 'requested' | 'scheduled' | 'confirmed' | 'in_queue' | 'serving' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled' | 'pending' | 'checked_in' | 'in_service' | 'expired';
-    guest_name?: string;
-    guest_phone?: string;
-    total_price?: number;
-    total_duration_minutes?: number;
-    delay_minutes?: number;
-    expected_start_at?: string;
-    expected_end_at?: string;
-    is_delayed?: boolean;
-    is_late?: boolean;
-    late_minutes?: number;
-    appointment_state?: string;
-    payment_method?: 'cash' | 'qr' | 'card' | 'unpaid';
-    payment_status?: 'unpaid' | 'paid' | 'partially_paid';
-    amount_paid?: number;
-    queue_entry?: {
-        id: string;
-        status: string;
-        ticket_number: string;
-        assigned_provider_id?: string;
+    full_name: string;
+    phone?: string;
+  };
+  amount_paid?: number;
+  queue_entry?: {
+    id: string;
+    status: string;
+    ticket_number: string;
+    assigned_provider_id?: string;
+  };
+  service_ids?: string[]; // For multi-service selection
+  profiles?: {
+    full_name: string;
+    phone: string;
+    id: string;
+    ui_language?: string;
+  };
+  appointment_services?: {
+    id: string;
+    price: number;
+    duration_minutes: number;
+    services: {
+      id: string;
+      name: string;
+      translations?: Record<string, string>;
     };
-    service_ids?: string[]; // For multi-service selection
-    profiles?: {
-        full_name: string;
-        phone: string;
-        id: string;
-        ui_language?: string;
-    };
-    appointment_services?: {
-        id: string;
-        price: number;
-        duration_minutes: number;
-        services: {
-            id: string;
-            name: string;
-            translations?: Record<string, string>;
-        }
-    }[];
+  }[];
 }
 
 export const appointmentService = {
-    async createAppointment(data: Partial<Appointment> & { service_ids?: string[] }): Promise<Appointment> {
-        const result = await api.post<Appointment>('/appointments', data);
-        return result.data;
-    },
+  async createAppointment(
+    data: Partial<Appointment> & { service_ids?: string[] },
+  ): Promise<Appointment> {
+    const result = await api.post<Appointment>("/appointments", data);
+    return result.data;
+  },
 
-    async bookPublicAppointment(data: {
-        business_id: string;
-        service_ids: string[];
-        start_time: string;
-        customer_name: string;
-        phone: string;
-        provider_id?: string;
-        ui_language?: string;
-        language_code?: string;
-    }): Promise<Appointment> {
-        const result = await api.post<Appointment>('/public/appointment/book', data);
-        return result.data;
-    },
+  async bookPublicAppointment(data: {
+    business_id: string;
+    service_ids: string[];
+    start_time: string;
+    customer_name: string;
+    phone: string;
+    provider_id?: string;
+    ui_language?: string;
+    language_code?: string;
+  }): Promise<Appointment> {
+    const result = await api.post<Appointment>(
+      "/public/appointment/book",
+      data,
+    );
+    return result.data;
+  },
 
-    async getCustomerAppointments(): Promise<Appointment[]> {
-        const result = await api.get<Appointment[]>('/appointments/my');
-        return result.data || [];
-    },
+  async getCustomerAppointments(): Promise<Appointment[]> {
+    const result = await api.get<Appointment[]>("/appointments/my");
+    return result.data || [];
+  },
 
-    async getBusinessAppointments(): Promise<Appointment[]> {
-        const result = await api.get<Appointment[]>('/appointments/business');
-        return result.data || [];
-    },
+  async getBusinessAppointments(): Promise<Appointment[]> {
+    const result = await api.get<Appointment[]>("/appointments/business");
+    return result.data || [];
+  },
 
-    async getMyAssignedAppointments(): Promise<any[]> {
-        const result = await api.get<any[]>('/appointments/assigned/me');
-        return result.data || [];
-    },
+  async getMyAssignedAppointments(): Promise<any[]> {
+    const result = await api.get<any[]>("/appointments/assigned/me");
+    return result.data || [];
+  },
 
-    async updateStatus(id: string, status: Appointment['status']): Promise<Appointment> {
-        const result = await api.patch<Appointment>(`/appointments/${id}/status`, { status });
-        return result.data;
-    },
+  async updateStatus(
+    id: string,
+    status: Appointment["status"],
+  ): Promise<Appointment> {
+    const result = await api.patch<Appointment>(`/appointments/${id}/status`, {
+      status,
+    });
+    return result.data;
+  },
 
-    async reschedule(id: string, startTime: string): Promise<Appointment> {
-        const result = await api.patch<Appointment>(`/appointments/${id}/reschedule`, { start_time: startTime });
-        return result.data;
-    },
+  async accept(id: string, employeeId?: string | null): Promise<Appointment> {
+    const result = await api.patch<Appointment>(`/appointments/${id}/accept`, {
+      employee_id: employeeId || null,
+    });
+    return result.data;
+  },
 
-    async cancel(id: string): Promise<Appointment> {
-        const result = await api.patch<Appointment>(`/appointments/${id}/cancel`, {});
-        return result.data;
-    },
+  async reject(id: string): Promise<Appointment> {
+    const result = await api.patch<Appointment>(`/appointments/${id}/reject`, {});
+    return result.data;
+  },
 
-    async updatePayment(id: string, paymentMethod: 'cash' | 'qr' | 'card' | 'unpaid'): Promise<Appointment> {
-        const result = await api.patch<Appointment>(`/appointments/${id}/payment`, { payment_method: paymentMethod });
-        return result.data;
-    },
+  async reschedule(id: string, startTime: string): Promise<Appointment> {
+    const result = await api.patch<Appointment>(
+      `/appointments/${id}/reschedule`,
+      { start_time: startTime },
+    );
+    return result.data;
+  },
 
-    async reassign(id: string, toProviderId: string, fromProviderId?: string): Promise<any> {
-        const result = await api.patch<any>(`/appointments/${id}/reassign`, {
-            to_provider_id: toProviderId,
-            from_provider_id: fromProviderId
-        });
-        return result.data;
-    },
+  async cancel(id: string): Promise<Appointment> {
+    const result = await api.patch<Appointment>(
+      `/appointments/${id}/cancel`,
+      {},
+    );
+    return result.data;
+  },
+
+  async updatePayment(
+    id: string,
+    paymentMethod: "cash" | "qr" | "card" | "unpaid",
+  ): Promise<Appointment> {
+    const result = await api.patch<Appointment>(`/appointments/${id}/payment`, {
+      payment_method: paymentMethod,
+    });
+    return result.data;
+  },
+
+  async reassign(
+    id: string,
+    toProviderId: string,
+    fromProviderId?: string,
+  ): Promise<any> {
+    const result = await api.patch<any>(`/appointments/${id}/reassign`, {
+      to_provider_id: toProviderId,
+      from_provider_id: fromProviderId,
+    });
+    return result.data;
+  },
 };

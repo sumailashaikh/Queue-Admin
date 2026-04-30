@@ -1,14 +1,7 @@
 "use client";
 
 import React from 'react';
-import {
-    X,
-    Layout,
-    IndianRupee,
-    Clock,
-    TrendingUp,
-    CheckCircle2
-} from "lucide-react";
+import { X, Layout, Clock, TrendingUp, CheckCircle2 } from "lucide-react";
 import { ProviderAnalytics, ProviderServiceStats } from "@/services/analyticsService";
 import { cn, formatCurrency, formatDuration } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
@@ -33,7 +26,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
     if (!isOpen || !provider) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="px-5 py-5 border-b border-slate-100 flex items-start justify-between gap-3 bg-slate-50/50">
@@ -42,7 +35,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                             <div className="h-10 w-10 shrink-0 rounded-full bg-slate-900 flex items-center justify-center text-white text-xs font-bold">
                                 {provider.provider_name.split(' ').map(n => n[0]).join('')}
                             </div>
-                            <h2 className="text-lg font-bold text-slate-900 tracking-tight break-words">
+                            <h2 className="text-lg font-bold text-slate-900 tracking-tight wrap-break-word">
                                 {provider.provider_name}
                             </h2>
                         </div>
@@ -60,7 +53,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                 </div>
 
                 {/* Content */}
-                <div className="p-8 max-h-[60vh] overflow-y-auto">
+                <div className="p-4 sm:p-8 max-h-[70vh] overflow-y-auto">
                     <div className="space-y-4">
                         {provider.service_breakdown.length === 0 ? (
                             <div className="text-center py-12 text-slate-400 italic">
@@ -103,6 +96,7 @@ export const ProviderServiceBreakdownModal: React.FC<ProviderServiceBreakdownMod
                             ))
                         )}
                     </div>
+
                 </div>
 
                 {/* Footer Stats */}

@@ -20,14 +20,40 @@ export interface ProviderAnalytics {
     services_completed: number;
     total_revenue: number;
     total_active_minutes: number;
+    total_working_minutes: number;
+    total_working_hours: number;
+    working_days: number;
+    leave_full_days: number;
+    leave_half_days: number;
+    leaves_taken: number;
+    leave_records: {
+        type: 'full' | 'half' | 'emergency';
+        startDate: string;
+        endDate: string;
+        status: 'pending' | 'approved' | 'rejected';
+    }[];
+    on_leave_today: boolean;
+    upcoming_leave_count: number;
+    past_leave_count: number;
     avg_service_time_minutes: number;
     service_breakdown: ProviderServiceStats[];
+    daily_work_log: ProviderDailyWorkLog[];
+}
+
+export interface ProviderDailyWorkLog {
+    date: string;
+    hours_worked: number;
+    status: string;
+    status_code: 'present' | 'half_day' | 'leave_half' | 'leave_full';
 }
 
 export interface AnalyticsSummaryStats {
     total_revenue: number;
     total_services: number;
     avg_service_time: number;
+    total_working_hours: number;
+    working_days: number;
+    leaves_taken: number;
 }
 
 export interface ProviderAnalyticsResponse {

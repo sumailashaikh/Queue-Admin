@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
     Users,
@@ -30,6 +30,7 @@ import { appointmentService } from "@/services/appointmentService";
 import { formatGlobalPhone } from "@/lib/phoneUtils";
 import { i18n } from "@/lib/i18n";
 import { useBusinessCurrency } from "@/hooks/useBusinessCurrency";
+import { supabase } from "@/lib/supabase";
 
 interface PublicProfilePageProps {
     slug: string;
@@ -37,6 +38,7 @@ interface PublicProfilePageProps {
 
 export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const router = useRouter();
+    const PHONE_DIGIT_LIMIT = 10;
 
     const [business, setBusiness] = useState<(Business & { queues: any[], services: any[] }) | null>(null);
     const [loading, setLoading] = useState(true);
@@ -196,36 +198,83 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         });
 
         const normalize = (t: string) => (t && t.length === 5) ? `${t}:00` : t;
-        const open = normalize(business.open_time || '09:00:00');
-        const close = normalize(business.close_time || '21:00:00');
+        const open = normalize((business as any).staff_open_time || business.open_time || '09:00:00');
+        const close = normalize((business as any).staff_close_time || business.close_time || '21:00:00');
 
         return istTimeStr >= open && istTimeStr <= close;
     };
 
-    const isOpen = isStoreOpen();
+    const availabilityState = business?.availability_status || (isStoreOpen() ? 'open' : 'closed');
+    const isEmergencyClosed = availabilityState === 'emergency_closed';
+    const isOpen = availabilityState === 'open';
+    const availabilityMessage = business?.availability_message || "";
     const hasOpenQueue = business?.queues?.some(q => q.status === 'open');
-    const closingMinutes = business ? parseTimeToMinutes(business.close_time || "21:00") : 0;
+    const closingMinutes = business ? parseTimeToMinutes((business as any).staff_close_time || business.close_time || "21:00") : 0;
+
+    const loadBusiness = useCallback(async (showLoader = false) => {
+        if (showLoader) setLoading(true);
+        try {
+            const [data, providers] = await Promise.all([
+                businessService.getBusinessBySlug(slug),
+                businessService.getPublicProviders(slug)
+            ]);
+            setBusiness(data);
+            setProviderInsights(providers);
+            setError(null);
+            if (!customerLangOverride && typeof window !== "undefined") {
+                const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
+                const supported = ['en', 'es', 'hi', 'ar'];
+                if (supported.includes(browser)) setCustomerLangOverride(browser);
+            }
+        } catch (err: any) {
+            setError(i18n.t(customerLangOverride || 'en', 'public.err_load_business'));
+        } finally {
+            if (showLoader) setLoading(false);
+        }
+    }, [slug, customerLangOverride]);
 
     useEffect(() => {
-        const loadBusiness = async () => {
-            try {
-                const data = await businessService.getBusinessBySlug(slug);
-                setBusiness(data);
-                const providers = await businessService.getPublicProviders(slug);
-                setProviderInsights(providers);
-                if (!customerLangOverride && typeof window !== "undefined") {
-                    const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
-                    const supported = ['en', 'es', 'hi', 'ar'];
-                    if (supported.includes(browser)) setCustomerLangOverride(browser);
-                }
-            } catch (err: any) {
-                setError(i18n.t(lang, 'public.err_load_business'));
-            } finally {
-                setLoading(false);
-            }
+        loadBusiness(true);
+    }, [loadBusiness]);
+
+    // Real-time and polling for owner emergency closure/open updates.
+    useEffect(() => {
+        if (!business?.id) return;
+
+        const interval = setInterval(() => {
+            loadBusiness(false);
+        }, 30000);
+
+        const businessChannel = supabase
+            .channel(`public-business-${business.id}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'businesses',
+                filter: `id=eq.${business.id}`
+            }, () => {
+                loadBusiness(false);
+            })
+            .subscribe();
+
+        const queueChannel = supabase
+            .channel(`public-queues-${business.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'queues',
+                filter: `business_id=eq.${business.id}`
+            }, () => {
+                loadBusiness(false);
+            })
+            .subscribe();
+
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(businessChannel);
+            supabase.removeChannel(queueChannel);
         };
-        loadBusiness();
-    }, [slug]);
+    }, [business?.id, loadBusiness]);
 
     useEffect(() => {
         if (!selectedProviderId || activeView !== 'appointment' || !bookingDate || !totalDuration) {
@@ -280,8 +329,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             const timezone = tz;
 
             const checkAvailability = (dateStr: string) => {
-                const openMins = parseToMins(business.open_time || "09:00");
-                const closeMins = parseToMins(business.close_time || "21:00");
+                const openMins = parseToMins((business as any).staff_open_time || business.open_time || "09:00");
+                const closeMins = parseToMins((business as any).staff_close_time || business.close_time || "21:00");
                 const bufferLimit = closeMins - 10;
 
                 let startMins = openMins;
@@ -318,6 +367,11 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         setJoinError(null);
 
         try {
+            const phoneDigits = String(phone || "").replace(/\D/g, "");
+            if (phoneDigits.length !== PHONE_DIGIT_LIMIT) {
+                setJoinError(i18n.t(lang, 'public.invalid_phone') || `Please enter a valid ${PHONE_DIGIT_LIMIT}-digit phone number.`);
+                return;
+            }
             const service_ids = selectedServices.map(s => s.id);
             
             // Try to derive country code from business phone or default to IN
@@ -351,7 +405,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                     );
                 const estimatedFinish = nowMins + Math.max(0, providerWait) + Math.max(0, Number(totalDuration || 0));
                 if (estimatedFinish > closingMinutes) {
-                    setJoinError("We’re fully booked for today. Please select a slot for tomorrow.");
+                    setJoinError(i18n.t(lang, 'public.fully_booked_today_tomorrow'));
                     return;
                 }
 
@@ -491,10 +545,16 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border",
                                 isOpen
                                     ? "bg-emerald-500 text-white border-emerald-400"
-                                    : "bg-red-500 text-white border-red-400"
+                                    : isEmergencyClosed
+                                        ? "bg-rose-600 text-white border-rose-500"
+                                        : "bg-red-500 text-white border-red-400"
                             )}>
                                 <div className={cn("h-1.5 w-1.5 rounded-full bg-white", isOpen && "animate-pulse")} />
-                                {isOpen ? i18n.t(lang, 'public.open_now') : i18n.t(lang, 'public.currently_closed')}
+                                {isOpen
+                                    ? i18n.t(lang, 'public.open_now')
+                                    : isEmergencyClosed
+                                        ? i18n.t(lang, 'public.emergency_closed')
+                                        : i18n.t(lang, 'public.currently_closed')}
                             </div>
                         </div>
                     </div>
@@ -574,12 +634,16 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         <Clock className="h-6 w-6 text-amber-900" strokeWidth={2.5} aria-hidden />
                                     </div>
                                     <div className="space-y-2 min-w-0 flex-1">
-                                        <p className="text-xs font-bold text-amber-950 uppercase tracking-widest">{i18n.t(lang, 'public.business_closed')}</p>
+                                        <p className="text-xs font-bold text-amber-950 uppercase tracking-widest">
+                                            {isEmergencyClosed ? i18n.t(lang, 'public.emergency_closed') : i18n.t(lang, 'public.business_closed')}
+                                        </p>
                                         <p className="text-[11px] font-bold text-amber-900 leading-relaxed">
-                                            {i18n.t(lang, 'public.closed_desc')}
+                                            {isEmergencyClosed
+                                                ? i18n.t(lang, 'public.closed_desc_emergency')
+                                                : (availabilityMessage || i18n.t(lang, 'public.closed_desc'))}
                                             <br />
                                             <span className="text-amber-950">{i18n.t(lang, 'public.our_hours')}</span>{' '}
-                                            <span className="text-amber-950 font-extrabold">{formatTime12(business.open_time)} – {formatTime12(business.close_time)}</span>
+                                            <span className="text-amber-950 font-extrabold">{formatTime12((business as any).staff_open_time || business.open_time)} – {formatTime12((business as any).staff_close_time || business.close_time)}</span>
                                         </p>
                                         <p className="text-[11px] font-semibold text-amber-900/95 leading-relaxed border-t border-amber-200/80 pt-2">
                                             {i18n.t(lang, 'public.closed_suggest_appointment')}
@@ -616,7 +680,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 </div>
                                 <div className="text-right">
                                     <span className="text-2xl font-bold text-primary tracking-tighter">{formatCurrency(totalPrice)}</span>
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{totalDuration} {i18n.t(lang, 'public.min')} total</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{totalDuration} {i18n.t(lang, 'public.min')} {i18n.t(lang, 'public.total_label')}</p>
                                 </div>
                             </div>
 
@@ -669,7 +733,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                             <div className="space-y-2 pt-1">
                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                                    {i18n.t(lang, 'public.select_provider_optional') || 'Select Staff (Optional)'}
+                                    {i18n.t(lang, 'public.select_provider_optional') || 'Select Staff'}
                                 </label>
                                 <select
                                     value={selectedProviderId}
@@ -679,7 +743,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     }}
                                     className="w-full p-4 bg-slate-50 rounded-xl text-sm font-bold shadow-sm outline-none"
                                 >
-                                    <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Select Staff (Optional)'}</option>
+                                    <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Select Staff'}</option>
                                     {visibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {p.name} {isFutureAppointmentDate
@@ -727,7 +791,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <div className="space-y-6 pt-6 border-t border-slate-100">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Date</label>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">{i18n.t(lang, 'public.date_label')}</label>
                                             <input
                                                 type="date"
                                                 min={new Date().toLocaleDateString('en-CA', { timeZone: business?.timezone || 'UTC' })}
@@ -737,7 +801,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Time</label>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">{i18n.t(lang, 'public.time_label')}</label>
                                             <select
                                                 required
                                                 value={bookingTime}
@@ -764,8 +828,8 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                         return h * 60 + m;
                                                     };
                                                     const selectedDuration = Math.max(0, Number(totalDuration || 0));
-                                                    const openMins = parseToMins(business.open_time || "09:00");
-                                                    const closeMins = parseToMins(business.close_time || "21:00");
+                                                    const openMins = parseToMins((business as any).staff_open_time || business.open_time || "09:00");
+                                                    const closeMins = parseToMins((business as any).staff_close_time || business.close_time || "21:00");
                                                     const tz = business?.timezone || 'UTC';
                                                     const today = new Date().toLocaleDateString('en-CA', { timeZone: tz });
                                                     let startMins = openMins;
@@ -815,7 +879,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 <p className="mt-1 text-[11px] text-slate-500 font-semibold">
                                                     {tSafe(
                                                         'public.slot_cutoff_note',
-                                                        `Slots outside business hours are disabled. Closing time is ${formatTime12(business.close_time)}.`
+                                                        `Slots outside business hours are disabled. Closing time is ${formatTime12((business as any).staff_close_time || business.close_time)}.`
                                                     )}
                                                 </p>
                                             )}
@@ -884,7 +948,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                 required
                                                 type="tel"
                                                 value={phone}
-                                                onChange={(e) => setPhone(e.target.value)}
+                                                inputMode="numeric"
+                                                pattern="[0-9]{10}"
+                                                maxLength={PHONE_DIGIT_LIMIT}
+                                                onChange={(e) => {
+                                                    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, PHONE_DIGIT_LIMIT);
+                                                    setPhone(digitsOnly);
+                                                }}
                                                 className="w-full h-16 pl-14 pr-6 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-[24px] text-sm font-bold text-slate-900 outline-none transition-all"
                                             />
                                         </div>

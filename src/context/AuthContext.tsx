@@ -29,6 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authService.logout();
         setUser(null);
         setBusiness(null);
+        localStorage.removeItem('auth_user');
+        localStorage.removeItem('auth_business');
         // Use router for soft redirect if possible, otherwise window.location
         try {
             router.push('/login');
@@ -55,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const biz = await businessService.getMyBusiness();
             setBusiness(biz);
-            // Also refresh user data whenever business is refreshed to keep sync
-            await refreshUser();
+            if (biz) localStorage.setItem('auth_business', JSON.stringify(biz));
+            else localStorage.removeItem('auth_business');
             return biz;
         } catch (error: any) {
             console.error('Failed to refresh business:', error);
@@ -66,16 +68,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return null;
         }
-    }, [refreshUser]);
+    }, []);
 
     useEffect(() => {
         const initAuth = async () => {
             const token = authService.getToken();
 
             if (token) {
-                // Always fetch fresh profile on init
-                await refreshUser();
-                await refreshBusiness();
+                // Paint cached auth quickly, then refresh in parallel.
+                try {
+                    const cachedUser = localStorage.getItem('auth_user');
+                    const cachedBusiness = localStorage.getItem('auth_business');
+                    if (cachedUser) setUser(JSON.parse(cachedUser));
+                    if (cachedBusiness) setBusiness(JSON.parse(cachedBusiness));
+                } catch {
+                    // Ignore malformed cache and continue with fresh fetch.
+                }
+
+                await Promise.all([refreshUser(), refreshBusiness()]);
             }
             setLoading(false);
         };
@@ -84,8 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (userData: any, token: string, isNewUser?: boolean) => {
         localStorage.setItem('auth_token', token);
-        // Fetch fresh profile after login to get all fields
-        const profile = await refreshUser();
+        // Fetch profile + business in parallel to reduce redirect latency.
+        const [profile, biz] = await Promise.all([refreshUser(), refreshBusiness()]);
         const userToUse = profile || userData;
 
         // Admins go straight to dashboard
@@ -93,8 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             router.push('/dashboard/admin');
             return;
         }
-
-        const biz = await refreshBusiness();
 
         if (isNewUser) {
             router.push('/setup');

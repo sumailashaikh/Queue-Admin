@@ -19,8 +19,11 @@ export default function LandingPage() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-                const response = await fetch(`${base}/platform-stats`);
+                const base =
+                    process.env.NEXT_PUBLIC_API_BASE_URL ||
+                    process.env.NEXT_PUBLIC_API_URL ||
+                    "http://localhost:4000/api";
+                const response = await fetch(`${base}/public/platform-stats`);
                 const result = await response.json();
                 if (result.status === "success") {
                     setStats(result.data);

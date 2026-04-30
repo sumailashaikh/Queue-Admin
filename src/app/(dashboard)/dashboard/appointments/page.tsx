@@ -10,9 +10,7 @@ import {
     CalendarDays,
     Phone,
     CheckCheck,
-    Bell,
     Megaphone,
-    Info,
     MessageCircle,
     Timer,
     AlertCircle,
@@ -22,7 +20,6 @@ import { appointmentService, Appointment } from "@/services/appointmentService";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/DashboardUI";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
 type AppointmentStatus = Appointment['status'];
@@ -32,7 +29,6 @@ export default function AppointmentsPage() {
     const { t, language } = useLanguage();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [providers, setProviders] = useState<any[]>([]); // Added for leave detection
     const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'past'>('today');
     const [dismissedDelays, setDismissedDelays] = useState<string[]>([]);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -78,26 +74,14 @@ export default function AppointmentsPage() {
         }
     }, []);
 
-    const fetchProviders = useCallback(async () => {
-        if (!business?.id) return;
-        try {
-            const { data } = await api.get(`/service-providers?business_id=${business.id}`) as any;
-            setProviders(data || []);
-        } catch (err) {
-            console.error("Failed to fetch providers:", err);
-        }
-    }, [business?.id]);
-
     useEffect(() => {
         fetchAppointments();
-        fetchProviders();
 
         const interval = setInterval(() => {
             fetchAppointments();
-            fetchProviders();
         }, 30000);
         return () => clearInterval(interval);
-    }, [fetchAppointments, fetchProviders]);
+    }, [fetchAppointments]);
 
     const handleUpdateStatus = async (id: string, status: AppointmentStatus) => {
         setActionLoading(id);
@@ -116,6 +100,24 @@ export default function AppointmentsPage() {
         } finally {
             setActionLoading(null);
         }
+    };
+
+    const handleAccept = async (id: string) => {
+        setActionLoading(id);
+        setMessage(null);
+        try {
+            await appointmentService.accept(id);
+            showSuccess(t('appointments.success_accept'));
+            await fetchAppointments();
+        } catch (err: any) {
+            showError(err.message || t('common.error_updating'));
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleReject = async (id: string) => {
+        setCancelModal({ isOpen: true, aptId: id });
     };
 
     const handleReschedule = (id: string) => {
@@ -154,11 +156,11 @@ export default function AppointmentsPage() {
         setActionLoading(id);
         setMessage(null);
         try {
-            await appointmentService.cancel(id);
+            await appointmentService.reject(id);
             setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' } : a));
-            showSuccess(t('appointments.success_cancel'));
+            showSuccess(t('appointments.success_reject'));
         } catch (err: any) {
-            showError(err.message || t('appointments.error_cancel'));
+            showError(err.message || t('appointments.error_reject'));
         } finally {
             setActionLoading(null);
         }
@@ -178,7 +180,7 @@ export default function AppointmentsPage() {
         const phone = apt.profiles?.phone || apt.guest_phone;
         if (!phone || !business) return;
 
-        const customerName = apt.profiles?.full_name || apt.guest_name || tSafe('queue.guest', 'Guest');
+        const customerName = apt.guest_name || apt.profiles?.full_name || tSafe('queue.guest', 'Guest');
         const serviceNames = getTranslatedServiceNames(apt);
         // Fallback to customer language or current language
         const customerLang = (apt as any).profiles?.ui_language || language;
@@ -227,17 +229,23 @@ export default function AppointmentsPage() {
         if (q && !customer.includes(q) && !service.includes(q)) return false;
         if (activeTab === 'today') return isToday(a.start_time);
         if (activeTab === 'upcoming') return isUpcoming(a.start_time);
-        if (activeTab === 'past') return isPast(a.start_time) || a.status === 'completed';
+        if (activeTab === 'past') return isPast(a.start_time) || ['completed', 'cancelled', 'expired', 'no_show'].includes(String(a.status || '').toLowerCase());
         return true;
-    }).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    }).sort((a, b) => {
+        const aStatus = String(a.status || "").toLowerCase();
+        const bStatus = String(b.status || "").toLowerCase();
+        if (aStatus === "pending" && bStatus === "pending") {
+            return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+        }
+        return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+    });
 
     const tabCounts = {
         today: appointments.filter(a => isToday(a.start_time)).length,
         upcoming: appointments.filter(a => isUpcoming(a.start_time)).length,
-        past: appointments.filter(a => isPast(a.start_time) || a.status === 'completed').length,
+        past: appointments.filter(a => isPast(a.start_time) || ['completed', 'cancelled', 'expired', 'no_show'].includes(String(a.status || '').toLowerCase())).length,
     };
     const confirmedCount = filteredAppointments.filter(a => ["confirmed", "scheduled", "checked_in"].includes(String(a.status || "").toLowerCase())).length;
-    const attentionCount = filteredAppointments.filter(a => ["pending", "requested", "rescheduled", "needs_attention"].includes(String(a.status || "").toLowerCase())).length;
     const formatDateTime = (dateString: string) => {
         const d = new Date(dateString);
         const locale = language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN';
@@ -257,13 +265,13 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className={cn("space-y-8 max-w-6xl mx-auto pb-20 animate-in fade-in duration-700 font-inter", isRTL && "font-arabic")} dir={isRTL ? "rtl" : "ltr"}>
+        <div className={cn("space-y-8 max-w-6xl mx-auto w-full min-w-0 overflow-x-hidden px-3 sm:px-4 lg:px-0 pb-20 animate-in fade-in duration-700 font-inter", isRTL && "font-arabic")} dir={isRTL ? "rtl" : "ltr"}>
             {/* Header */}
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
                 <div className="space-y-4">
                     <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-slate-100 rounded-full border border-slate-200">
                         <Calendar className="h-4 w-4 text-slate-900" />
-                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">{t('appointments.title')}</span>
+                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">{t('appointments.management_title')}</span>
                     </div>
                     <div className={cn("space-y-2 text-slate-900", isRTL ? "text-right" : "text-left")}>
                         <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
@@ -290,18 +298,22 @@ export default function AppointmentsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{tSafe('appointments.total', 'Total')}</p>
                     <p className="text-2xl font-black text-slate-900 mt-1">{filteredAppointments.length}</p>
+                </div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">{tSafe('appointments.pending', 'Pending')}</p>
+                    <p className="text-2xl font-black text-amber-900 mt-1">{filteredAppointments.filter((a) => String(a.status || "").toLowerCase() === "pending").length}</p>
                 </div>
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
                     <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">{tSafe('appointments.confirmed', 'Confirmed')}</p>
                     <p className="text-2xl font-black text-emerald-900 mt-1">{confirmedCount}</p>
                 </div>
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">{tSafe('appointments.needs_action', 'Needs Action')}</p>
-                    <p className="text-2xl font-black text-amber-900 mt-1">{attentionCount}</p>
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
+                    <p className="text-[10px] font-black text-rose-700 uppercase tracking-widest">{tSafe('appointments.cancelled', 'Cancelled')}</p>
+                    <p className="text-2xl font-black text-rose-900 mt-1">{filteredAppointments.filter((a) => ["cancelled", "expired", "no_show"].includes(String(a.status || "").toLowerCase())).length}</p>
                 </div>
             </div>
 
@@ -318,24 +330,26 @@ export default function AppointmentsPage() {
             )}
 
             {/* Tabs */}
-            <div className="flex items-center p-1.5 bg-slate-100/70 backdrop-blur-sm rounded-[20px] w-fit border border-slate-200/60">
-                {(['today', 'upcoming', 'past'] as const).map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={cn(
-                            "px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center gap-2",
-                            activeTab === tab
-                                ? "bg-slate-900 text-white shadow-xl shadow-slate-900/10 scale-105"
-                                : "text-slate-500 hover:text-slate-900"
-                        )}
-                    >
-                        {t(`appointments.${tab}`)}
-                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded-md", activeTab === tab ? "bg-white/20" : "bg-slate-200 text-slate-700")}>
-                            {tabCounts[tab]}
-                        </span>
-                    </button>
-                ))}
+            <div className="w-full overflow-x-auto pb-1">
+                <div className="inline-flex min-w-max items-center p-1.5 bg-slate-100/70 backdrop-blur-sm rounded-[20px] border border-slate-200/60">
+                    {(['today', 'upcoming', 'past'] as const).map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={cn(
+                                "px-4 sm:px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap",
+                                activeTab === tab
+                                    ? "bg-slate-900 text-white shadow-xl shadow-slate-900/10 scale-105"
+                                    : "text-slate-500 hover:text-slate-900"
+                            )}
+                        >
+                            {t(`appointments.${tab}`)}
+                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-md", activeTab === tab ? "bg-white/20" : "bg-slate-200 text-slate-700")}>
+                                {tabCounts[tab]}
+                            </span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* List */}
@@ -377,7 +391,7 @@ export default function AppointmentsPage() {
 
                                     {apt.is_delayed && apt.expected_start_at && (
                                         <div className="flex flex-col mt-1 space-y-0.5 animate-in fade-in zoom-in duration-300">
-                                            <span className="text-[10px] font-bold text-amber-500 uppercase">{t('appointments.running_late', { min: apt.delay_minutes })}</span>
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase">{t('appointments.awaiting_customer_30m')}</span>
                                             <span className="text-lg font-extrabold text-amber-600">{formatDateTime(apt.expected_start_at).time}</span>
                                         </div>
                                     )}
@@ -392,7 +406,7 @@ export default function AppointmentsPage() {
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t('common.status')}</p>
                                         <h3 className="text-xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-3">
-                                            <span className="capitalize">{apt.profiles?.full_name || apt.guest_name || t('queue.guest')}</span>
+                                            <span className="capitalize">{apt.guest_name || apt.profiles?.full_name || t('queue.guest')}</span>
 
                                             {(() => {
                                                 const isToday = new Date(apt.start_time).toDateString() === new Date().toDateString();
@@ -462,6 +476,9 @@ export default function AppointmentsPage() {
                                                 <span>{t('status.paid')}</span>
                                             </div>
                                         )}
+                                        <div className="text-xs font-bold text-slate-500">
+                                            {tSafe('appointments.assigned_to', 'Assigned to')}: {(apt as any)?.employee?.full_name || '--'}
+                                        </div>
                                     </div>
 
                                     {/* Delay Warning Banner */}
@@ -469,7 +486,7 @@ export default function AppointmentsPage() {
                                         <div className="mt-4 p-3.5 bg-amber-50 border border-amber-100 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-300">
                                             <div className="flex items-center gap-2 text-amber-700">
                                                 <AlertCircle className="w-5 h-5 shrink-0" />
-                                                <span className="text-xs font-bold uppercase leading-tight">{t('appointments.running_late', { min: apt.delay_minutes })}</span>
+                                                <span className="text-xs font-bold uppercase leading-tight">{t('appointments.awaiting_customer_30m')}</span>
                                             </div>
                                             <div className="flex items-center gap-2 w-full sm:w-auto">
                                                 <button onClick={() => setDismissedDelays(p => [...p, apt.id])} className="flex-1 sm:flex-none px-3 py-1.5 bg-amber-100/50 text-amber-700 hover:bg-amber-100 text-xs font-bold rounded-lg transition-colors border border-amber-200/50">
@@ -489,11 +506,11 @@ export default function AppointmentsPage() {
                                         <>
                                             <button
                                                 disabled={actionLoading === apt.id}
-                                                onClick={() => handleUpdateStatus(apt.id, 'confirmed')}
+                                                onClick={() => handleAccept(apt.id)}
                                                 className="h-10 px-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-sm"
                                             >
                                                 {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                                                {t('common.confirm')}
+                                                {t('appointments.accept')}
                                             </button>
                                             {apt.status === 'rescheduled' ? (
                                                 <button
@@ -515,18 +532,18 @@ export default function AppointmentsPage() {
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleReschedule(apt.id)}
-                                                className="h-10 w-10 border-2 border-slate-100 text-indigo-500 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
+                                                className="h-10 px-5 border-2 border-slate-100 text-indigo-600 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50 text-[11px] font-bold uppercase tracking-wider"
                                                 title={t('appointments.reschedule_appointment')}
                                             >
-                                                <CalendarDays className="h-5 w-5" />
+                                                {t('appointments.reschedule')}
                                             </button>
                                             <button
                                                 disabled={actionLoading === apt.id}
-                                                onClick={() => handleCancel(apt.id)}
-                                                className="h-10 w-10 border-2 border-slate-100 text-red-500 rounded-xl hover:bg-red-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50"
-                                                title={t('appointments.cancel_appointment')}
+                                                onClick={() => handleReject(apt.id)}
+                                                className="h-10 px-5 border-2 border-red-100 text-red-600 rounded-xl hover:bg-red-50 transition-all flex items-center justify-center active:scale-95 disabled:opacity-50 text-[11px] font-bold uppercase tracking-wider"
+                                                title={t('appointments.reject')}
                                             >
-                                                <XCircle className="h-5 w-5" />
+                                                {t('appointments.reject')}
                                             </button>
                                         </>
                                     )}

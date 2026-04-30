@@ -102,7 +102,17 @@ export const api = {
     },
 
     get<T>(endpoint: string, options?: RequestOptions) {
-        return this.request<T>(endpoint, { ...options, method: 'GET' });
+        return this.request<T>(endpoint, {
+            ...options,
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                Pragma: 'no-cache',
+                Expires: '0',
+                ...(options?.headers || {}),
+            },
+        });
     },
 
     post<T>(endpoint: string, data?: any, options?: RequestOptions) {

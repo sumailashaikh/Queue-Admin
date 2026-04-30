@@ -21,11 +21,11 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { businessService, Business } from "@/services/businessService";
+import { paymentSettingsService, PaymentSettings } from "@/services/paymentSettingsService";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { formatGlobalPhone } from "@/lib/phoneUtils";
 import { useLanguage } from "@/context/LanguageContext";
-import { appointmentService } from "@/services/appointmentService";
 
 export default function SettingsPage() {
     const { business, setBusiness } = useAuth();
@@ -37,19 +37,22 @@ export default function SettingsPage() {
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [vipCustomers, setVipCustomers] = useState<any[]>([]);
-    const [allCustomers, setAllCustomers] = useState<{ id: string; full_name: string; phone?: string }[]>([]);
-    const [vipForm, setVipForm] = useState<{ customerId: string; isVip: boolean; note: string }>({
-        customerId: "",
-        isVip: true,
-        note: ""
-    });
-    const [vipLoading, setVipLoading] = useState(false);
+    const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
+    const [upiIdInput, setUpiIdInput] = useState("");
+    const [generatedQrUrl, setGeneratedQrUrl] = useState("");
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const [savingPayment, setSavingPayment] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToastMessage(message);
         setToastType(type);
         setTimeout(() => setToastMessage(null), 3000);
+    };
+    const tr = (key: string, fallback: string) => {
+        const translated = t(key);
+        return translated === key ? fallback : translated;
     };
 
     const [formData, setFormData] = useState({
@@ -61,6 +64,8 @@ export default function SettingsPage() {
         slug: business?.slug || "",
         open_time: business?.open_time || "09:00:00",
         close_time: business?.close_time || "21:00:00",
+        staff_open_time: business?.staff_open_time || business?.open_time || "09:00:00",
+        staff_close_time: business?.staff_close_time || business?.close_time || "21:00:00",
         is_closed: business?.is_closed || false,
         currency: business?.currency || "USD",
         timezone: business?.timezone || "UTC",
@@ -78,6 +83,8 @@ export default function SettingsPage() {
                 slug: business.slug,
                 open_time: business.open_time || "09:00:00",
                 close_time: business.close_time || "21:00:00",
+                staff_open_time: (business as any).staff_open_time || business.open_time || "09:00:00",
+                staff_close_time: (business as any).staff_close_time || business.close_time || "21:00:00",
                 is_closed: business.is_closed || false,
                 currency: business.currency || "USD",
                 timezone: business.timezone || "UTC",
@@ -85,6 +92,83 @@ export default function SettingsPage() {
             });
         }
     }, [business]);
+
+    useEffect(() => {
+        const loadPaymentSettings = async () => {
+            if (!business?.id) return;
+            try {
+                const settings = await paymentSettingsService.getByBusinessId(business.id);
+                setPaymentSettings(settings);
+                if (settings?.upi_id) {
+                    setUpiIdInput(settings.upi_id);
+                    setGeneratedQrUrl(settings.qr_code_url || "");
+                }
+            } catch (err) {
+                setPaymentError(tr('settings.payment_load_error', "Could not load payment settings. Please retry."));
+            }
+        };
+        loadPaymentSettings();
+    }, [business?.id]);
+
+    const buildQrFromUpi = (upi: string) => {
+        const upiPayload = `upi://pay?pa=${upi}&pn=${encodeURIComponent(business?.name || "Business")}`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(upiPayload)}`;
+    };
+
+    const isValidUpi = (upi: string) => /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z]{2,64}$/.test(upi);
+
+    const handleGenerateQr = async () => {
+        setPaymentError(null);
+        setPaymentSuccess(null);
+        const normalized = upiIdInput.trim();
+        if (!normalized) {
+            setPaymentError(tr('settings.payment_enter_upi', "Please enter a UPI ID."));
+            return;
+        }
+        if (!isValidUpi(normalized)) {
+            setPaymentError(tr('settings.payment_invalid_upi', "Invalid UPI ID. Example: example@upi"));
+            return;
+        }
+        setPaymentLoading(true);
+        try {
+            const qrUrl = buildQrFromUpi(normalized);
+            setGeneratedQrUrl(qrUrl);
+            setPaymentSuccess(tr('settings.payment_qr_generated', "QR generated successfully."));
+        } catch {
+            setPaymentError(tr('settings.payment_qr_failed', "Unable to generate QR right now. Please try again."));
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
+    const handleSavePayment = async () => {
+        if (!business?.id) return;
+        setPaymentError(null);
+        setPaymentSuccess(null);
+        const normalized = upiIdInput.trim();
+        if (!isValidUpi(normalized)) {
+            setPaymentError(tr('settings.payment_invalid_upi', "Invalid UPI ID. Example: example@upi"));
+            return;
+        }
+        if (!generatedQrUrl) {
+            setPaymentError(tr('settings.payment_generate_first', "Please generate QR before saving."));
+            return;
+        }
+        setSavingPayment(true);
+        try {
+            const saved = await paymentSettingsService.save({
+                business_id: business.id,
+                upi_id: normalized,
+            });
+            setPaymentSettings(saved);
+            setGeneratedQrUrl(saved.qr_code_url);
+            setPaymentSuccess(tr('settings.payment_saved', "Payment settings saved successfully."));
+        } catch (err: any) {
+            setPaymentError(err?.message || tr('settings.payment_save_failed', "Failed to save payment settings."));
+        } finally {
+            setSavingPayment(false);
+        }
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,7 +190,8 @@ export default function SettingsPage() {
             setBusiness(updated);
             // Apply the business language as default UI language for this session
             if (payload.language) {
-                setLanguage(payload.language, true).catch(() => {});
+                // Avoid server-side profile language write here; business language already drives portal language.
+                setLanguage(payload.language, false).catch(() => {});
             }
             // Update local form state with formatted numbers
             setFormData(prev => ({ ...prev, phone: payload.phone, whatsapp_number: payload.whatsapp_number }));
@@ -116,51 +201,6 @@ export default function SettingsPage() {
             setError(err.message || t('settings.fail_msg'));
         } finally {
             setLoading(false);
-        }
-    };
-
-    const refreshVipData = async () => {
-        if (!business?.id) return;
-        setVipLoading(true);
-        try {
-            const [vip, appts] = await Promise.all([
-                businessService.listVipCustomers(business.id),
-                appointmentService.getBusinessAppointments()
-            ]);
-            setVipCustomers(vip || []);
-
-            const map = new Map<string, { id: string; full_name: string; phone?: string }>();
-            (appts || []).forEach((a: any) => {
-                const p = a?.profiles;
-                if (p?.id) {
-                    map.set(p.id, { id: p.id, full_name: p.full_name || 'Customer', phone: p.phone });
-                }
-            });
-            setAllCustomers(Array.from(map.values()).sort((a, b) => a.full_name.localeCompare(b.full_name)));
-        } catch {
-            // non-blocking
-        } finally {
-            setVipLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        refreshVipData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [business?.id]);
-
-    const saveVip = async () => {
-        if (!business?.id || !vipForm.customerId) return;
-        setVipLoading(true);
-        try {
-            await businessService.setCustomerVipFlag(business.id, vipForm.customerId, vipForm.isVip, vipForm.note);
-            showToast(t('settings.vip_saved'), 'success');
-            setVipForm({ customerId: "", isVip: true, note: "" });
-            refreshVipData();
-        } catch (err: any) {
-            showToast(err?.message || t('settings.vip_save_error'), 'error');
-        } finally {
-            setVipLoading(false);
         }
     };
 
@@ -336,8 +376,8 @@ export default function SettingsPage() {
                                     <div className="relative">
                                         <input
                                             type="time"
-                                            value={formData.open_time}
-                                            onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
+                                            value={(formData as any).staff_open_time}
+                                            onChange={(e) => setFormData({ ...formData, staff_open_time: e.target.value })}
                                             className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] scheme-light dark:scheme-dark"
                                         />
                                     </div>
@@ -350,8 +390,8 @@ export default function SettingsPage() {
                                     <div className="relative">
                                         <input
                                             type="time"
-                                            value={formData.close_time}
-                                            onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
+                                            value={(formData as any).staff_close_time}
+                                            onChange={(e) => setFormData({ ...formData, staff_close_time: e.target.value })}
                                             className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] scheme-light dark:scheme-dark"
                                         />
                                     </div>
@@ -371,6 +411,46 @@ export default function SettingsPage() {
                                         <div className={cn("h-1.5 w-1.5 rounded-full", formData.is_closed ? "bg-red-600" : "bg-emerald-600")} />
                                         {formData.is_closed ? t('settings.status_closed') : t('settings.status_open')}
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-slate-700 dark:text-slate-100 shrink-0" strokeWidth={2.25} aria-hidden />
+                                General Staff Time
+                            </label>
+                            <p className="text-[11px] text-slate-500 pl-1">
+                                This common timing is applied for all staff members.
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300 shrink-0" strokeWidth={2.25} />
+                                        Staff Open At
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            value={formData.open_time}
+                                            onChange={(e) => setFormData({ ...formData, open_time: e.target.value })}
+                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] scheme-light dark:scheme-dark"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300 shrink-0" strokeWidth={2.25} />
+                                        Staff Close At
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="time"
+                                            value={formData.close_time}
+                                            onChange={(e) => setFormData({ ...formData, close_time: e.target.value })}
+                                            className="w-full pl-3 pr-3 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all min-w-[120px] scheme-light dark:scheme-dark"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -396,106 +476,73 @@ export default function SettingsPage() {
                         </div>
                     </form>
 
-                    {/* VIP Customers */}
-                    <div className="pro-card p-8 space-y-6">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 className="text-lg font-bold text-slate-900">{t('settings.vip_title')}</h2>
-                                <p className="text-sm font-semibold text-slate-600">{t('settings.vip_desc')}</p>
-                            </div>
-                            {vipLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="md:col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.vip_select_customer')}</label>
-                                <select
-                                    value={vipForm.customerId}
-                                    onChange={(e) => setVipForm((p) => ({ ...p, customerId: e.target.value }))}
-                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                                >
-                                    <option value="">{t('settings.vip_select_placeholder')}</option>
-                                    {allCustomers.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.full_name}{c.phone ? ` (${c.phone})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.vip_flag')}</label>
-                                <select
-                                    value={vipForm.isVip ? '1' : '0'}
-                                    onChange={(e) => setVipForm((p) => ({ ...p, isVip: e.target.value === '1' }))}
-                                    className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                                >
-                                    <option value="1">{t('settings.vip_yes')}</option>
-                                    <option value="0">{t('settings.vip_no')}</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.vip_note')}</label>
-                            <input
-                                type="text"
-                                value={vipForm.note}
-                                onChange={(e) => setVipForm((p) => ({ ...p, note: e.target.value }))}
-                                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                                placeholder={t('settings.vip_note_placeholder')}
-                            />
-                        </div>
-
-                        <div className="flex justify-end">
-                            <button
-                                type="button"
-                                disabled={!vipForm.customerId || vipLoading}
-                                onClick={saveVip}
-                                className="px-5 py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50"
-                            >
-                                {t('settings.vip_save')}
-                            </button>
-                        </div>
-
-                        <div className="space-y-3">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('settings.vip_current')}</h3>
-                            {(vipCustomers || []).length === 0 ? (
-                                <div className="p-4 rounded-xl border border-dashed border-slate-200 text-slate-500 text-sm font-semibold">
-                                    {t('settings.vip_none')}
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    {vipCustomers.map((v: any) => (
-                                        <div key={v.customer_id} className="flex items-center justify-between gap-4 p-4 rounded-xl border border-slate-100 bg-white">
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-bold text-slate-900 truncate">{v?.profiles?.full_name || 'Customer'}</p>
-                                                <p className="text-xs font-semibold text-slate-500 truncate">{v?.profiles?.phone || ''}</p>
-                                                {v?.vip_note ? <p className="text-xs font-semibold text-slate-400 mt-1">{v.vip_note}</p> : null}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                disabled={vipLoading}
-                                                onClick={async () => {
-                                                    try {
-                                                        await businessService.setCustomerVipFlag(business!.id, v.customer_id, false);
-                                                        refreshVipData();
-                                                    } catch {
-                                                        showToast(t('settings.vip_save_error'), 'error');
-                                                    }
-                                                }}
-                                                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 disabled:opacity-50"
-                                            >
-                                                {t('settings.vip_remove')}
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
                 </div>
 
                 <div className="space-y-6">
+                    <div className="pro-card p-6">
+                        <h3 className="text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2 text-slate-800">
+                            <QrCode className="h-4 w-4 text-primary" />
+                            {t('settings.payment_title')}
+                        </h3>
+                        <p className="text-xs font-semibold text-slate-500 mb-4">
+                            {t('settings.payment_desc')}
+                        </p>
+
+                        <div className="mb-3 rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-wide bg-slate-50 border-slate-200 text-slate-600">
+                            {paymentSettings?.upi_id ? t('settings.payment_status_complete') : t('settings.payment_status_missing')}
+                        </div>
+
+                        {paymentError && (
+                            <div className="mb-3 p-3 rounded-xl border border-red-100 bg-red-50 text-red-600 text-xs font-bold">
+                                {paymentError}
+                            </div>
+                        )}
+                        {paymentSuccess && (
+                            <div className="mb-3 p-3 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 text-xs font-bold">
+                                {paymentSuccess}
+                            </div>
+                        )}
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">{t('settings.payment_upi_label')}</label>
+                                <input
+                                    value={upiIdInput}
+                                    onChange={(e) => setUpiIdInput(e.target.value)}
+                                    placeholder={t('settings.payment_upi_placeholder')}
+                                    className="mt-1 w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateQr}
+                                    disabled={paymentLoading}
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-900 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-800 disabled:bg-slate-600"
+                                >
+                                    {paymentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+                                    {t('settings.payment_generate_qr')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSavePayment}
+                                    disabled={savingPayment}
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 disabled:bg-blue-400"
+                                >
+                                    {savingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                    {t('settings.payment_save')}
+                                </button>
+                            </div>
+                        </div>
+
+                        {generatedQrUrl && (
+                            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 flex flex-col items-center gap-2">
+                                <img src={generatedQrUrl} alt="UPI QR preview" className="h-44 w-44 rounded-xl border border-slate-200 bg-white p-2 object-contain" />
+                                <p className="text-[11px] font-semibold text-slate-500 text-center break-all">{upiIdInput}</p>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="pro-card p-6 bg-slate-900 border-none text-white relative overflow-hidden group">
                         <div className="absolute -right-8 -top-8 p-12 opacity-5 group-hover:opacity-10 transition-opacity">
                             <QrCode className="h-32 w-32" />

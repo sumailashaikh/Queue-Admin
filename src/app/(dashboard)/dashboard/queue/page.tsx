@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Search,
     Filter,
@@ -20,7 +20,6 @@ import {
     Share2,
     RotateCcw,
     Play,
-    ChevronRight,
     CheckCircle2,
     Phone,
     Monitor,
@@ -49,6 +48,9 @@ export default function LiveQueuePage() {
     const [queues, setQueues] = useState<Queue[]>([]);
     const [selectedQueue, setSelectedQueue] = useState<Queue | null>(null);
     const [entries, setEntries] = useState<QueueEntry[]>([]);
+    const entriesRef = useRef<QueueEntry[]>([]);
+    const [taskStatusOverrides, setTaskStatusOverrides] = useState<Record<string, 'in_progress' | 'done'>>({});
+    const overrideTimersRef = useRef<Record<string, any>>({});
     const [loading, setLoading] = useState(true);
     const [entriesLoading, setEntriesLoading] = useState(false);
     const [search, setSearch] = useState("");
@@ -133,13 +135,23 @@ export default function LiveQueuePage() {
         setEntriesLoading(true);
         try {
             const data = await queueService.getQueueEntriesToday(queueId);
-            setEntries(data);
+            setEntries((data || []).map((entry: any) => {
+                const nextServices = (entry.queue_entry_services || []).map((s: any) => {
+                    const forced = taskStatusOverrides[String(s?.id || "")];
+                    return forced ? { ...s, task_status: forced } : s;
+                });
+                return { ...entry, queue_entry_services: nextServices };
+            }));
         } catch (error: any) {
             console.error("Failed to fetch entries:", error);
         } finally {
             setEntriesLoading(false);
         }
-    }, []);
+    }, [taskStatusOverrides]);
+
+    useEffect(() => {
+        entriesRef.current = entries;
+    }, [entries]);
 
     const fetchProviders = useCallback(async () => {
         if (!business?.id) return;
@@ -188,6 +200,7 @@ export default function LiveQueuePage() {
         // Optimistic update
         setEntries((prev: QueueEntry[]) => prev.map(entry => ({
             ...entry,
+            status: entry.queue_entry_services?.some(s => s.id === taskId) ? 'serving' : entry.status,
             queue_entry_services: entry.queue_entry_services?.map(s =>
                 s.id === taskId ? { ...s, task_status: 'in_progress' } : s
             )
@@ -195,7 +208,19 @@ export default function LiveQueuePage() {
 
         try {
             await queueService.startTask(taskId);
-            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            setTaskStatusOverrides((prev) => ({ ...prev, [taskId]: 'in_progress' }));
+            if (overrideTimersRef.current[taskId]) clearTimeout(overrideTimersRef.current[taskId]);
+            overrideTimersRef.current[taskId] = setTimeout(() => {
+                setTaskStatusOverrides((prev) => {
+                    const next = { ...prev };
+                    delete next[taskId];
+                    return next;
+                });
+            }, 15000);
+            if (selectedQueue?.id) {
+                // Avoid immediate stale overwrite right after success.
+                setTimeout(() => fetchEntries(selectedQueue.id), 1000);
+            }
             fetchProviders(); // Refresh provider availability
             showToast(t('queue.success_start'));
         } catch (error: any) {
@@ -218,7 +243,19 @@ export default function LiveQueuePage() {
 
         try {
             await queueService.completeTask(taskId);
-            if (selectedQueue?.id) fetchEntries(selectedQueue.id);
+            setTaskStatusOverrides((prev) => ({ ...prev, [taskId]: 'done' }));
+            if (overrideTimersRef.current[taskId]) clearTimeout(overrideTimersRef.current[taskId]);
+            overrideTimersRef.current[taskId] = setTimeout(() => {
+                setTaskStatusOverrides((prev) => {
+                    const next = { ...prev };
+                    delete next[taskId];
+                    return next;
+                });
+            }, 15000);
+            if (selectedQueue?.id) {
+                // Avoid immediate stale overwrite right after success.
+                setTimeout(() => fetchEntries(selectedQueue.id), 1000);
+            }
             fetchProviders(); // Refresh provider availability
             showToast(t('queue.success_complete'));
         } catch (error: any) {
@@ -253,16 +290,29 @@ export default function LiveQueuePage() {
         if (!selectedQueue) return;
         setIsSubmitting(true);
         try {
-            await queueService.nextEntry(selectedQueue.id);
+            const resp = await queueService.nextEntry(selectedQueue.id);
+            const nextMsg = String(resp?.message || "").toLowerCase();
+            if (nextMsg.includes("no more customers in queue")) {
+                showToast(t('queue.info_no_more_customers'));
+                return;
+            }
+            if (nextMsg.includes("no ready customer to call right now")) {
+                showToast(t('queue.info_no_ready_customers'));
+                return;
+            }
             await fetchEntries(selectedQueue.id);
             showToast(t('queue.success_next'));
         } catch (error: any) {
             const raw = String(error?.response?.data?.message || error?.message || "").trim();
             const lower = raw.toLowerCase();
-            const msg = lower.includes("please assign")
-                ? t('queue.err_next_assign_expert')
-                : (lower.includes("no available expert") || lower.includes("currently serving another customer"))
-                    ? t('queue.err_next_expert_busy')
+            const msg = (lower.includes("please assign")
+                || lower.includes("no available expert")
+                || lower.includes("currently serving another customer")
+                || lower.includes("assigned expert is unavailable")
+                || lower.includes("cannot perform all selected services"))
+                ? t('queue.info_no_ready_customers')
+                : (lower.includes("no more customers in queue") || lower.includes("queue is empty"))
+                    ? t('queue.info_no_more_customers')
                     : (raw || t('queue.err_next'));
             showToast(msg, "error");
         } finally {
@@ -313,6 +363,40 @@ export default function LiveQueuePage() {
                     filter: `queue_id=eq.${selectedQueue.id}`
                 },
                 () => {
+                    fetchEntries(selectedQueue.id);
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [selectedQueue?.id, fetchEntries]);
+
+    // Realtime Sync for per-service task status (Start/Done updates queue_entry_services)
+    useEffect(() => {
+        if (!selectedQueue?.id) return;
+
+        const channel = supabase
+            .channel(`queue-entry-services-${selectedQueue.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'queue_entry_services',
+                },
+                (payload: any) => {
+                    const changedEntryId =
+                        payload?.new?.queue_entry_id ||
+                        payload?.old?.queue_entry_id;
+                    if (!changedEntryId) return;
+
+                    // Only refetch if this changed task belongs to an entry currently shown for this queue.
+                    const current = entriesRef.current || [];
+                    const isRelevant = current.some((e: any) => String(e?.id) === String(changedEntryId));
+                    if (!isRelevant) return;
+
                     fetchEntries(selectedQueue.id);
                 }
             )
@@ -600,16 +684,6 @@ export default function LiveQueuePage() {
                         )}
 
                         <div className="flex items-center gap-3">
-                            {selectedQueue && (
-                                <button
-                                    onClick={handleNextCustomer}
-                                    disabled={isSubmitting || entries.length === 0}
-                                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-semibold tracking-wide transition-all hover:bg-primary/90 disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
-                                >
-                                    <ChevronRight className="h-4 w-4" />
-                                    {t('queue.next_customer')}
-                                </button>
-                            )}
                             {business && (
                                 <button
                                     onClick={() => setIsWalkInModalOpen(true)}
@@ -954,7 +1028,7 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
                         {t('queue.no_phone')}
                     </label>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Services</label>
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.title')}</label>
                         <div className="max-h-36 overflow-auto bg-slate-50 rounded-2xl border border-slate-200 p-3 space-y-2">
                             {services.map((s: any) => (
                                 <label key={s.id} className="flex items-center gap-2 text-xs font-semibold text-slate-700">
@@ -976,13 +1050,13 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
                         </div>
                     </div>
                     <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Assign Employee (Optional)</label>
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.assign_expert')}</label>
                         <select
                             value={data.providerId}
                             onChange={(e) => setData({ ...data, providerId: e.target.value })}
                             className="w-full px-4 py-3 bg-slate-50 rounded-2xl text-sm font-semibold outline-none border border-slate-200"
                         >
-                            <option value="">Unassigned</option>
+                            <option value="">{t('queue.select_expert')}</option>
                             {providers.map((p: any) => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
@@ -1004,12 +1078,21 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
 const InviteModal = ({ isOpen, onClose, business }: any) => {
     const { t } = useLanguage();
     const [inviteData, setInviteData] = useState({ name: '', phone: '' });
+    useEffect(() => {
+        if (!isOpen) {
+            setInviteData({ name: '', phone: '' });
+        }
+    }, [isOpen]);
     if (!isOpen) return null;
 
     const handleSendInvite = (e: React.FormEvent) => {
         e.preventDefault();
         const link = `${window.location.host}/${business.slug}`;
-        const message = `Hello ${inviteData.name},\n\nThis is ${business.name}. You can join the queue online using this link: ${link}\n\nAfter joining, you'll see your token number and live waiting time.\n\nThank you.`;
+        const message = [
+            t('queue.wa_invite_greet', { name: inviteData.name }),
+            t('queue.wa_invite_body', { business: business.name, link }),
+            t('queue.wa_invite_footer')
+        ].join('\n\n');
         // CountryPhoneInput already provides the full number with +
         let phone = inviteData.phone.replace(/\+/g, '');
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
@@ -1017,8 +1100,8 @@ const InviteModal = ({ isOpen, onClose, business }: any) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden p-8 space-y-6">
+        <div className="fixed inset-0 z-260 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-visible p-8 space-y-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('queue.whatsapp_invite')}</h2>
                     <button onClick={onClose} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">

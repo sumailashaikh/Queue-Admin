@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-    BarChart3,
     Calendar,
     ChevronLeft,
     ChevronRight,
@@ -12,7 +11,8 @@ import {
     Search,
     TrendingUp,
     Users,
-    Filter
+    Filter,
+    Ban
 } from "lucide-react";
 import { cn, formatCurrency, formatDuration, getCurrencySymbol } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,6 +92,70 @@ export default function ProviderAnalyticsPage() {
     const filteredData = (data || []).filter(p =>
         p.provider_name.toLowerCase().includes(search.toLowerCase())
     );
+
+    const getDisplayWorkingHours = (provider: ProviderAnalytics) => {
+        const totalHours = Number(provider.total_working_hours || 0);
+        if (totalHours > 0) return totalHours;
+        return Math.round(((Number(provider.total_active_minutes || 0) / 60) * 100)) / 100;
+    };
+
+    const getDisplayWorkingHoursText = (provider: ProviderAnalytics) => {
+        const totalMinutes = Math.max(0, Math.round(getDisplayWorkingHours(provider) * 60));
+        return formatDuration(totalMinutes, t);
+    };
+
+    const getDisplayWorkingDays = (provider: ProviderAnalytics) => {
+        const workingDays = Number(provider.working_days || 0);
+        if (workingDays > 0) return workingDays;
+        const uniqueServiceDates = new Set(
+            (provider.daily_work_log || [])
+                .filter((log) => Number(log.hours_worked || 0) > 0)
+                .map((log) => String(log.date || ""))
+                .filter(Boolean)
+        );
+        return uniqueServiceDates.size;
+    };
+
+    const formatLeaveText = (provider: ProviderAnalytics) => {
+        const full = Number(provider.leave_full_days || 0);
+        const half = Number(provider.leave_half_days || 0);
+        if (full > 0 && half === 0) return `${t('provider_analytics.full')}: ${full}`;
+        if (half > 0 && full === 0) return `${t('provider_analytics.half')}: ${half}`;
+        if (full > 0 && half > 0) return `${t('provider_analytics.full')}: ${full} • ${t('provider_analytics.half')}: ${half}`;
+        return "0";
+    };
+
+    const getPastLeaveSummary = (provider: ProviderAnalytics) => {
+        const records = (provider.leave_records || []).filter((l) => l.status === 'approved');
+        let full = 0;
+        let half = 0;
+        let emergency = 0;
+        records.forEach((r) => {
+            if (r.type === 'emergency') emergency += 1;
+            else if (r.type === 'half') half += 1;
+            else full += 1;
+        });
+
+        const parts: string[] = [];
+        if (full > 0) parts.push(`${t('provider_analytics.full')}: ${full}`);
+        if (half > 0) parts.push(`${t('provider_analytics.half')}: ${half}`);
+        if (emergency > 0) parts.push(`${t('providers.emergency_time')}: ${emergency}`);
+        return parts.length > 0 ? parts.join(' • ') : "0";
+    };
+
+    const getUpcomingLeavePreview = (provider: ProviderAnalytics) => {
+        const today = new Date().toISOString().slice(0, 10);
+        return (provider.leave_records || [])
+            .filter((l) => l.status === 'approved' && l.startDate > today)
+            .sort((a, b) => a.startDate.localeCompare(b.startDate))
+            .slice(0, 2);
+    };
+
+    const leaveTypePill = (type: 'full' | 'half' | 'emergency') => {
+        if (type === 'emergency') return { label: t('providers.emergency_time'), cls: 'bg-rose-100 text-rose-700 border-rose-200' };
+        if (type === 'half') return { label: t('provider_analytics.half'), cls: 'bg-amber-100 text-amber-700 border-amber-200' };
+        return { label: t('provider_analytics.full'), cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+    };
 
     const openBreakdown = (p: ProviderAnalytics) => {
         setSelectedProvider(p);
@@ -173,13 +237,12 @@ export default function ProviderAnalyticsPage() {
             </div>
 
             {/* Summary Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
                 {[
                     { label: t('provider_analytics.total_services'), value: summary?.total_services || 0, iconText: null, icon: Layout, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(undefined, language), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: t('provider_analytics.avg_service_time'), value: formatDuration(summary?.avg_service_time || 0, t), iconText: null, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' }
+                    { label: t('provider_analytics.total_revenue'), value: formatCurrency(summary?.total_revenue || 0, business?.currency, language), iconText: getCurrencySymbol(undefined, language), icon: null, color: 'text-emerald-600', bg: 'bg-emerald-50' }
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow min-w-0">
                         <div className="flex items-center justify-between gap-4">
                             <div className={cn("p-3 rounded-xl shrink-0", stat.bg)}>
                                 {stat.iconText ? (
@@ -188,18 +251,18 @@ export default function ProviderAnalyticsPage() {
                                     <stat.icon className={cn("h-6 w-6", stat.color)} />
                                 ) : null}
                             </div>
-                            <div className="text-right min-w-0">
+                            <div className="text-right min-w-0 flex-1">
                                 <span className={cn(
-                                    "font-bold text-slate-900 tracking-tight block",
+                                    "font-bold text-slate-900 tracking-tight block wrap-break-word leading-tight",
                                     typeof stat.value === 'string' && stat.value.length > 12 
-                                        ? "text-lg sm:text-xl leading-snug" 
-                                        : "text-2xl sm:text-3xl leading-none"
+                                        ? "text-base sm:text-xl" 
+                                        : "text-xl sm:text-2xl"
                                 )}>
                                     {loading ? <Loader2 className="h-6 w-6 animate-spin text-slate-200 ml-auto" /> : stat.value}
                                 </span>
                             </div>
                         </div>
-                        <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-[0.2em] opacity-60">
+                        <p className="mt-3 text-[11px] font-bold text-slate-500 tracking-wide opacity-80 wrap-break-word">
                             {stat.label}
                         </p>
                     </div>
@@ -233,8 +296,7 @@ export default function ProviderAnalyticsPage() {
                         {filteredData.map((p) => (
                             <div
                                 key={p.provider_id}
-                                className="group hover:bg-slate-50 transition-all cursor-pointer p-4 md:px-6"
-                                onClick={() => openBreakdown(p)}
+                                className="group hover:bg-slate-50 transition-all p-4 md:px-6"
                             >
                                 {/* Provider Name Row */}
                                 <div className="flex items-center justify-between gap-3 mb-3">
@@ -243,7 +305,7 @@ export default function ProviderAnalyticsPage() {
                                             {p.provider_name.split(' ').map((n: string) => n[0]).join('')}
                                         </div>
                                         <div className="min-w-0">
-                                            <span className="font-bold text-slate-900 uppercase text-sm tracking-tight block break-words">{p.provider_name}</span>
+                                            <span className="font-bold text-slate-900 uppercase text-sm tracking-tight block wrap-break-word">{p.provider_name}</span>
                                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider opacity-60">{t('provider_analytics.id')}: {p.provider_id.slice(0, 8)}</span>
                                         </div>
                                     </div>
@@ -256,22 +318,83 @@ export default function ProviderAnalyticsPage() {
                                 </div>
 
                                 {/* Stats Grid - 2x2 on mobile, 4 in a row on desktop */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full min-w-0">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7 gap-2 w-full min-w-0">
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.services')}</p>
                                         <span className="font-bold text-slate-900 text-sm truncate block">{p.services_completed}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.revenue')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.avg_time')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{formatDuration(p.avg_service_time_minutes, t)}</span>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatDuration(p.avg_service_time_minutes, t)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.active_mins')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{formatDuration(Math.round(p.total_active_minutes), t)}</span>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatDuration(Math.round(p.total_active_minutes), t)}</span>
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.total_hours')}</p>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{getDisplayWorkingHoursText(p)}</span>
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.working_days')}</p>
+                                        <span className="font-bold text-slate-900 text-sm truncate block">{getDisplayWorkingDays(p)}</span>
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.leaves')}</p>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatLeaveText(p)}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3 rounded-2xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-4 shadow-sm">
+                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                                            Leave Tracker
+                                        </p>
+                                        <span className={cn(
+                                            "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider",
+                                            p.on_leave_today
+                                                ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                        )}>
+                                            {p.on_leave_today ? "On Leave Today" : "Available Today"}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Upcoming Leaves</p>
+                                            <p className="text-lg font-black text-slate-900 mt-1">{Number(p.upcoming_leave_count || 0)}</p>
+                                            <p className="text-[10px] font-semibold text-slate-500 mt-1">Next approved plans</p>
+                                        </div>
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Past Leave Summary</p>
+                                            <p className="text-xs font-bold text-slate-900 mt-2 wrap-break-word leading-tight">{getPastLeaveSummary(p)}</p>
+                                        </div>
+                                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Next Leave Dates</p>
+                                            <div className="space-y-2">
+                                                {getUpcomingLeavePreview(p).length === 0 ? (
+                                                    <p className="text-[11px] font-semibold text-slate-500">No upcoming approved leaves</p>
+                                                ) : (
+                                                    getUpcomingLeavePreview(p).map((leave, idx) => {
+                                                        const pill = leaveTypePill(leave.type);
+                                                        return (
+                                                            <div key={`${leave.startDate}-${idx}`} className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-2">
+                                                                <p className="text-[11px] font-bold text-slate-700">
+                                                                    {leave.startDate === leave.endDate ? leave.startDate : `${leave.startDate} - ${leave.endDate}`}
+                                                                </p>
+                                                                <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider", pill.cls)}>
+                                                                    {pill.label}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

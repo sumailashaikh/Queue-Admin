@@ -17,7 +17,8 @@ import {
     Trash2,
     AlertCircle,
     MessageSquare,
-    ShieldCheck
+    ShieldCheck,
+    Bell
 } from "lucide-react";
 import { cn, formatCurrency, validateLanguage, formatLeaveDateRange } from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
@@ -25,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
 import { businessService } from "@/services/businessService";
 import { appointmentService } from "@/services/appointmentService";
+import { notificationService, AppNotification } from "@/services/notificationService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
@@ -84,6 +86,8 @@ export default function ProvidersPage() {
     const [reassignTo, setReassignTo] = useState<Record<string, string>>({});
     const [rescheduleTo, setRescheduleTo] = useState<Record<string, string>>({});
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [leaveNotifications, setLeaveNotifications] = useState<AppNotification[]>([]);
+    const [isLeaveNotifOpen, setIsLeaveNotifOpen] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
@@ -209,16 +213,59 @@ export default function ProvidersPage() {
         }
     }, [business?.id]);
 
+    const fetchLeaveNotifications = useCallback(async () => {
+        try {
+            const resp = await notificationService.listMy();
+            const all = resp?.data || [];
+            const leaveOnly = all.filter((n: any) => {
+                const type = String(n?.type || "").toLowerCase();
+                const title = String(n?.title || "").toLowerCase();
+                const message = String(n?.message || "").toLowerCase();
+                return type.includes("leave") || title.includes("leave") || message.includes("leave");
+            });
+            // Fallback: if leave tagging differs in older rows, still show latest notifications.
+            setLeaveNotifications(leaveOnly.length > 0 ? leaveOnly : all.slice(0, 20));
+        } catch {
+            // Non-blocking for Providers page.
+        }
+    }, []);
+
     useEffect(() => {
         fetchProviders();
         fetchResignations();
+        fetchLeaveNotifications();
 
         const interval = setInterval(() => {
+            if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
             fetchProviders();
             fetchResignations();
-        }, 180000);
+            fetchLeaveNotifications();
+        }, 60000);
         return () => clearInterval(interval);
-    }, [fetchProviders, fetchResignations]);
+    }, [fetchProviders, fetchResignations, fetchLeaveNotifications]);
+
+    const unreadLeaveCount = useMemo(
+        () => leaveNotifications.filter((n) => !n.is_read).length,
+        [leaveNotifications]
+    );
+
+    const markLeaveRead = async (id: string) => {
+        try {
+            await notificationService.markRead(id);
+            setLeaveNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+        } catch {
+            // ignore
+        }
+    };
+
+    const markAllLeaveRead = async () => {
+        try {
+            await notificationService.markAllRead();
+            setLeaveNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+        } catch {
+            // ignore
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -528,6 +575,22 @@ export default function ProvidersPage() {
             await fetchProviders();
         } catch (error: any) {
             const data = error.response?.data;
+            if (data?.impact) {
+                setImpactModal({
+                    isOpen: true,
+                    loading: false,
+                    leave: {
+                        start_date: leaveFormData.start_date,
+                        end_date: leaveFormData.end_date,
+                        leave_kind: 'FULL_DAY',
+                        start_time: leaveFormData.start_time || undefined,
+                        end_time: leaveFormData.end_time || undefined,
+                        status: 'PENDING'
+                    },
+                    impact: data.impact
+                });
+                return;
+            }
             const msg = data?.message || 'providers.err_add_leave';
             showToast(msg.includes('.') ? t(msg as any, data) : msg, "error");
         } finally {
@@ -734,11 +797,8 @@ export default function ProvidersPage() {
     const handleUpdateResignation = async (requestId: string, status: 'APPROVED' | 'REJECTED') => {
         setIsSubmitting(true);
         try {
-            const resp = await businessService.updateResignationStatus(requestId, status);
+            await businessService.updateResignationStatus(requestId, status);
             showToast(status === 'APPROVED' ? t('providers.success_deactivate_full') : t('providers.success_resignation_rejected'));
-            if (resp?.notification_sent === false) {
-                showToast(t('providers.leave_status_updated_notify_warning'), "error");
-            }
             await fetchProviders();
         } catch (error: any) {
             const msg = error.response?.data?.message || 'common.error';
@@ -770,6 +830,53 @@ export default function ProvidersPage() {
                     <div className="relative w-full sm:w-64 md:w-72">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <input type="text" placeholder={t('providers.search_placeholder')} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-primary transition-all font-medium shadow-sm" />
+                    </div>
+                    <div className="relative w-full sm:w-auto shrink-0">
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                const next = !isLeaveNotifOpen;
+                                setIsLeaveNotifOpen(next);
+                                if (next) await fetchLeaveNotifications();
+                            }}
+                            className="w-full sm:w-auto h-10 px-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 flex items-center justify-center gap-2 shadow-sm hover:bg-indigo-100"
+                        >
+                            <Bell className="h-4 w-4" />
+                            <span className="text-xs font-bold">{t("dashboard.notifications")}</span>
+                            {unreadLeaveCount > 0 && (
+                                <span className="min-w-5 h-5 px-1 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center">
+                                    {unreadLeaveCount}
+                                </span>
+                            )}
+                        </button>
+                        {isLeaveNotifOpen && (
+                            <div className="absolute right-0 mt-2 w-[330px] max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-40">
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">{t("dashboard.notifications")}</p>
+                                    <button type="button" onClick={markAllLeaveRead} className="text-[10px] font-black uppercase tracking-wider text-indigo-600">
+                                        {t("dashboard.mark_all_read")}
+                                    </button>
+                                </div>
+                                <div className="max-h-64 overflow-auto space-y-2">
+                                    {leaveNotifications.length === 0 ? (
+                                        <p className="text-xs text-slate-400 py-3 text-center">{t("dashboard.no_notifications")}</p>
+                                    ) : leaveNotifications.map((n) => (
+                                        <button
+                                            key={n.id}
+                                            type="button"
+                                            onClick={() => markLeaveRead(n.id)}
+                                            className={cn(
+                                                "w-full text-left rounded-xl border p-3 transition-colors",
+                                                n.is_read ? "border-slate-100 bg-slate-50/60" : "border-indigo-100 bg-indigo-50/60"
+                                            )}
+                                        >
+                                            <p className="text-xs font-bold text-slate-900">{n.title}</p>
+                                            <p className="text-[11px] text-slate-600 mt-1">{n.message}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     {pendingResignationCount > 0 && (
                         <button

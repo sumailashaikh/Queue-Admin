@@ -18,6 +18,7 @@ interface ServiceExecutionStripProps {
     services: QueueEntryService[];
     providers: any[];
     preselectedProviderId?: string;
+    entryStatus?: string;
     entryJoinedAt: string;
     expectedStartTime?: string;
     now: number;
@@ -33,6 +34,7 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     services,
     providers,
     preselectedProviderId,
+    entryStatus,
     onAssignProvider,
     onStartTask,
     onCompleteTask,
@@ -294,10 +296,18 @@ export const ServiceExecutionStrip: React.FC<ServiceExecutionStripProps> = ({
     return (
         <div className="flex flex-col gap-1.5 w-full">
             {services.map((s) => {
-                const status = s.task_status || 'pending';
-                const isDone = status === 'done';
-                const isInProgress = status === 'in_progress';
-                const isPending = status === 'pending';
+                const status = String(s.task_status || 'pending').toLowerCase().trim();
+                const isDone = status === 'done' || status === 'completed';
+                const entryIsServing = String(entryStatus || '').toLowerCase() === 'serving';
+                // Professional fallback:
+                // if parent entry is serving and task is assigned but still marked pending,
+                // treat it as in-progress so owner can always complete it.
+                const isInProgress =
+                    status === 'in_progress' ||
+                    status === 'in-progress' ||
+                    status === 'serving' ||
+                    (!isDone && entryIsServing && !!s.assigned_provider_id);
+                const isPending = !isDone && !isInProgress;
 
                 return (
                     <div key={s.id} className="flex flex-col gap-1.5">

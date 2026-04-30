@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -8,6 +8,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { Bell } from "lucide-react";
+import { notificationService, AppNotification } from "@/services/notificationService";
 
 export default function DashboardLayout({
     children,
@@ -18,11 +20,62 @@ export default function DashboardLayout({
     const { t: baseT } = useLanguage();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifMenu, setShowNotifMenu] = useState(false);
+    const [notifFilter, setNotifFilter] = useState<"unread" | "all">("unread");
+    const [headerToast, setHeaderToast] = useState<string | null>(null);
+    const firstLoadDoneRef = useRef(false);
     const pathname = usePathname();
     const isAdminPath = pathname.startsWith('/dashboard/admin');
     const t = (key: string, params?: any) => baseT(key, params, isAdminPath ? 'en' : undefined);
     const segment = pathname.split('/').pop() || 'dashboard';
     const pageTitle = segment === 'dashboard' ? 'Overview' : segment.replace(/-/g, ' ');
+    const isOwnerLike = ["owner", "admin"].includes(String(user?.role || "").toLowerCase());
+
+    useEffect(() => {
+        if (!isOwnerLike || pathname.startsWith('/dashboard/admin')) return;
+        let mounted = true;
+        const fetchNotifications = async () => {
+            try {
+                const resp = await notificationService.listMy();
+                if (!mounted) return;
+                const prevUnread = unreadCount;
+                setNotifications(resp.data || []);
+                setUnreadCount(resp.unread || 0);
+                if (firstLoadDoneRef.current && (resp.unread || 0) > prevUnread) {
+                    setHeaderToast(t("dashboard.new_appointment_request_received"));
+                    setTimeout(() => setHeaderToast(null), 2500);
+                }
+                firstLoadDoneRef.current = true;
+            } catch {
+                // non-blocking
+            }
+        };
+        fetchNotifications();
+        const interval = setInterval(() => {
+            if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+            fetchNotifications();
+        }, 15000);
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [isOwnerLike, pathname, unreadCount]);
+
+    const handleMarkOneRead = async (id: string) => {
+        await notificationService.markRead(id);
+        const next = notifications.map((n) => n.id === id ? { ...n, is_read: true } : n);
+        setNotifications(next);
+        setUnreadCount(next.filter((n) => !n.is_read).length);
+    };
+
+    const handleMarkAllRead = async () => {
+        await notificationService.markAllRead();
+        const next = notifications.map((n) => ({ ...n, is_read: true }));
+        setNotifications(next);
+        setUnreadCount(0);
+    };
 
     return (
         <ProtectedRoute>
@@ -76,6 +129,60 @@ export default function DashboardLayout({
 
                         <div className="flex items-center gap-6">
                             {!pathname.startsWith('/dashboard/admin') && <LanguageSwitcher />}
+                            {isOwnerLike && !pathname.startsWith('/dashboard/admin') && (
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowNotifMenu((p) => !p)}
+                                        className="relative h-9 w-9 rounded-full border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50"
+                                    >
+                                        <Bell className="h-4 w-4 text-slate-600" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
+                                                {unreadCount > 9 ? "9+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {showNotifMenu && (
+                                        <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl z-200 p-3">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-xs font-black uppercase tracking-wider text-slate-500">{t("dashboard.notifications")}</p>
+                                                <button onClick={handleMarkAllRead} className="text-[10px] font-bold text-primary uppercase tracking-wider">{t("dashboard.mark_all_read")}</button>
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <button
+                                                    onClick={() => setNotifFilter("unread")}
+                                                    className={cn("text-[10px] px-2 py-1 rounded-lg font-bold uppercase", notifFilter === "unread" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600")}
+                                                >
+                                                    {t("dashboard.unread")}
+                                                </button>
+                                                <button
+                                                    onClick={() => setNotifFilter("all")}
+                                                    className={cn("text-[10px] px-2 py-1 rounded-lg font-bold uppercase", notifFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600")}
+                                                >
+                                                    {t("dashboard.all")}
+                                                </button>
+                                            </div>
+                                            <div className="max-h-72 overflow-y-auto space-y-2">
+                                                {(notifFilter === "unread" ? notifications.filter((n) => !n.is_read) : notifications).length === 0 ? (
+                                                    <p className="text-xs text-slate-400 py-4 text-center">{t("dashboard.no_notifications")}</p>
+                                                ) : (notifFilter === "unread" ? notifications.filter((n) => !n.is_read) : notifications).map((n) => (
+                                                    <button
+                                                        key={n.id}
+                                                        onClick={() => handleMarkOneRead(n.id)}
+                                                        className={cn(
+                                                            "w-full text-left rounded-xl border p-3",
+                                                            n.is_read ? "border-slate-100 bg-slate-50/50" : "border-indigo-100 bg-indigo-50/60"
+                                                        )}
+                                                    >
+                                                        <p className="text-xs font-bold text-slate-900">{n.title}</p>
+                                                        <p className="text-[11px] text-slate-600 mt-1">{n.message}</p>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <div className="hidden sm:flex flex-col items-end">
                                 <p className="text-sm font-bold text-slate-900">{pathname.startsWith('/dashboard/admin') ? 'Admin' : t('dashboard.business_portal')}</p>
                                 <button
@@ -97,6 +204,11 @@ export default function DashboardLayout({
                         </div>
                     </main>
                 </div>
+                {headerToast && (
+                    <div className="fixed top-20 right-6 z-210 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-xl">
+                        {headerToast}
+                    </div>
+                )}
             </div>
         </ProtectedRoute>
     );

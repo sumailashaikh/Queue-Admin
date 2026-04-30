@@ -68,6 +68,10 @@ export const QueueRow: React.FC<QueueRowProps> = ({
     const s = (item.status || "").toLowerCase().trim();
     const isServingOrCompleted = ['serving', 'completed', 'done', 'skipped', 'no_show'].includes(s);
     const isPendingPayment = (s === 'completed' || s === 'serving' || s === 'waiting') && (item.payment_method === 'unpaid' || !item.payment_method);
+    const hasOpenServiceTask = (item.queue_entry_services || []).some((task: any) => {
+        const ts = String(task?.task_status || '').toLowerCase();
+        return !['done', 'completed', 'cancelled', 'skipped'].includes(ts);
+    });
 
     // The user prefers manual opening of the payment menu via the button.
     // Removed the auto-open useEffect to prevent unexpected UI popping.
@@ -216,15 +220,14 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-50">
                     <div className="flex items-center gap-2 flex-wrap">
                         {/* WhatsApp quick actions */}
-                        {item.status === 'waiting' && (
+                        {item.status === 'waiting' && hasOpenServiceTask && (
                             <div className="flex items-center gap-1.5 border-r border-slate-100 pr-2">
                                 <button
                                     onClick={() => {
                                         if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
                                         const cleanPhone = item.phone.replace(/\D/g, '');
                                         const name = item.customer_name || t('queue.guest');
-                                        const customerLang = (item as any).profiles?.ui_language;
-                                        const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }, customerLang));
+                                        const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }));
                                         window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                         sessionStorage.setItem(delayKey, 'true');
                                         setHasNotifiedDelay(true);
@@ -242,8 +245,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                         if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
                                         const cleanPhone = item.phone.replace(/\D/g, '');
                                         const name = item.customer_name || t('queue.guest');
-                                        const customerLang = (item as any).profiles?.ui_language;
-                                        const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }, customerLang));
+                                        const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }));
                                         window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                     }}
                                     className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90 shrink-0"
@@ -256,8 +258,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                                         if (!item.phone || !business) return;
                                         const cleanPhone = item.phone.replace(/\D/g, '');
                                         const name = item.customer_name || t('queue.guest');
-                                        const customerLang = (item as any).profiles?.ui_language;
-                                        const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }, customerLang));
+                                        const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }));
                                         window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                     }}
                                     className="h-8 w-8 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20 shrink-0"
@@ -270,12 +271,12 @@ export const QueueRow: React.FC<QueueRowProps> = ({
 
                         {/* Skip / No-show / Restore */}
                         <div className="flex items-center gap-1">
-                            {!isServingOrCompleted && (
+                            {!isServingOrCompleted && hasOpenServiceTask && (
                                 <button onClick={() => setShowSkipModal(true)} className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title={t('queue.skip')}>
                                     <ArrowRightToLine className="h-3.5 w-3.5" />
                                 </button>
                             )}
-                            {item.status !== 'completed' && !isServingOrCompleted && (
+                            {item.status !== 'completed' && !isServingOrCompleted && hasOpenServiceTask && (
                                 <button onClick={() => setShowNoShowModal(true)} className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all" title={t('queue.no_show')}>
                                     <UserMinus className="h-3.5 w-3.5" />
                                 </button>
@@ -294,6 +295,7 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                             services={item.queue_entry_services || []}
                             providers={providers}
                             preselectedProviderId={item.assigned_provider_id}
+                            entryStatus={item.status}
                             entryJoinedAt={item.joined_at}
                             now={now}
                             onAssignProvider={onAssignTaskProvider}

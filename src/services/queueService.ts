@@ -94,6 +94,11 @@ export const queueService = {
         return result.data || [];
     },
 
+    async getBillingEntriesToday(): Promise<(QueueEntry & { queue_name?: string })[]> {
+        const result = await api.get<(QueueEntry & { queue_name?: string })[]>('/queues/billing/today');
+        return result.data || [];
+    },
+
     async updateEntryStatus(entryId: string, status: QueueEntry['status']): Promise<QueueEntry> {
         const result = await api.patch<QueueEntry>(`/queues/entries/${entryId}/status`, { status });
         return result.data;
@@ -129,8 +134,9 @@ export const queueService = {
         return result.data;
     },
 
-    async nextEntry(queueId: string): Promise<void> {
-        await api.post('/queues/next', { queue_id: queueId });
+    async nextEntry(queueId: string): Promise<{ status: string; message?: string }> {
+        const result = await api.post<{ status: string; message?: string }>('/queues/next', { queue_id: queueId });
+        return result;
     },
 
     // Per-Service Tasks (Phase 3)
@@ -168,7 +174,13 @@ export const queueService = {
     },
 
     async getMyTasks(): Promise<QueueEntry[]> {
-        const result = await api.get<QueueEntry[]>('/queues/my-tasks');
+        const result = await api.get<QueueEntry[]>('/queues/my-tasks', {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache',
+            },
+        });
         return result.data || [];
     },
 

@@ -50,7 +50,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setIsTemporary(false);
         localStorage.setItem('ui_language', newLang);
 
-        if (user) {
+        // In business portal, language is driven by business settings, so no profile write needed.
+        if (user && !business?.id) {
             try {
                 const storedUser = localStorage.getItem('auth_user');
                 if (storedUser) {
@@ -60,7 +61,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
                 await api.put('/users/language', { ui_language: newLang });
             } catch (error) {
-                console.error('Failed to update language on server', error);
+                // Keep UI responsive even if optional language persistence fails.
             }
         }
     };
