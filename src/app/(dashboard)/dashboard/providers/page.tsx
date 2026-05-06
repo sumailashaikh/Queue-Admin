@@ -1281,7 +1281,19 @@ export default function ProvidersPage() {
                         </div>
                         <div className="overflow-y-auto space-y-2 pr-1">
                             {prioritizedPendingAlerts.length === 0 ? (
-                                <p className="text-xs text-slate-400 py-6 text-center">{t("dashboard.no_notifications")}</p>
+                                <div className="py-10 px-4">
+                                    <div className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-slate-50/70 p-5 text-center">
+                                        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                                            <CalendarOff className="h-5 w-5" />
+                                        </div>
+                                        <p className="text-sm font-bold text-slate-700">
+                                            {tt("providers.no_leave_requests_title", "No pending leave requests")}
+                                        </p>
+                                        <p className="mt-1 text-xs font-medium text-slate-500 leading-relaxed">
+                                            {tt("providers.no_leave_requests_hint", "New employee leave requests will appear here for quick approve/reject actions.")}
+                                        </p>
+                                    </div>
+                                </div>
                             ) : prioritizedPendingAlerts.map((row: any) => (
                                 <div key={`all-req-${row.leave_id}`} className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
                                     <div className="flex items-start justify-between gap-3">
