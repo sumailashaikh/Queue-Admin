@@ -79,7 +79,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         if (!p.service_ids || p.service_ids.length === 0) return true;
         return selectedServiceIds.every((sid) => p.service_ids.includes(sid));
     });
-    const visibleProviders = eligibleProviders.filter((p) => !p.is_on_leave);
+    const visibleProviders = eligibleProviders;
     const selectedProvider = providerInsights.find((p) => p.id === selectedProviderId) || null;
 
     const [customerLangOverride, setCustomerLangOverride] = useState<string | null>(null);
@@ -183,6 +183,21 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             ? i18n.t(lang, 'public.provider_busy_until', { time: busyUntil }) || `This provider is likely busy until ${busyUntil}. Please choose a time after that.`
             : i18n.t(lang, 'public.provider_busy_choose_later') || "This provider is currently busy. Please choose a later time.";
     })();
+    const shouldShowProviderUnavailableMessage = Boolean(
+        selectedProviderId &&
+        (
+            selectedProvider?.is_on_leave ||
+            selectedProvider?.busy_source === "on_leave" ||
+            (
+                activeView === "appointment" &&
+                totalDuration > 0 &&
+                !!bookingDate &&
+                !providerSlotsLoading &&
+                providerSlots.length === 0
+            )
+        )
+    );
+    const disableContinueForProvider = !!selectedProviderId && shouldShowProviderUnavailableMessage;
 
     const isStoreOpen = () => {
         if (!business) return false;
@@ -214,9 +229,10 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const loadBusiness = useCallback(async (showLoader = false) => {
         if (showLoader) setLoading(true);
         try {
+            const providersForDate = activeView === 'appointment' && bookingDate ? bookingDate : undefined;
             const [data, providers] = await Promise.all([
                 businessService.getBusinessBySlug(slug),
-                businessService.getPublicProviders(slug)
+                businessService.getPublicProviders(slug, providersForDate)
             ]);
             setBusiness(data);
             setProviderInsights(providers);
@@ -231,7 +247,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
         } finally {
             if (showLoader) setLoading(false);
         }
-    }, [slug, customerLangOverride]);
+    }, [slug, customerLangOverride, activeView, bookingDate]);
 
     useEffect(() => {
         loadBusiness(true);
@@ -442,11 +458,18 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
             const rawMessage = String(err?.message || "");
             const normalized = rawMessage.toLowerCase();
             if (
+                normalized.includes("on leave") ||
+                normalized.includes("leave for this day/time") ||
                 normalized.includes("selected employee is currently unavailable") ||
                 normalized.includes("provider unavailable") ||
                 normalized.includes("currently unavailable")
             ) {
-                setJoinError(i18n.t(lang, 'public.err_employee_unavailable'));
+                const leaveMsg = i18n.t(lang, 'public.provider_on_leave_pick_another');
+                setJoinError(
+                    leaveMsg && leaveMsg !== 'public.provider_on_leave_pick_another'
+                        ? leaveMsg
+                        : i18n.t(lang, 'public.err_employee_unavailable')
+                );
             } else {
                 setJoinError(rawMessage || i18n.t(lang, 'public.err_something_went_wrong'));
             }
@@ -785,6 +808,14 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         )}
                                     </div>
                                 )}
+                                {shouldShowProviderUnavailableMessage && (
+                                    <p className="mt-1 text-[11px] text-rose-700 font-semibold">
+                                        {tSafe(
+                                            'public.provider_on_leave_pick_another',
+                                            'Selected staff is unavailable or on leave. Please choose another staff member.'
+                                        )}
+                                    </p>
+                                )}
                             </div>
 
                             {activeView === 'appointment' && (
@@ -870,16 +901,12 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                                     {providerConflictMessage}
                                                 </p>
                                             )}
-                                            {selectedProviderId && totalDuration > 0 && !providerSlotsLoading && providerSlots.length === 0 && (
-                                                <p className="mt-1 text-[11px] text-amber-700 font-semibold">
-                                                    {i18n.t(lang, 'public.no_slots_hint') || 'No slots found for this provider on selected date. Choose another provider or date.'}
-                                                </p>
-                                            )}
                                             {activeView === 'appointment' && totalDuration > 0 && !!business?.close_time && (
                                                 <p className="mt-1 text-[11px] text-slate-500 font-semibold">
                                                     {tSafe(
                                                         'public.slot_cutoff_note',
-                                                        `Slots outside business hours are disabled. Closing time is ${formatTime12((business as any).staff_close_time || business.close_time)}.`
+                                                        `Slots outside business hours are disabled. Closing time is ${formatTime12((business as any).staff_close_time || business.close_time)}.`,
+                                                        { time: formatTime12((business as any).staff_close_time || business.close_time) }
                                                     )}
                                                 </p>
                                             )}
@@ -892,12 +919,20 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                 <div className="fixed bottom-0 left-0 right-0 md:relative md:mt-auto p-6 bg-white border-t border-slate-100 md:border-none md:p-0 md:pt-4 animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0">
                                     <button
                                         onClick={() => setStep(2)}
-                                        disabled={(activeView === 'appointment' && !bookingTime) || (!isOpen && activeView === 'queue') || (activeView === 'queue' && !hasOpenQueue)}
+                                        disabled={(activeView === 'appointment' && !bookingTime) || (!isOpen && activeView === 'queue') || (activeView === 'queue' && !hasOpenQueue) || disableContinueForProvider}
                                         className="w-full h-16 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[10px] font-semibold uppercase tracking-[0.2em] shadow-md active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                                     >
                                         {(!isOpen && activeView === 'queue') ? i18n.t(lang, 'public.check_in_unavailable') : (activeView === 'queue' && !hasOpenQueue) ? i18n.t(lang, 'public.no_queue') : i18n.t(lang, 'public.continue')}
                                         {(isOpen || activeView === 'appointment') && hasOpenQueue && <ArrowRight className="h-4 w-4" />}
                                     </button>
+                                    {disableContinueForProvider && (
+                                        <p className="mt-2 text-center text-[11px] text-rose-700 font-semibold">
+                                            {tSafe(
+                                                'public.provider_on_leave_pick_another',
+                                                'Selected staff is unavailable or on leave. Please choose another staff member.'
+                                            )}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

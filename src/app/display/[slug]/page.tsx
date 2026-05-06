@@ -110,8 +110,8 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             <div className="min-h-screen bg-slate-50 flex items-center justify-center p-12 text-center text-slate-900">
                 <div className="space-y-6 bg-white p-12 rounded-[48px] shadow-2xl border border-slate-100">
                     <Monitor className="h-20 w-20 text-red-500 mx-auto" />
-                    <h1 className="text-4xl font-black uppercase tracking-tighter">System Offline</h1>
-                    <p className="text-slate-500 font-medium">Please verify the business link or contact support.</p>
+                    <h1 className="text-4xl font-black uppercase tracking-tighter">{t('display.system_offline')}</h1>
+                    <p className="text-slate-500 font-medium">{t('display.verify_business_link')}</p>
                 </div>
             </div>
         );
@@ -191,16 +191,16 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     <div className="rounded-[20px] border border-blue-100 bg-blue-50 p-3">
                         <div className="flex items-center gap-2 mb-2">
                             <Bell className="h-4 w-4 text-blue-700" />
-                            <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-blue-900">Next</h3>
+                            <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-blue-900">{t('display.next')}</h3>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
                             {nextEntries.length > 0 ? nextEntries.map((item) => (
                                 <div key={item.id} className="rounded-xl bg-blue-600 text-white px-3 py-2 flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Next</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('display.next')}</span>
                                     <span className="text-[clamp(20px,4.8vw,38px)] font-black leading-none">{item?.display_token || "--"}</span>
                                 </div>
                             )) : (
-                                <div className="rounded-xl bg-white border border-blue-100 p-3 text-xs font-bold text-blue-900">No next token</div>
+                                <div className="rounded-xl bg-white border border-blue-100 p-3 text-xs font-bold text-blue-900">{t('display.no_next_token')}</div>
                             )}
                         </div>
                     </div>
@@ -218,7 +218,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                                         <span className="text-[clamp(18px,3.5vw,28px)] font-black leading-none">{item?.display_token || "--"}</span>
                                     </div>
                                 )) : (
-                                    <div className="rounded-xl bg-white border border-amber-100 p-3 text-xs font-bold text-amber-900">No waiting tokens</div>
+                                    <div className="rounded-xl bg-white border border-amber-100 p-3 text-xs font-bold text-amber-900">{t('display.no_waiting_tokens')}</div>
                                 )}
                             </div>
                         </div>

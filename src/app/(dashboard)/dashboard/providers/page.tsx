@@ -18,7 +18,6 @@ import {
     AlertCircle,
     MessageSquare,
     ShieldCheck,
-    Bell
 } from "lucide-react";
 import { cn, formatCurrency, validateLanguage, formatLeaveDateRange } from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
@@ -87,7 +86,8 @@ export default function ProvidersPage() {
     const [rescheduleTo, setRescheduleTo] = useState<Record<string, string>>({});
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [leaveNotifications, setLeaveNotifications] = useState<AppNotification[]>([]);
-    const [isLeaveNotifOpen, setIsLeaveNotifOpen] = useState(false);
+    const [pendingLeaveAlerts, setPendingLeaveAlerts] = useState<any[]>([]);
+    const [isLeaveRequestsModalOpen, setIsLeaveRequestsModalOpen] = useState(false);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
@@ -225,10 +225,20 @@ export default function ProvidersPage() {
             });
             // Fallback: if leave tagging differs in older rows, still show latest notifications.
             setLeaveNotifications(leaveOnly.length > 0 ? leaveOnly : all.slice(0, 20));
+            if (business?.id) {
+                const alerts = await providerService.getLeaveAlerts(business.id);
+                const pendingOnly = (alerts || []).filter(
+                    (row: any) => String(row?.leave_status || "").toUpperCase() === "PENDING"
+                );
+                setPendingLeaveAlerts(pendingOnly);
+            } else {
+                setPendingLeaveAlerts([]);
+            }
         } catch {
             // Non-blocking for Providers page.
+            setPendingLeaveAlerts([]);
         }
-    }, []);
+    }, [business?.id]);
 
     useEffect(() => {
         fetchProviders();
@@ -248,6 +258,25 @@ export default function ProvidersPage() {
         () => leaveNotifications.filter((n) => !n.is_read).length,
         [leaveNotifications]
     );
+    const prioritizedPendingAlerts = useMemo(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const extractStart = (leaveDate: string) => String(leaveDate || "").split(" to ")[0]?.trim();
+        return [...pendingLeaveAlerts].sort((a: any, b: any) => {
+            const aStart = extractStart(a?.leave_date);
+            const bStart = extractStart(b?.leave_date);
+            const aIsToday = aStart === today;
+            const bIsToday = bStart === today;
+            if (aIsToday !== bIsToday) return aIsToday ? -1 : 1;
+            return String(bStart || "").localeCompare(String(aStart || ""));
+        });
+    }, [pendingLeaveAlerts]);
+    const sortedLeaveNotifications = useMemo(() => {
+        return [...leaveNotifications].sort((a, b) => {
+            if (a.is_read !== b.is_read) return a.is_read ? 1 : -1;
+            return String(b.created_at || "").localeCompare(String(a.created_at || ""));
+        });
+    }, [leaveNotifications]);
+    const leaveRequestsBadgeCount = prioritizedPendingAlerts.length;
 
     const markLeaveRead = async (id: string) => {
         try {
@@ -618,7 +647,6 @@ export default function ProvidersPage() {
     };
 
     const handleUpdateLeaveStatus = async (leaveId: string, status: 'APPROVED' | 'REJECTED', reason?: string) => {
-        if (!selectedProvider) return;
         if (status === 'REJECTED' && !String(reason || '').trim()) {
             showToast(leaveUiText.reasonRequired, "error");
             return;
@@ -627,12 +655,27 @@ export default function ProvidersPage() {
         try {
             const resp = await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
             showToast(t('providers.success_leave_status_updated', { status: t(`employee.status_${status.toLowerCase()}`) }));
-            if (resp?.notification_sent === false) {
-                showToast(t('providers.leave_status_updated_notify_warning'));
+            if (resp?.notification_sent === true) {
+                showToast("Message forwarded to employee successfully.");
+            }
+            if (resp?.notification_sent === false && resp?.employee_in_app_notified === false) {
+                const waErr = String(resp?.delivery?.whatsapp_error || "").trim();
+                const smsErr = String(resp?.delivery?.sms_error || "").trim();
+                const errMsg = waErr || smsErr || t('providers.leave_status_updated_notify_warning');
+                showToast(errMsg, "error");
+            } else if (resp?.notification_sent === false && resp?.employee_in_app_notified === true) {
+                const waErr = String(resp?.delivery?.whatsapp_error || "").trim();
+                const smsErr = String(resp?.delivery?.sms_error || "").trim();
+                if (waErr || smsErr) {
+                    showToast(`SMS/WhatsApp failed: ${waErr || smsErr}`);
+                }
             }
             setRejectModal({ isOpen: false, leaveId: "", reason: "" });
-            setLeavesData(await providerService.getLeaves(selectedProvider.id));
+            if (selectedProvider?.id) {
+                setLeavesData(await providerService.getLeaves(selectedProvider.id));
+            }
             await fetchProviders();
+            await fetchLeaveNotifications();
         } catch (error: any) {
             const raw = String(error?.response?.data?.message || '').toLowerCase();
             if (raw.includes('provider_leaves') && raw.includes('status')) {
@@ -810,6 +853,32 @@ export default function ProvidersPage() {
         }
     };
 
+    const handleApproveFromRequestsModal = async (row: any) => {
+        const providerId = String(row?.provider_id || "");
+        if (!providerId) {
+            await handleUpdateLeaveStatus(row.leave_id, 'APPROVED');
+            return;
+        }
+        const provider = providers.find((p: any) => String(p?.id || "") === providerId);
+        if (!provider) {
+            await handleUpdateLeaveStatus(row.leave_id, 'APPROVED');
+            return;
+        }
+        setSelectedProvider(provider);
+        try {
+            const allLeaves = await providerService.getLeaves(provider.id);
+            const exactLeave = (allLeaves || []).find((l: any) => String(l?.id || "") === String(row.leave_id || ""));
+            if (exactLeave) {
+                setLeavesData(allLeaves || []);
+                await openImpactModal(exactLeave);
+                return;
+            }
+            await handleUpdateLeaveStatus(row.leave_id, 'APPROVED');
+        } catch {
+            await handleUpdateLeaveStatus(row.leave_id, 'APPROVED');
+        }
+    };
+
     const daysList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const filteredProviders = providers.filter(p => p.is_active !== false && p.name.toLowerCase().includes(search.toLowerCase()));
     const pendingResignationCount = resignations.filter((r: any) => String(r?.status || '').toUpperCase() === 'PENDING').length;
@@ -835,48 +904,19 @@ export default function ProvidersPage() {
                         <button
                             type="button"
                             onClick={async () => {
-                                const next = !isLeaveNotifOpen;
-                                setIsLeaveNotifOpen(next);
-                                if (next) await fetchLeaveNotifications();
+                                await fetchLeaveNotifications();
+                                setIsLeaveRequestsModalOpen(true);
                             }}
                             className="w-full sm:w-auto h-10 px-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 flex items-center justify-center gap-2 shadow-sm hover:bg-indigo-100"
                         >
-                            <Bell className="h-4 w-4" />
-                            <span className="text-xs font-bold">{t("dashboard.notifications")}</span>
-                            {unreadLeaveCount > 0 && (
+                            <CalendarOff className="h-4 w-4" />
+                            <span className="text-xs font-bold">{tt("dashboard.leave_requests", "Leave Requests")}</span>
+                            {leaveRequestsBadgeCount > 0 && (
                                 <span className="min-w-5 h-5 px-1 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center">
-                                    {unreadLeaveCount}
+                                    {leaveRequestsBadgeCount}
                                 </span>
                             )}
                         </button>
-                        {isLeaveNotifOpen && (
-                            <div className="absolute right-0 mt-2 w-[330px] max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-40">
-                                <div className="flex items-center justify-between mb-2">
-                                    <p className="text-[11px] font-black uppercase tracking-wider text-slate-500">{t("dashboard.notifications")}</p>
-                                    <button type="button" onClick={markAllLeaveRead} className="text-[10px] font-black uppercase tracking-wider text-indigo-600">
-                                        {t("dashboard.mark_all_read")}
-                                    </button>
-                                </div>
-                                <div className="max-h-64 overflow-auto space-y-2">
-                                    {leaveNotifications.length === 0 ? (
-                                        <p className="text-xs text-slate-400 py-3 text-center">{t("dashboard.no_notifications")}</p>
-                                    ) : leaveNotifications.map((n) => (
-                                        <button
-                                            key={n.id}
-                                            type="button"
-                                            onClick={() => markLeaveRead(n.id)}
-                                            className={cn(
-                                                "w-full text-left rounded-xl border p-3 transition-colors",
-                                                n.is_read ? "border-slate-100 bg-slate-50/60" : "border-indigo-100 bg-indigo-50/60"
-                                            )}
-                                        >
-                                            <p className="text-xs font-bold text-slate-900">{n.title}</p>
-                                            <p className="text-[11px] text-slate-600 mt-1">{n.message}</p>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
                     {pendingResignationCount > 0 && (
                         <button
@@ -936,7 +976,6 @@ export default function ProvidersPage() {
                                 <div className="flex items-center justify-between"><h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.assigned_services')}</h4><button onClick={() => openAssignModal(provider)} className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1"><Plus className="h-3 w-3" />{t('providers.manage')}</button></div>
                                 <div className="flex flex-wrap gap-1.5">{provider.services?.slice(0, 3).map(s => <span key={s.id} className="px-2 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100/50 rounded-lg text-[10px] font-bold uppercase">{s.name}</span>)}{provider.services && provider.services.length > 3 && <span className="px-2 py-1 bg-slate-50 text-slate-400 rounded-lg text-[10px] font-bold">+{provider.services.length - 3} {t('providers.more')}</span>}</div>
                             </div>
-                            <button onClick={() => openLeaveModal(provider)} className="w-full py-2.5 border-2 border-amber-100 text-amber-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-50 transition-all flex items-center justify-center gap-2"><CalendarOff className="h-3.5 w-3.5" />{t('providers.manage_leave')}</button>
                         </div>
                     ))
                 )}
@@ -1116,7 +1155,13 @@ export default function ProvidersPage() {
                 <div className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-4xl rounded-[28px] sm:rounded-[40px] shadow-2xl p-5 sm:p-8 md:p-10 flex flex-col md:flex-row gap-6 md:gap-10 animate-in zoom-in-95 duration-300 max-h-[92vh] overflow-y-auto">
                         <div className="flex-1 space-y-6 sm:space-y-8">
-                            <div className="flex items-center justify-between"><h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('providers.manage_leave')}</h3><button onClick={() => setIsLeaveModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button></div>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Leave Inbox & Actions</h3>
+                                    <p className="text-[11px] font-semibold text-slate-500 mt-1">Review pending requests and approve/reject instantly.</p>
+                                </div>
+                                <button onClick={() => setIsLeaveModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button>
+                            </div>
                             <form onSubmit={handleAddLeave} className="space-y-6">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
@@ -1224,6 +1269,50 @@ export default function ProvidersPage() {
                     </div>
                 </div>
             )}
+            {isLeaveRequestsModalOpen && (
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-3xl rounded-[28px] sm:rounded-[32px] shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[90vh] overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 uppercase tracking-tight">{tt("providers.all_leave_requests_title", "All Leave Requests")}</h3>
+                                <p className="text-[11px] font-semibold text-slate-500 mt-1">{tt("providers.all_leave_requests_subtitle", "Approve or reject pending requests from one place.")}</p>
+                            </div>
+                            <button onClick={() => setIsLeaveRequestsModalOpen(false)}><X className="h-6 w-6 text-slate-400" /></button>
+                        </div>
+                        <div className="overflow-y-auto space-y-2 pr-1">
+                            {prioritizedPendingAlerts.length === 0 ? (
+                                <p className="text-xs text-slate-400 py-6 text-center">{t("dashboard.no_notifications")}</p>
+                            ) : prioritizedPendingAlerts.map((row: any) => (
+                                <div key={`all-req-${row.leave_id}`} className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">{row.employee_name}</p>
+                                            <p className="text-[11px] font-semibold text-slate-600 mt-0.5">{row.leave_date}</p>
+                                            {row.note && <p className="text-[11px] text-slate-500 mt-1">{row.note}</p>}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                disabled={isSubmitting}
+                                                onClick={() => handleApproveFromRequestsModal(row)}
+                                                className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
+                                            >
+                                                {tt("providers.approve", "Approve")}
+                                            </button>
+                                            <button
+                                                disabled={isSubmitting}
+                                                onClick={() => setRejectModal({ isOpen: true, leaveId: row.leave_id, reason: "" })}
+                                                className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
+                                            >
+                                                {tt("providers.reject", "Reject")}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Leave Impact Modal */}
             {impactModal.isOpen && selectedProvider && (
@@ -1254,15 +1343,15 @@ export default function ProvidersPage() {
                             <>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{tt("providers.impact_total", "Total")}</p>
                                         <p className="text-2xl font-black text-slate-900">{impactModal.impact?.total_appointments || 0}</p>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Regular</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{tt("providers.impact_regular", "Regular")}</p>
                                         <p className="text-2xl font-black text-slate-900">{impactModal.impact?.regular_customers || 0}</p>
                                     </div>
                                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">VIP</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{tt("providers.impact_vip", "VIP")}</p>
                                         <p className="text-2xl font-black text-slate-900">{impactModal.impact?.vip_customers || 0}</p>
                                     </div>
                                 </div>

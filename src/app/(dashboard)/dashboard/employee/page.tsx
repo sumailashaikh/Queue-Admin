@@ -17,6 +17,7 @@ import {
     User,
     CalendarOff,
     AlertCircle,
+    Bell,
     ChevronDown,
     ChevronRight,
     ChevronUp,
@@ -66,6 +67,7 @@ function pickQueueEntryServiceId(
 import { api } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 import { businessService } from "@/services/businessService";
+import { notificationService } from "@/services/notificationService";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 import { useSearchParams } from "next/navigation";
@@ -147,6 +149,8 @@ function EmployeeDashboardContent() {
     const [resignationRequests, setResignationRequests] = useState<any[]>([]);
     
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [employeeNotifications, setEmployeeNotifications] = useState<any[]>([]);
+    const [employeeUnreadNotifications, setEmployeeUnreadNotifications] = useState(0);
 
     const minLeaveDate = useMemo(() => new Date().toLocaleDateString("en-CA"), []);
     const todayDate = useMemo(() => new Date().toLocaleDateString("en-CA"), []);
@@ -360,13 +364,15 @@ function EmployeeDashboardContent() {
         return raw;
     };
 
-    const leaveTypeLabel = (leaveType?: string) => {
+    const leaveTypeLabel = (leaveType?: string, leaveKind?: string) => {
         const v = String(leaveType || "").toLowerCase();
+        const kind = String(leaveKind || "").toUpperCase();
         if (v === "normal") return ({ en: "Normal", ar: "عادي", hi: "सामान्य", es: "Normal" } as any)[language] || "Normal";
         if (v === "planned") return ({ en: "Planned", ar: "مخطط", hi: "योजनाबद्ध", es: "Planificado" } as any)[language] || "Planned";
         if (v === "holiday") return t("providers.holiday");
         if (v === "sick") return t("providers.sick");
-        if (v === "emergency") return t("providers.emergency");
+        // Show "Emergency" tag only for explicit emergency-time leave entries.
+        if (v === "emergency") return kind === "EMERGENCY" ? t("providers.emergency") : ({ en: "Planned", ar: "مخطط", hi: "योजनाबद्ध", es: "Planificado" } as any)[language] || "Planned";
         if (v === "other") return t("providers.other");
         return leaveType || t("providers.other");
     };
@@ -523,6 +529,18 @@ function EmployeeDashboardContent() {
             setMyDayOffs(dayOffData || []);
             setMyBlockTimes(blockData || []);
             setResignationRequests(resignationData || []);
+
+            try {
+                const notifResp = await notificationService.listMy();
+                const employeeFeed = (notifResp.data || []).filter((n: any) =>
+                    ["leave_status_update", "appointment_request", "leave_request"].includes(String(n?.type || ""))
+                );
+                setEmployeeNotifications(employeeFeed.slice(0, 4));
+                setEmployeeUnreadNotifications(Number(notifResp.unread || 0));
+            } catch {
+                setEmployeeNotifications([]);
+                setEmployeeUnreadNotifications(0);
+            }
         } catch (error) {
             console.error("Failed to fetch employee data:", error);
         } finally {
@@ -801,7 +819,7 @@ function EmployeeDashboardContent() {
         setIsSubmitting(true);
         try {
             await providerService.markAttendance(profile.id, action);
-            showToast(action === "clock_in" ? "Clock in recorded" : "Clock out recorded");
+            showToast(action === "clock_in" ? t("employee.clock_in_recorded") : t("employee.clock_out_recorded"));
             fetchData();
         } catch (error: any) {
             showToast(parseApiMessage(error, "providers.err_availability"), "error");
@@ -1194,6 +1212,62 @@ function EmployeeDashboardContent() {
                     </div>
                 </motion.div>
             </div>
+
+            {employeeNotifications.length > 0 && (
+                <div className="px-6 mt-4">
+                    <div className="rounded-3xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-2">
+                                <Bell className="h-3.5 w-3.5" />
+                                Notifications {employeeUnreadNotifications > 0 ? `(${employeeUnreadNotifications})` : ""}
+                            </p>
+                            <button
+                                onClick={async () => {
+                                    await notificationService.markAllRead();
+                                    setEmployeeNotifications((prev) => prev.map((n: any) => ({ ...n, is_read: true })));
+                                    setEmployeeUnreadNotifications(0);
+                                }}
+                                className="text-[10px] font-bold uppercase tracking-widest text-indigo-700"
+                            >
+                                Mark all read
+                            </button>
+                        </div>
+                        <div className="space-y-2">
+                            {employeeNotifications.map((n: any) => (
+                                <div
+                                    key={n.id}
+                                    className={cn(
+                                        "rounded-2xl border px-3 py-2.5",
+                                        n.is_read ? "border-slate-100 bg-white" : "border-indigo-200 bg-white"
+                                    )}
+                                >
+                                    <p className="text-[11px] font-bold text-slate-800">{n.title || "Notification"}</p>
+                                    <p className="text-[11px] text-slate-600 mt-0.5">{n.message}</p>
+                                    <div className="mt-1.5 flex items-center justify-between">
+                                        <span className="text-[10px] text-slate-400 font-semibold">
+                                            {new Date(n.created_at).toLocaleString()}
+                                        </span>
+                                        {!n.is_read && (
+                                            <button
+                                                onClick={async () => {
+                                                    await notificationService.markRead(n.id);
+                                                    setEmployeeNotifications((prev) =>
+                                                        prev.map((row: any) => (row.id === n.id ? { ...row, is_read: true } : row))
+                                                    );
+                                                    setEmployeeUnreadNotifications((prev) => Math.max(0, prev - 1));
+                                                }}
+                                                className="text-[10px] font-bold uppercase tracking-widest text-indigo-700"
+                                            >
+                                                Mark read
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Main Tabs */}
             <div className="px-6 mt-8">
@@ -1623,7 +1697,7 @@ function EmployeeDashboardContent() {
                                                                             {formatLeaveDateRange(leave.start_date, leave.end_date, language)}
                                                                         </p>
                                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex flex-wrap items-center gap-1.5">
-                                                                            {leaveTypeLabel(leave.leave_type)}
+                                                                            {leaveTypeLabel(leave.leave_type, leave.leave_kind)}
                                                                             <span className="text-slate-200">•</span>
                                                                             {leaveKindLabel(leave.leave_kind)}
                                                                             <span className="text-slate-200">•</span>
@@ -1709,7 +1783,7 @@ function EmployeeDashboardContent() {
                                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                                         <div className="flex items-center justify-between gap-3">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                <Clock className="h-3.5 w-3.5" /> Staff Attendance
+                                                <Clock className="h-3.5 w-3.5" /> {t("employee.staff_attendance")}
                                             </p>
                                             <span className={cn(
                                                 "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
@@ -1717,17 +1791,21 @@ function EmployeeDashboardContent() {
                                                 attendanceStatus === "clocked_in" && "bg-emerald-100 text-emerald-700",
                                                 attendanceStatus === "not_marked" && "bg-amber-100 text-amber-700",
                                             )}>
-                                                {attendanceStatus === "clocked_out" ? "Clocked Out" : attendanceStatus === "clocked_in" ? "On Duty" : "Not Marked"}
+                                                {attendanceStatus === "clocked_out"
+                                                    ? t("employee.clocked_out")
+                                                    : attendanceStatus === "clocked_in"
+                                                    ? t("employee.on_duty")
+                                                    : t("employee.not_marked")}
                                             </span>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Clock In</p>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t("employee.clock_in")}</p>
                                                 <p className="text-lg font-black text-slate-900 mt-1">{todayClockIn}</p>
                                             </div>
                                             <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Clock Out</p>
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t("employee.clock_out")}</p>
                                                 <p className="text-lg font-black text-slate-900 mt-1">{todayClockOut}</p>
                                             </div>
                                         </div>
@@ -1739,7 +1817,7 @@ function EmployeeDashboardContent() {
                                                 onClick={() => handleClockAction("clock_in")}
                                                 className="w-full px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Clock In
+                                                {t("employee.clock_in")}
                                             </button>
                                             <button
                                                 type="button"
@@ -1747,13 +1825,13 @@ function EmployeeDashboardContent() {
                                                 onClick={() => handleClockAction("clock_out")}
                                                 className="w-full px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Clock Out
+                                                {t("employee.clock_out")}
                                             </button>
                                         </div>
 
                                         {attendanceRecords.length > 0 && (
                                             <div className="pt-1 border-t border-slate-100 space-y-2 max-h-44 overflow-auto">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Attendance</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("employee.recent_attendance")}</p>
                                                 {attendanceRecords.slice(0, 5).map((r: any) => (
                                                     <div key={r.id} className="text-[11px] text-slate-500 flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2">
                                                         <span className="font-semibold text-slate-600">{String(r.attendance_date || "")}</span>
@@ -1890,7 +1968,7 @@ function EmployeeDashboardContent() {
                                                             {formatLeaveDateRange(leave.start_date, leave.end_date, language)}
                                                         </p>
                                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex flex-wrap items-center gap-1.5">
-                                                            {leaveTypeLabel(leave.leave_type)}
+                                                            {leaveTypeLabel(leave.leave_type, leave.leave_kind)}
                                                             <span className="text-slate-200">•</span>
                                                             {leaveKindLabel(leave.leave_kind)}
                                                             <span className="text-slate-200">•</span>

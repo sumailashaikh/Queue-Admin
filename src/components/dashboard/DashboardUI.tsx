@@ -89,6 +89,26 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       text: "text-indigo-700",
       label: tSafe("status.confirmed", "Confirmed"),
     },
+    pending: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      label: tSafe("status.pending", "Pending"),
+    },
+    requested: {
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      label: tSafe("status.requested", "Requested"),
+    },
+    rescheduled: {
+      bg: "bg-violet-50",
+      text: "text-violet-700",
+      label: tSafe("status.rescheduled", "Rescheduled"),
+    },
+    cancelled: {
+      bg: "bg-rose-50",
+      text: "text-rose-700",
+      label: tSafe("status.cancelled", "Cancelled"),
+    },
     scheduled: {
       bg: "bg-slate-100",
       text: "text-slate-600",

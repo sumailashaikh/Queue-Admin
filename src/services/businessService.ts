@@ -96,9 +96,10 @@ export const businessService = {
     return result.data;
   },
 
-  async getPublicProviders(slug: string): Promise<PublicProviderInsight[]> {
+  async getPublicProviders(slug: string, date?: string): Promise<PublicProviderInsight[]> {
+    const query = date ? `?date=${encodeURIComponent(date)}` : "";
     const result = await api.get<PublicProviderInsight[]>(
-      `/public/business/${slug}/providers`,
+      `/public/business/${slug}/providers${query}`,
     );
     return result.data || [];
   },

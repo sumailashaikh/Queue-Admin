@@ -233,6 +233,12 @@ export default function PaymentsPage() {
 
     const shareInvoiceOnWhatsApp = async () => {
         if (!selectedEntry || !business) return;
+        const paymentMethod = String(selectedEntry.payment_method || "").toLowerCase();
+        const isPaid = paymentMethod === "qr" || paymentMethod === "cash";
+        if (!isPaid) {
+            window.alert(tr("payments.share_only_paid_invoice", "Please mark this invoice as paid before sharing on WhatsApp."));
+            return;
+        }
         const normalizedCustomerPhone = String(selectedEntry.phone || "").replace(/[^\d]/g, "");
         const doc = buildInvoicePdf();
         if (!doc) return;
@@ -480,10 +486,18 @@ export default function PaymentsPage() {
                                 <div className="flex flex-wrap gap-3">
                                     <button
                                         onClick={shareInvoiceOnWhatsApp}
-                                        className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-600 active:scale-[0.99] transition-all shadow-sm hover:shadow cursor-pointer"
+                                        disabled={!isPaidLocked}
+                                        className={cn(
+                                            "inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm",
+                                            isPaidLocked
+                                                ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-[0.99] hover:shadow cursor-pointer"
+                                                : "bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed"
+                                        )}
                                     >
                                         <MessageCircle className="h-4 w-4" />
-                                        {tr("payments.share_whatsapp", "Share On WhatsApp")}
+                                        {isPaidLocked
+                                            ? tr("payments.share_whatsapp", "Share On WhatsApp")
+                                            : tr("payments.share_after_paid", "Share After Payment")}
                                     </button>
                                     <button
                                         onClick={() => markPayment("qr")}

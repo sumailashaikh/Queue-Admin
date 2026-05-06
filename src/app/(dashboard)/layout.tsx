@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { Bell } from "lucide-react";
 import { notificationService, AppNotification } from "@/services/notificationService";
+import { providerService } from "@/services/providerService";
+import { appointmentService } from "@/services/appointmentService";
 
 export default function DashboardLayout({
     children,
@@ -25,32 +27,81 @@ export default function DashboardLayout({
     const [showNotifMenu, setShowNotifMenu] = useState(false);
     const [notifFilter, setNotifFilter] = useState<"unread" | "all">("unread");
     const [headerToast, setHeaderToast] = useState<string | null>(null);
+    const [providersAlertCount, setProvidersAlertCount] = useState(0);
+    const [appointmentsAlertCount, setAppointmentsAlertCount] = useState(0);
     const firstLoadDoneRef = useRef(false);
     const pathname = usePathname();
     const isAdminPath = pathname.startsWith('/dashboard/admin');
     const t = (key: string, params?: any) => baseT(key, params, isAdminPath ? 'en' : undefined);
     const segment = pathname.split('/').pop() || 'dashboard';
     const pageTitle = segment === 'dashboard' ? 'Overview' : segment.replace(/-/g, ' ');
-    const isOwnerLike = ["owner", "admin"].includes(String(user?.role || "").toLowerCase());
+    const normalizedRole = String(user?.role || user?.user_metadata?.role || "").toLowerCase().trim();
+    const isOwnerLike =
+        ["owner", "business_owner", "admin", "manager"].includes(normalizedRole) ||
+        (!!business?.id && normalizedRole !== "employee");
 
     useEffect(() => {
         if (!isOwnerLike || pathname.startsWith('/dashboard/admin')) return;
         let mounted = true;
         const fetchNotifications = async () => {
+            let providerUnread = 0;
+            let appointmentUnread = 0;
             try {
                 const resp = await notificationService.listMy();
                 if (!mounted) return;
                 const prevUnread = unreadCount;
                 setNotifications(resp.data || []);
                 setUnreadCount(resp.unread || 0);
+                providerUnread = (resp.data || []).filter((n: any) => {
+                    const type = String(n?.type || "").toLowerCase();
+                    const title = String(n?.title || "").toLowerCase();
+                    const msg = String(n?.message || "").toLowerCase();
+                    const leaveLike = type.includes("leave") || title.includes("leave") || msg.includes("leave");
+                    return leaveLike && !n.is_read;
+                }).length;
+                appointmentUnread = (resp.data || []).filter((n: any) => {
+                    const type = String(n?.type || "").toLowerCase();
+                    const title = String(n?.title || "").toLowerCase();
+                    const msg = String(n?.message || "").toLowerCase();
+                    const apptLike = type.includes("appointment") || title.includes("appointment") || msg.includes("appointment");
+                    return apptLike && !n.is_read;
+                }).length;
                 if (firstLoadDoneRef.current && (resp.unread || 0) > prevUnread) {
                     setHeaderToast(t("dashboard.new_appointment_request_received"));
                     setTimeout(() => setHeaderToast(null), 2500);
                 }
                 firstLoadDoneRef.current = true;
             } catch {
-                // non-blocking
+                // fallback counters still run below
             }
+
+            let pendingLeaveCount = 0;
+            let pendingLeaveCountFromAlerts = 0;
+            let pendingApptCount = 0;
+            if (business?.id) {
+                const [leaveCountRes, leaveRes, apptRes] = await Promise.allSettled([
+                    providerService.getPendingLeaveCount(business.id),
+                    providerService.getLeaveAlerts(business.id),
+                    appointmentService.getBusinessAppointments()
+                ]);
+                if (leaveCountRes.status === "fulfilled") {
+                    pendingLeaveCount = Number(leaveCountRes.value || 0);
+                }
+                if (leaveRes.status === "fulfilled") {
+                    pendingLeaveCountFromAlerts = (leaveRes.value || []).filter((row: any) => {
+                        const value = String(row?.leave_status || row?.status || "").toUpperCase();
+                        return value === "PENDING";
+                    }).length;
+                }
+                if (apptRes.status === "fulfilled") {
+                    pendingApptCount = (apptRes.value || []).filter((a: any) =>
+                        ["pending", "requested"].includes(String(a?.status || "").toLowerCase())
+                    ).length;
+                }
+            }
+            if (!mounted) return;
+            setProvidersAlertCount(Math.max(providerUnread, pendingLeaveCount, pendingLeaveCountFromAlerts));
+            setAppointmentsAlertCount(Math.max(appointmentUnread, pendingApptCount));
         };
         fetchNotifications();
         const interval = setInterval(() => {
@@ -61,7 +112,7 @@ export default function DashboardLayout({
             mounted = false;
             clearInterval(interval);
         };
-    }, [isOwnerLike, pathname, unreadCount]);
+    }, [isOwnerLike, pathname, unreadCount, business?.id]);
 
     const handleMarkOneRead = async (id: string) => {
         await notificationService.markRead(id);
@@ -97,6 +148,10 @@ export default function DashboardLayout({
                         onClose={() => setIsSidebarOpen(false)}
                         isCollapsed={isSidebarCollapsed}
                         forceLanguage={pathname.startsWith('/dashboard/admin') ? 'en' : undefined}
+                        navBadges={{
+                            "/dashboard/providers": providersAlertCount,
+                            "/dashboard/appointments": appointmentsAlertCount,
+                        }}
                     />
                 </div>
 
@@ -129,60 +184,6 @@ export default function DashboardLayout({
 
                         <div className="flex items-center gap-6">
                             {!pathname.startsWith('/dashboard/admin') && <LanguageSwitcher />}
-                            {isOwnerLike && !pathname.startsWith('/dashboard/admin') && (
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowNotifMenu((p) => !p)}
-                                        className="relative h-9 w-9 rounded-full border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50"
-                                    >
-                                        <Bell className="h-4 w-4 text-slate-600" />
-                                        {unreadCount > 0 && (
-                                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
-                                                {unreadCount > 9 ? "9+" : unreadCount}
-                                            </span>
-                                        )}
-                                    </button>
-                                    {showNotifMenu && (
-                                        <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl z-200 p-3">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <p className="text-xs font-black uppercase tracking-wider text-slate-500">{t("dashboard.notifications")}</p>
-                                                <button onClick={handleMarkAllRead} className="text-[10px] font-bold text-primary uppercase tracking-wider">{t("dashboard.mark_all_read")}</button>
-                                            </div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <button
-                                                    onClick={() => setNotifFilter("unread")}
-                                                    className={cn("text-[10px] px-2 py-1 rounded-lg font-bold uppercase", notifFilter === "unread" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600")}
-                                                >
-                                                    {t("dashboard.unread")}
-                                                </button>
-                                                <button
-                                                    onClick={() => setNotifFilter("all")}
-                                                    className={cn("text-[10px] px-2 py-1 rounded-lg font-bold uppercase", notifFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600")}
-                                                >
-                                                    {t("dashboard.all")}
-                                                </button>
-                                            </div>
-                                            <div className="max-h-72 overflow-y-auto space-y-2">
-                                                {(notifFilter === "unread" ? notifications.filter((n) => !n.is_read) : notifications).length === 0 ? (
-                                                    <p className="text-xs text-slate-400 py-4 text-center">{t("dashboard.no_notifications")}</p>
-                                                ) : (notifFilter === "unread" ? notifications.filter((n) => !n.is_read) : notifications).map((n) => (
-                                                    <button
-                                                        key={n.id}
-                                                        onClick={() => handleMarkOneRead(n.id)}
-                                                        className={cn(
-                                                            "w-full text-left rounded-xl border p-3",
-                                                            n.is_read ? "border-slate-100 bg-slate-50/50" : "border-indigo-100 bg-indigo-50/60"
-                                                        )}
-                                                    >
-                                                        <p className="text-xs font-bold text-slate-900">{n.title}</p>
-                                                        <p className="text-[11px] text-slate-600 mt-1">{n.message}</p>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                             <div className="hidden sm:flex flex-col items-end">
                                 <p className="text-sm font-bold text-slate-900">{pathname.startsWith('/dashboard/admin') ? 'Admin' : t('dashboard.business_portal')}</p>
                                 <button

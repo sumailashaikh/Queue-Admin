@@ -97,12 +97,15 @@ const dictionaries: Record<string, Dictionary> = {
             loading_slots: "Loading available time slots...",
             no_slots_for_provider: "No available slots for selected provider. Try another provider/date.",
             no_slots_hint: "No slots found for this provider on selected date. Choose another provider or date.",
+            no_slots_hint_with_leave: "No time slots available for this staff on the selected date. Please choose another staff member/date or use auto-assign.",
+            provider_on_leave_pick_another: "Selected staff is unavailable or on leave. Please choose another staff member.",
             selected_provider: "Selected Provider",
             hour_short: "hr",
             minute_short: "min",
             provider_busy_until: "This provider is likely busy until {{time}}. Please choose a time after that.",
             provider_busy_choose_later: "This provider is currently busy. Please choose a later time.",
-            provider_selected_for_date: "Provider selected for your appointment date and time."
+            provider_selected_for_date: "Provider selected for your appointment date and time.",
+            slot_cutoff_note: "Slots outside business hours are disabled. Closing time is {{time}}."
         },
         status: {
             access_denied: "Access Denied",
@@ -302,12 +305,15 @@ const dictionaries: Record<string, Dictionary> = {
             loading_slots: "Cargando horarios disponibles...",
             no_slots_for_provider: "No hay horarios disponibles para el proveedor seleccionado. Prueba con otro proveedor/fecha.",
             no_slots_hint: "No se encontraron horarios para este proveedor en la fecha seleccionada. Elige otro proveedor o fecha.",
+            no_slots_hint_with_leave: "No hay horarios disponibles para este personal en la fecha seleccionada. Elige otro personal/fecha o usa asignación automática.",
+            provider_on_leave_pick_another: "El personal seleccionado no está disponible o está de permiso. Elige otro personal.",
             selected_provider: "Proveedor seleccionado",
             hour_short: "h",
             minute_short: "min",
             provider_busy_until: "Es probable que este proveedor esté ocupado hasta las {{time}}. Elige un horario después de ese momento.",
             provider_busy_choose_later: "Este proveedor está ocupado en este momento. Elige un horario más tarde.",
-            provider_selected_for_date: "Proveedor seleccionado para la fecha y hora de su cita."
+            provider_selected_for_date: "Proveedor seleccionado para la fecha y hora de su cita.",
+            slot_cutoff_note: "Los horarios fuera del horario laboral están deshabilitados. La hora de cierre es {{time}}."
         },
         status: {
             access_denied: "Acceso Denegado",
@@ -437,12 +443,15 @@ const dictionaries: Record<string, Dictionary> = {
             loading_slots: "उपलब्ध समय स्लॉट लोड हो रहे हैं...",
             no_slots_for_provider: "चुने गए प्रदाता के लिए कोई स्लॉट उपलब्ध नहीं है। दूसरा प्रदाता/तारीख चुनें।",
             no_slots_hint: "चुनी गई तारीख पर इस प्रदाता के लिए स्लॉट नहीं मिले। दूसरा प्रदाता या तारीख चुनें।",
+            no_slots_hint_with_leave: "चुनी गई तारीख पर इस स्टाफ के लिए कोई समय स्लॉट उपलब्ध नहीं है। कृपया दूसरा स्टाफ/तारीख चुनें या ऑटो-असाइन उपयोग करें।",
+            provider_on_leave_pick_another: "चुना गया स्टाफ उपलब्ध नहीं है या छुट्टी पर है। कृपया दूसरा स्टाफ चुनें।",
             selected_provider: "चयनित प्रदाता",
             hour_short: "घं",
             minute_short: "मिनट",
             provider_busy_until: "यह प्रदाता संभवतः {{time}} तक व्यस्त रहेगा। कृपया इसके बाद का समय चुनें।",
             provider_busy_choose_later: "यह प्रदाता अभी व्यस्त है। कृपया बाद का समय चुनें।",
-            provider_selected_for_date: "यह प्रदाता आपकी चुनी हुई तारीख और समय के लिए चयनित है।"
+            provider_selected_for_date: "यह प्रदाता आपकी चुनी हुई तारीख और समय के लिए चयनित है।",
+            slot_cutoff_note: "कार्य समय के बाहर वाले स्लॉट अक्षम हैं। बंद होने का समय {{time}} है।"
         },
         status: {
             access_denied: "पहुंच अस्वीकृत",
@@ -642,12 +651,15 @@ const dictionaries: Record<string, Dictionary> = {
             loading_slots: "جاري تحميل الأوقات المتاحة...",
             no_slots_for_provider: "لا توجد مواعيد متاحة لمقدم الخدمة المحدد. جرّب مقدم خدمة/تاريخاً آخر.",
             no_slots_hint: "لا توجد مواعيد لهذا المقدم في التاريخ المحدد. اختر مقدم خدمة أو تاريخاً آخر.",
+            no_slots_hint_with_leave: "لا توجد مواعيد متاحة لهذا الموظف في التاريخ المحدد. اختر موظفاً/تاريخاً آخر أو استخدم التعيين التلقائي.",
+            provider_on_leave_pick_another: "الموظف المحدد غير متاح أو في إجازة. يرجى اختيار موظف آخر.",
             selected_provider: "مقدم الخدمة المحدد",
             hour_short: "سا",
             minute_short: "د",
             provider_busy_until: "من المحتمل أن يكون مقدم الخدمة مشغولاً حتى {{time}}. يرجى اختيار وقت بعد ذلك.",
             provider_busy_choose_later: "مقدم الخدمة مشغول حالياً. يرجى اختيار وقت لاحق.",
-            provider_selected_for_date: "تم اختيار مقدم الخدمة لموعدك في التاريخ والوقت المحددين."
+            provider_selected_for_date: "تم اختيار مقدم الخدمة لموعدك في التاريخ والوقت المحددين.",
+            slot_cutoff_note: "الفتحات خارج ساعات العمل معطلة. وقت الإغلاق هو {{time}}."
         },
         status: {
             access_denied: "تم رفض الوصول",

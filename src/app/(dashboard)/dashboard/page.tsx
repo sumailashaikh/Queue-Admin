@@ -21,6 +21,7 @@ import { queueService } from "@/services/queueService";
 import { businessService } from "@/services/businessService"; // Assuming businessService is needed for business data
 import { providerService } from "@/services/providerService";
 import { appointmentService } from "@/services/appointmentService";
+import { notificationService } from "@/services/notificationService";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardPage() {
@@ -57,12 +58,17 @@ export default function DashboardPage() {
 
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
   const [leaveAlerts, setLeaveAlerts] = useState<any[]>([]);
+  const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
+  const [notificationUnread, setNotificationUnread] = useState(0);
 
   const refreshLeaveAlerts = async (businessId: string) => {
     const n = await providerService.getPendingLeaveCount(businessId);
     setPendingLeaveCount(n);
     const alerts = await providerService.getLeaveAlerts(businessId);
-    setLeaveAlerts(alerts || []);
+    const pendingOnly = (alerts || []).filter(
+      (row: any) => String(row?.leave_status || "").toUpperCase() === "PENDING",
+    );
+    setLeaveAlerts(pendingOnly);
   };
 
   const handleLeaveAction = async (
@@ -112,6 +118,18 @@ export default function DashboardPage() {
       try {
         const myBusiness = await businessService.getMyBusiness(); // Fetch business data
         setBusiness(myBusiness);
+
+        try {
+          const notifResp = await notificationService.listMy();
+          const ownerFeed = (notifResp.data || []).filter((n: any) =>
+            ["leave_request", "appointment_request", "leave_status_update"].includes(String(n?.type || "")),
+          );
+          setRecentNotifications(ownerFeed.slice(0, 5));
+          setNotificationUnread(Number(notifResp.unread || 0));
+        } catch {
+          setRecentNotifications([]);
+          setNotificationUnread(0);
+        }
 
         if (myBusiness?.id && user?.role === "owner") {
           try {
@@ -268,7 +286,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="space-y-2">
-              {leaveAlerts.slice(0, 5).map((a: any) => (
+              {leaveAlerts.slice(0, 15).map((a: any) => (
                 <div
                   key={a.leave_id}
                   className="rounded-xl border border-rose-100 bg-white px-3 py-3"
@@ -315,6 +333,105 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {user?.role === "owner" && (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-bold text-slate-900">
+                Owner Notifications {notificationUnread > 0 ? `(${notificationUnread})` : ""}
+              </p>
+              <button
+                onClick={async () => {
+                  await notificationService.markAllRead();
+                  setRecentNotifications((prev) => prev.map((n: any) => ({ ...n, is_read: true })));
+                  setNotificationUnread(0);
+                }}
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-[11px] font-bold uppercase tracking-wider text-white"
+              >
+                Mark all read
+              </button>
+            </div>
+            <div className="space-y-2">
+              {recentNotifications.length === 0 && (
+                <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                  <p className="text-xs font-semibold text-slate-600">
+                    No recent notifications yet.
+                  </p>
+                </div>
+              )}
+              {recentNotifications.map((n: any) => {
+                const to =
+                  n.type === "appointment_request"
+                    ? "/dashboard/appointments"
+                    : "/dashboard/providers";
+                return (
+                  <div
+                    key={n.id}
+                    className={cn(
+                      "rounded-xl border px-3 py-3",
+                      n.is_read ? "border-slate-100 bg-slate-50" : "border-indigo-100 bg-indigo-50/50",
+                    )}
+                  >
+                    <p className="text-xs font-bold text-slate-900">{n.title || "Notification"}</p>
+                    <p className="mt-1 text-[11px] font-medium text-slate-600">{n.message}</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {new Date(n.created_at).toLocaleString()}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {!n.is_read && (
+                          <button
+                            onClick={async () => {
+                              await notificationService.markRead(n.id);
+                              setRecentNotifications((prev) =>
+                                prev.map((row: any) => (row.id === n.id ? { ...row, is_read: true } : row)),
+                              );
+                              setNotificationUnread((prev) => Math.max(0, prev - 1));
+                            }}
+                            className="text-[10px] font-bold uppercase tracking-wider text-indigo-700"
+                          >
+                            Mark read
+                          </button>
+                        )}
+                        <Link href={to} className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                          Open
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {leaveAlerts.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Pending Leave Requests
+                </p>
+                {leaveAlerts.slice(0, 5).map((a: any) => (
+                  <div
+                    key={`pending-${a.leave_id}`}
+                    className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-3"
+                  >
+                    <p className="text-xs font-bold text-slate-900">
+                      {a.employee_name} - {a.leave_date}
+                    </p>
+                    <p className="mt-1 text-[11px] font-medium text-slate-600">
+                      Action required: Approve or reject this leave request.
+                    </p>
+                    <div className="mt-2 flex items-center justify-end">
+                      <Link
+                        href="/dashboard/providers"
+                        className="text-[10px] font-bold uppercase tracking-wider text-slate-700"
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -446,7 +563,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-black text-slate-900 uppercase tracking-widest">
-                        {t("dashboard.pwa_setup") || "Get Web App"}
+                        {tr("dashboard.pwa_setup", "Web App Ready")}
                       </p>
                       <p className="text-[10px] font-bold opacity-80 uppercase tracking-tighter text-slate-500">
                         {t("dashboard.installation_guide")}

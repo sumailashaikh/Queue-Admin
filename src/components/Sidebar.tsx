@@ -17,6 +17,7 @@ import {
   BadgeCheck,
   Briefcase,
   TrendingUp,
+  Bell,
 } from "lucide-react";
 
 const navigation = [
@@ -50,10 +51,12 @@ export default function Sidebar({
   onClose,
   isCollapsed = false,
   forceLanguage,
+  navBadges,
 }: {
   onClose?: () => void;
   isCollapsed?: boolean;
   forceLanguage?: string;
+  navBadges?: Record<string, number>;
 }) {
   const pathname = usePathname();
   const { user, business, logout } = useAuth();
@@ -172,6 +175,10 @@ export default function Sidebar({
                   (isAdmin &&
                     pathname.startsWith("/dashboard/admin") &&
                     item.href === "/dashboard/admin");
+                const badgeCount = Number(navBadges?.[item.href] || 0);
+                const isAlertNav =
+                  item.href === "/dashboard/providers" ||
+                  item.href === "/dashboard/appointments";
                 return (
                   <Link
                     key={item.href}
@@ -179,7 +186,7 @@ export default function Sidebar({
                     onClick={onClose}
                     title={isCollapsed ? t(item.transKey) : undefined}
                     className={cn(
-                      "group flex items-center rounded-[14px] transition-all duration-200",
+                      "group relative flex items-center rounded-[14px] transition-all duration-200",
                       isCollapsed
                         ? "px-3 py-3 justify-center"
                         : "px-4 py-3 text-[13px] font-bold",
@@ -197,7 +204,27 @@ export default function Sidebar({
                           : "text-slate-500 group-hover:text-slate-300",
                       )}
                     />
-                    {!isCollapsed && t(item.transKey)}
+                    {!isCollapsed && (
+                      <>
+                        <span className="truncate">{t(item.transKey)}</span>
+                        {isAlertNav && badgeCount > 0 && (
+                          <span className="ml-auto inline-flex items-center gap-1">
+                            <Bell className="h-3.5 w-3.5 text-blue-300" />
+                            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
+                              {badgeCount > 99 ? "99+" : badgeCount}
+                            </span>
+                          </span>
+                        )}
+                      </>
+                    )}
+                    {isCollapsed && isAlertNav && badgeCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5">
+                        <Bell className="h-3 w-3 text-blue-300" />
+                        <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">
+                          {badgeCount > 9 ? "9+" : badgeCount}
+                        </span>
+                      </span>
+                    )}
                   </Link>
                 );
               })}
