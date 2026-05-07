@@ -55,7 +55,7 @@ export default function ProvidersPage() {
     const [dayOffData, setDayOffData] = useState<any[]>([]);
     const [blockTimeData, setBlockTimeData] = useState<any[]>([]);
     const [dayOffForm, setDayOffForm] = useState({ day_off_date: "", day_off_type: "full_day", start_time: "", end_time: "", reason: "" });
-    const [blockForm, setBlockForm] = useState({ block_date: "", start_time: "", end_time: "", reason: "" });
+    const [blockForm, setBlockForm] = useState({ block_date: "", start_time: "", end_time: "", reason: "lunch_break", note: "", duration: "30" });
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; provider: ServiceProvider | null }>({ isOpen: false, provider: null });
 
     const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -103,6 +103,22 @@ export default function ProvidersPage() {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
     };
+
+    const blockoutReasons = [
+        { value: "lunch_break", label: "Lunch Break" },
+        { value: "tea_break", label: "Tea Break" },
+        { value: "outside_work", label: "Outside Work" },
+        { value: "emergency", label: "Emergency" },
+        { value: "meeting", label: "Meeting" },
+        { value: "personal_work", label: "Personal Work" },
+        { value: "other", label: "Other" },
+    ];
+    const blockoutDurations = [
+        { value: "30", label: "30 minutes" },
+        { value: "60", label: "1 hour" },
+        { value: "120", label: "2 hours" },
+        { value: "custom", label: "Custom end time" },
+    ];
 
     const parseApiMessage = (error: any, fallbackKey: string, fallbackText: string) => {
         const data = error?.response?.data;
@@ -484,6 +500,18 @@ export default function ProvidersPage() {
 
     const openAvailabilityModal = async (provider: ServiceProvider) => {
         setSelectedProvider(provider);
+        setBlockForm({
+            block_date: todayBlockDate,
+            start_time: new Date().toLocaleTimeString("en-GB", {
+                hour12: false,
+                hour: "2-digit",
+                minute: "2-digit",
+            }),
+            end_time: "",
+            reason: "lunch_break",
+            note: "",
+            duration: "30",
+        });
         try {
             const [data, offs, blocks] = await Promise.all([
                 providerService.getAvailability(provider.id),
@@ -565,16 +593,43 @@ export default function ProvidersPage() {
     };
 
     const handleAddBlockTime = async () => {
-        if (!selectedProvider || !blockForm.block_date || !blockForm.start_time || !blockForm.end_time) return;
+        if (!selectedProvider || !blockForm.block_date || !blockForm.start_time) return;
+        const toMinutes = (v: string) => {
+            const [h, m] = String(v || "00:00").split(":").map(Number);
+            return (Number(h) || 0) * 60 + (Number(m) || 0);
+        };
+        let effectiveEndTime = blockForm.end_time;
+        if (blockForm.duration !== "custom") {
+            const extra = Number(blockForm.duration || 0);
+            const startMins = toMinutes(blockForm.start_time);
+            const endMins = Math.min(23 * 60 + 59, startMins + extra);
+            const hh = String(Math.floor(endMins / 60)).padStart(2, "0");
+            const mm = String(endMins % 60).padStart(2, "0");
+            effectiveEndTime = `${hh}:${mm}`;
+        }
+        if (!effectiveEndTime) {
+            showToast("Please select end time", "error");
+            return;
+        }
+        if (toMinutes(effectiveEndTime) <= toMinutes(blockForm.start_time)) {
+            showToast("End time must be after start time", "error");
+            return;
+        }
         if (blockForm.block_date !== todayBlockDate) {
             showToast("Only current-day block out is allowed", "error");
             return;
         }
         setIsSubmitting(true);
         try {
-            await providerService.addBlockTime(selectedProvider.id, blockForm as any);
+            await providerService.addBlockTime(selectedProvider.id, {
+                block_date: blockForm.block_date,
+                start_time: blockForm.start_time,
+                end_time: effectiveEndTime,
+                reason: blockForm.reason,
+                note: blockForm.note,
+            } as any);
             setBlockTimeData(await providerService.getBlockTimes(selectedProvider.id));
-            setBlockForm({ block_date: "", start_time: "", end_time: "", reason: "" });
+            setBlockForm({ block_date: "", start_time: "", end_time: "", reason: "lunch_break", note: "", duration: "30" });
             showToast("Block time added");
         } catch (error: any) {
             showToast(error?.response?.data?.message || "Failed to add block time", "error");
@@ -916,6 +971,11 @@ export default function ProvidersPage() {
     const daysList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const filteredProviders = providers.filter(p => p.is_active !== false && p.name.toLowerCase().includes(search.toLowerCase()));
     const pendingResignationCount = resignations.filter((r: any) => String(r?.status || '').toUpperCase() === 'PENDING').length;
+    const labelReason = (reason?: string | null) => {
+        const key = String(reason || "other").toLowerCase();
+        const found = blockoutReasons.find((r) => r.value === key);
+        return found?.label || key.replace(/_/g, " ");
+    };
 
     if (loading) {
         return <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('dashboard.loading')}</p></div>;
@@ -973,6 +1033,57 @@ export default function ProvidersPage() {
                 </div>
             </div>
 
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-x-auto">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Live Employee Availability</h3>
+                <table className="w-full min-w-[720px]">
+                    <thead>
+                        <tr className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <th className="py-2 pr-3">Employee Name</th>
+                            <th className="py-2 pr-3">Current Status</th>
+                            <th className="py-2 pr-3">Reason</th>
+                            <th className="py-2 pr-3">Available After</th>
+                            <th className="py-2 pr-3">Remaining Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredProviders.map((provider) => {
+                            const remaining = Number(provider.temporary_unavailable_remaining_minutes || 0);
+                            const status = provider.temporary_unavailable
+                                ? "unavailable"
+                                : Number(provider.current_tasks_count || 0) > 0
+                                    ? "busy"
+                                    : "available";
+                            return (
+                                <tr key={`live-${provider.id}`} className="border-t border-slate-100 text-sm">
+                                    <td className="py-2.5 pr-3 font-bold text-slate-900">{provider.name}</td>
+                                    <td className="py-2.5 pr-3">
+                                        <span className={cn(
+                                            "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border",
+                                            status === "unavailable"
+                                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                                : status === "busy"
+                                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                        )}>
+                                            {status === "unavailable" ? "Temporarily Unavailable" : status === "busy" ? "Busy" : "Available"}
+                                        </span>
+                                    </td>
+                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">
+                                        {status === "unavailable" ? labelReason(provider.temporary_unavailable_reason) : "-"}
+                                    </td>
+                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">
+                                        {status === "unavailable" ? provider.temporary_unavailable_until || "-" : "-"}
+                                    </td>
+                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">
+                                        {status === "unavailable" ? `Back in ${Math.max(0, remaining)} mins` : "-"}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
             {/* Providers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProviders.length === 0 ? (
@@ -997,7 +1108,24 @@ export default function ProvidersPage() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
-                                    <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border", provider.leave_status === 'on_leave' ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-emerald-50 text-emerald-600 border-emerald-100")}>{t(provider.leave_status === 'on_leave' ? 'providers.on_leave' : 'providers.available')}</div>
+                                    <div className={cn(
+                                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                                        provider.temporary_unavailable
+                                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                                            : provider.leave_status === 'on_leave'
+                                                ? "bg-rose-50 text-rose-600 border-rose-100"
+                                                : Number(provider.current_tasks_count || 0) > 0
+                                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                    : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                    )}>
+                                        {provider.temporary_unavailable
+                                            ? "Unavailable"
+                                            : provider.leave_status === 'on_leave'
+                                                ? t('providers.on_leave')
+                                                : Number(provider.current_tasks_count || 0) > 0
+                                                    ? "Busy"
+                                                    : t('providers.available')}
+                                    </div>
                                     <div className="flex gap-1">
                                         <button type="button" onClick={() => handleEdit(provider)} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors active:scale-90" aria-label={t('common.edit')}>
                                             <Settings className="h-4 w-4" />
@@ -1171,21 +1299,78 @@ export default function ProvidersPage() {
                             </div>
 
                             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 space-y-3">
-                                <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Block Time</h4>
+                                <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Temporary Unavailable / Block Out</h4>
                                 <div className="grid grid-cols-1 gap-2">
                                     <input type="date" min={todayBlockDate} max={todayBlockDate} value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <select
+                                        value={blockForm.reason}
+                                        onChange={(e) => setBlockForm({ ...blockForm, reason: e.target.value })}
+                                        className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold"
+                                    >
+                                        {blockoutReasons.map((reason) => (
+                                            <option key={reason.value} value={reason.value}>{reason.label}</option>
+                                        ))}
+                                    </select>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                         <input type="time" value={blockForm.start_time} onChange={(e) => setBlockForm({ ...blockForm, start_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
-                                        <input type="time" value={blockForm.end_time} onChange={(e) => setBlockForm({ ...blockForm, end_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                        <select
+                                            value={blockForm.duration}
+                                            onChange={(e) => setBlockForm({ ...blockForm, duration: e.target.value })}
+                                            className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold"
+                                        >
+                                            {blockoutDurations.map((d) => (
+                                                <option key={d.value} value={d.value}>{d.label}</option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            type="time"
+                                            disabled={blockForm.duration !== "custom"}
+                                            value={blockForm.end_time}
+                                            onChange={(e) => setBlockForm({ ...blockForm, end_time: e.target.value })}
+                                            className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold disabled:opacity-60"
+                                        />
                                     </div>
                                 </div>
-                                <input type="text" placeholder="Reason (optional)" value={blockForm.reason} onChange={(e) => setBlockForm({ ...blockForm, reason: e.target.value })} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
-                                <button onClick={handleAddBlockTime} disabled={isSubmitting} className="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-wider">Add Block</button>
+                                <textarea
+                                    placeholder="Note (optional)"
+                                    value={blockForm.note}
+                                    onChange={(e) => setBlockForm({ ...blockForm, note: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold"
+                                    rows={2}
+                                />
+                                <button onClick={handleAddBlockTime} disabled={isSubmitting} className="w-full py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-black uppercase tracking-wider">Start Break</button>
                                 <div className="max-h-32 overflow-y-auto space-y-1">
                                     {blockTimeData.map((b: any) => (
                                         <div key={b.id} className="flex items-center justify-between text-[11px] font-bold bg-white border border-slate-100 rounded-lg px-2 py-1.5">
-                                            <span>{b.block_date} ({String(b.start_time || '').slice(0, 5)}-{String(b.end_time || '').slice(0, 5)})</span>
-                                            <button onClick={() => handleDeleteBlockTime(b.id)} className="text-rose-600">Remove</button>
+                                            <span>{b.block_date} ({String(b.start_time || '').slice(0, 5)}-{String(b.end_time || '').slice(0, 5)}) • {String(b.reason || "other").replace(/_/g, " ")}</span>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={async () => {
+                                                        const start = String(b.start_time || '').slice(0, 5);
+                                                        const end = String(b.end_time || '').slice(0, 5);
+                                                        const toM = (v: string) => {
+                                                            const [h, m] = String(v || "00:00").split(":").map(Number);
+                                                            return (Number(h) || 0) * 60 + (Number(m) || 0);
+                                                        };
+                                                        const nextMins = Math.min(23 * 60 + 59, toM(end) + 15);
+                                                        const hh = String(Math.floor(nextMins / 60)).padStart(2, "0");
+                                                        const mm = String(nextMins % 60).padStart(2, "0");
+                                                        const next = `${hh}:${mm}`;
+                                                        await providerService.updateBlockTime(b.id, {
+                                                            block_date: b.block_date,
+                                                            start_time: start,
+                                                            end_time: next,
+                                                            reason: b.reason,
+                                                        } as any);
+                                                        setBlockTimeData(await providerService.getBlockTimes(selectedProvider.id));
+                                                        showToast("Break extended by 15 mins");
+                                                    }}
+                                                    className="text-indigo-600"
+                                                >
+                                                    +15m
+                                                </button>
+                                                <button onClick={() => handleDeleteBlockTime(b.id)} className="text-rose-600">Cancel</button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

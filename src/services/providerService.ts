@@ -12,6 +12,10 @@ export interface ServiceProvider {
   leave_status?: "available" | "upcoming" | "on_leave";
   leave_until?: string | null;
   leave_starts_at?: string | null;
+  temporary_unavailable?: boolean;
+  temporary_unavailable_reason?: string | null;
+  temporary_unavailable_until?: string | null;
+  temporary_unavailable_remaining_minutes?: number;
   services?: any[];
   translations?: Record<string, any>;
   created_at: string;
@@ -160,6 +164,7 @@ export const providerService = {
       start_time: string;
       end_time: string;
       reason?: string;
+      note?: string;
     },
   ): Promise<any> {
     const result = await api.post<any>(
