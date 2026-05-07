@@ -189,7 +189,14 @@
     "status_present": "حاضر",
     "status_half_day": "نصف يوم",
     "status_leave_half": "إجازة (نصف)",
-    "status_leave_full": "إجازة (كامل)"
+    "status_leave_full": "إجازة (كامل)",
+    "leave_tracker_title": "متتبع الإجازات",
+    "upcoming_leaves": "الإجازات القادمة",
+    "past_leave_summary": "ملخص الإجازات السابقة",
+    "next_leave_dates": "تواريخ الإجازة القادمة",
+    "on_leave_today": "في إجازة اليوم",
+    "block_outs": "فترات الحظر",
+    "emergency_leave_count_label": "إجازات الطوارئ"
   },
   "providers": {
     "title": "مزودي الخدمات",

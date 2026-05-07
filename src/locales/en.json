@@ -255,7 +255,14 @@
     "status_present": "Present",
     "status_half_day": "Half Day",
     "status_leave_half": "Leave (Half)",
-    "status_leave_full": "Leave (Full)"
+    "status_leave_full": "Leave (Full)",
+    "leave_tracker_title": "Leave Tracker",
+    "upcoming_leaves": "Upcoming Leaves",
+    "past_leave_summary": "Past Leave Summary",
+    "next_leave_dates": "Next Leave Dates",
+    "on_leave_today": "On Leave Today",
+    "block_outs": "Block Outs",
+    "emergency_leave_count_label": "Emergency leaves"
   },
   "providers": {
     "title": "Service Providers",

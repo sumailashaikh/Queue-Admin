@@ -178,7 +178,14 @@
     "combined_output": "Salida Combinada",
     "efficiency": "Eficiencia",
     "avg": "prom",
-    "close_portal": "Cerrar Portal"
+    "close_portal": "Cerrar Portal",
+    "leave_tracker_title": "Seguimiento de permisos",
+    "upcoming_leaves": "Permisos próximos",
+    "past_leave_summary": "Resumen de permisos pasados",
+    "next_leave_dates": "Próximas fechas de permiso",
+    "on_leave_today": "De permiso hoy",
+    "block_outs": "Bloqueos de horario",
+    "emergency_leave_count_label": "Permisos de emergencia"
   },
   "providers": {
     "title": "Proveedores de Servicios",

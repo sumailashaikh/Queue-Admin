@@ -190,7 +190,14 @@
     "status_present": "उपस्थित",
     "status_half_day": "आधा दिन",
     "status_leave_half": "छुट्टी (आधा)",
-    "status_leave_full": "छुट्टी (पूरा)"
+    "status_leave_full": "छुट्टी (पूरा)",
+    "leave_tracker_title": "लीव ट्रैकर",
+    "upcoming_leaves": "आने वाली छुट्टियां",
+    "past_leave_summary": "पिछली छुट्टी सारांश",
+    "next_leave_dates": "अगली छुट्टी की तारीखें",
+    "on_leave_today": "आज छुट्टी पर",
+    "block_outs": "ब्लॉक आउट",
+    "emergency_leave_count_label": "इमरजेंसी छुट्टियां"
   },
   "providers": {
     "title": "सेवा प्रदाता",
