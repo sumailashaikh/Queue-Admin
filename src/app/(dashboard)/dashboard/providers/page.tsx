@@ -276,7 +276,7 @@ export default function ProvidersPage() {
             return String(b.created_at || "").localeCompare(String(a.created_at || ""));
         });
     }, [leaveNotifications]);
-    const leaveRequestsBadgeCount = prioritizedPendingAlerts.length;
+    const leaveRequestsBadgeCount = Math.max(prioritizedPendingAlerts.length, unreadLeaveCount);
 
     const markLeaveRead = async (id: string) => {
         try {

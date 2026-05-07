@@ -339,6 +339,12 @@ function EmployeeDashboardContent() {
     };
 
     const parseApiMessage = (error: any, fallbackKey: string) => {
+        const safeLocal = (key: string, fallbackByLang: Record<string, string>) => {
+            const localized = t(key as any, {}, effectiveUiLanguage as any);
+            if (localized !== key) return localized;
+            const langCode = String(effectiveUiLanguage || "en").toLowerCase();
+            return fallbackByLang[langCode] || fallbackByLang.en || key;
+        };
         const key = String(error?.response?.data?.message_key || "").trim();
         if (key && key.includes(".")) {
             const localized = t(key as any, error?.response?.data, effectiveUiLanguage as any);
@@ -360,6 +366,38 @@ function EmployeeDashboardContent() {
         }
         if (lower.includes('unable to validate leave conflicts right now')) {
             return t('providers.err_leave_conflict_validation_unavailable' as any, {}, effectiveUiLanguage as any);
+        }
+        if (lower.includes('clock-in failed due to supabase permission policy')) {
+            return safeLocal('employee.err_clockin_permission', {
+                en: 'Clock-in failed. Please contact support to update backend permissions.',
+                hi: 'क्लॉक-इन विफल हुआ। कृपया बैकएंड परमिशन अपडेट के लिए सपोर्ट से संपर्क करें।',
+                ar: 'فشل تسجيل الحضور. يرجى التواصل مع الدعم لتحديث صلاحيات الخادم.',
+                es: 'El registro de entrada falló. Contacta con soporte para actualizar permisos del backend.'
+            });
+        }
+        if (lower.includes('clock-out failed due to supabase permission policy')) {
+            return safeLocal('employee.err_clockout_permission', {
+                en: 'Clock-out failed. Please contact support to update backend permissions.',
+                hi: 'क्लॉक-आउट विफल हुआ। कृपया बैकएंड परमिशन अपडेट के लिए सपोर्ट से संपर्क करें।',
+                ar: 'فشل تسجيل الانصراف. يرجى التواصل مع الدعم لتحديث صلاحيات الخادم.',
+                es: 'El registro de salida falló. Contacta con soporte para actualizar permisos del backend.'
+            });
+        }
+        if (lower.includes('task completion failed due to supabase permission policy')) {
+            return safeLocal('employee.err_task_complete_permission', {
+                en: 'Task completion failed due to permission settings. Please contact support.',
+                hi: 'परमिशन सेटिंग्स के कारण टास्क पूरा नहीं हो सका। कृपया सपोर्ट से संपर्क करें।',
+                ar: 'فشل إنهاء المهمة بسبب إعدادات الصلاحيات. يرجى التواصل مع الدعم.',
+                es: 'No se pudo completar la tarea por configuración de permisos. Contacta con soporte.'
+            });
+        }
+        if (lower.includes('task start failed due to supabase permission policy')) {
+            return safeLocal('employee.err_task_start_permission', {
+                en: 'Task start failed due to permission settings. Please contact support.',
+                hi: 'परमिशन सेटिंग्स के कारण टास्क शुरू नहीं हो सका। कृपया सपोर्ट से संपर्क करें।',
+                ar: 'فشل بدء المهمة بسبب إعدادات الصلاحيات. يرجى التواصل مع الدعم.',
+                es: 'No se pudo iniciar la tarea por configuración de permisos. Contacta con soporte.'
+            });
         }
         return raw;
     };
