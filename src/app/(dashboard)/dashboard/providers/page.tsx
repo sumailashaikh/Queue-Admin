@@ -91,6 +91,7 @@ export default function ProvidersPage() {
     const [planAssignments, setPlanAssignments] = useState<Record<string, string | null>>({});
     const [reassignTo, setReassignTo] = useState<Record<string, string>>({});
     const [rescheduleTo, setRescheduleTo] = useState<Record<string, string>>({});
+    const [impactDraftActions, setImpactDraftActions] = useState<Record<string, { to_provider_id: string; reschedule_at: string }>>({});
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const [leaveNotifications, setLeaveNotifications] = useState<AppNotification[]>([]);
     const [pendingLeaveAlerts, setPendingLeaveAlerts] = useState<any[]>([]);
@@ -794,6 +795,9 @@ export default function ProvidersPage() {
 
     const openImpactModal = async (leave: any) => {
         if (!selectedProvider?.id) return;
+        setImpactDraftActions({});
+        setReassignTo({});
+        setRescheduleTo({});
         setImpactModal({ isOpen: true, loading: true, leave, impact: null });
         try {
             const kind = String(leave?.leave_kind || 'FULL_DAY').toUpperCase();
@@ -827,6 +831,49 @@ export default function ProvidersPage() {
             setImpactModal((p) => ({ ...p, loading: false, impact: (resp as any)?.data || null }));
         } catch {
             setImpactModal((p) => ({ ...p, loading: false }));
+        }
+    };
+
+    const addImpactDraftAction = (appointmentId: string) => {
+        const providerId = String(reassignTo[appointmentId] || "").trim();
+        const datetime = String(rescheduleTo[appointmentId] || "").trim();
+        if (!providerId || !datetime) {
+            showToast(tt('providers.err_select_provider_and_time', 'Please select employee and date/time before adding.'), 'error');
+            return;
+        }
+        setImpactDraftActions((prev) => ({
+            ...prev,
+            [appointmentId]: {
+                to_provider_id: providerId,
+                reschedule_at: datetime
+            }
+        }));
+        showToast(tt('providers.action_added', 'Action added. Click Approve to confirm.'), 'success');
+    };
+
+    const approveImpactWithActions = async () => {
+        if (!impactModal.leave?.id || !selectedProvider?.id) return;
+        const impacted = (impactModal.impact?.appointments || []) as any[];
+        if (impacted.length > 0 && Object.keys(impactDraftActions).length === 0) {
+            showToast(tt('providers.err_add_action_before_approve', 'Please add at least one reassignment action before approving.'), 'error');
+            return;
+        }
+        setImpactActionKey(`approve-${String(impactModal.leave?.id || "")}`);
+        setIsSubmitting(true);
+        try {
+            for (const [appointmentId, action] of Object.entries(impactDraftActions)) {
+                await appointmentService.reassign(appointmentId, action.to_provider_id, selectedProvider.id);
+                const iso = new Date(action.reschedule_at).toISOString();
+                await appointmentService.reschedule(appointmentId, iso);
+            }
+            await handleUpdateLeaveStatus(impactModal.leave.id, 'APPROVED');
+            setImpactModal({ isOpen: false, loading: false, leave: null, impact: null });
+            setImpactDraftActions({});
+        } catch (e: any) {
+            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to apply reassignment actions'), 'error');
+        } finally {
+            setImpactActionKey(null);
+            setIsSubmitting(false);
         }
     };
 
@@ -1686,25 +1733,7 @@ export default function ProvidersPage() {
                                                 ? tt('providers.impact_none_appointments', 'No impacted appointments found. Live queue tasks are shown above.')
                                                 : tt('providers.impact_none', 'No impacted appointments found for this leave window.')}
                                         </div>
-                                    ) : (
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="button"
-                                                disabled={isSubmitting || isPlanLoading}
-                                                onClick={autoReassignAllImpacted}
-                                                className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:opacity-50"
-                                            >
-                                                {isPlanLoading ? (
-                                                    <span className="inline-flex items-center gap-2">
-                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                        {tt('providers.planning', 'Planning...')}
-                                                    </span>
-                                                ) : (
-                                                    tt('providers.auto_reassign_all', 'Auto reassign all')
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
+                                    ) : null}
                                     {(impactModal.impact?.appointments || []).length > 0 && (
                                         <>
                                         {(impactModal.impact.appointments || []).map((a: any) => {
@@ -1745,26 +1774,11 @@ export default function ProvidersPage() {
                                                                     ))}
                                                                 </select>
                                                                 <button
-                                                                    disabled={!currentReassign || isSubmitting}
-                                                                    onClick={async () => {
-                                                                        const actionKey = `reassign-${a.id}`;
-                                                                        setImpactActionKey(actionKey);
-                                                                        setIsSubmitting(true);
-                                                                        try {
-                                                                            await appointmentService.reassign(a.id, currentReassign, selectedProvider.id);
-                                                                            showToast(tt('providers.success_reassign', 'Reassigned successfully'));
-                                                                            setReassignTo((p) => ({ ...p, [a.id]: "" }));
-                                                                            await refreshImpact();
-                                                                        } catch (e: any) {
-                                                                            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to reassign'), 'error');
-                                                                        } finally {
-                                                                            setIsSubmitting(false);
-                                                                            setImpactActionKey(null);
-                                                                        }
-                                                                    }}
+                                                                    disabled={!currentReassign || !currentReschedule || isSubmitting}
+                                                                    onClick={() => addImpactDraftAction(String(a.id))}
                                                                     className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50 hover:bg-slate-800 active:scale-[0.98]"
                                                                 >
-                                                                    {impactActionKey === `reassign-${a.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : tt('providers.apply', 'Apply')}
+                                                                    {impactDraftActions[String(a.id)] ? tt('providers.added', 'Added') : tt('providers.add', 'Add')}
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1780,29 +1794,6 @@ export default function ProvidersPage() {
                                                                     onChange={(e) => setRescheduleTo((p) => ({ ...p, [a.id]: e.target.value }))}
                                                                     className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold"
                                                                 />
-                                                                <button
-                                                                    disabled={!currentReschedule || isSubmitting}
-                                                                    onClick={async () => {
-                                                                        const actionKey = `reschedule-${a.id}`;
-                                                                        setImpactActionKey(actionKey);
-                                                                        setIsSubmitting(true);
-                                                                        try {
-                                                                            const iso = new Date(currentReschedule).toISOString();
-                                                                            await appointmentService.reschedule(a.id, iso);
-                                                                            showToast(tt('appointments.success_reschedule', 'Appointment successfully rescheduled.'));
-                                                                            setRescheduleTo((p) => ({ ...p, [a.id]: "" }));
-                                                                            await refreshImpact();
-                                                                        } catch (e: any) {
-                                                                            showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to reschedule'), 'error');
-                                                                        } finally {
-                                                                            setIsSubmitting(false);
-                                                                            setImpactActionKey(null);
-                                                                        }
-                                                                    }}
-                                                                    className="px-4 py-2.5 rounded-xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50 hover:bg-amber-700 active:scale-[0.98]"
-                                                                >
-                                                                    {impactActionKey === `reschedule-${a.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : tt('providers.apply', 'Apply')}
-                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1897,15 +1888,7 @@ export default function ProvidersPage() {
                                     {String(impactModal.leave?.status || '').toUpperCase().replace(/\s+/g, '_').startsWith('PENDING') && (
                                         <button
                                             disabled={isSubmitting}
-                                            onClick={async () => {
-                                                setImpactActionKey(`approve-${String(impactModal.leave?.id || "")}`);
-                                                try {
-                                                    await handleUpdateLeaveStatus(impactModal.leave.id, 'APPROVED');
-                                                    setImpactModal({ isOpen: false, loading: false, leave: null, impact: null });
-                                                } finally {
-                                                    setImpactActionKey(null);
-                                                }
-                                            }}
+                                            onClick={approveImpactWithActions}
                                             className="px-5 py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 disabled:opacity-50 hover:bg-emerald-700 active:scale-[0.98]"
                                         >
                                             {impactActionKey === `approve-${String(impactModal.leave?.id || "")}` ? <Loader2 className="h-4 w-4 animate-spin" /> : tt('providers.leave_tooltip_approve', 'Approve')}
