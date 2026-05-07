@@ -155,6 +155,15 @@ export default function ProvidersPage() {
             }
             return `Invite created, but today's SMS limit is reached. Please try again later or share the link manually:${urlText}`;
         }
+        if (hint === 'twilio_cooldown_active') {
+            if (lang.startsWith('hi')) {
+                return `अभी-अभी इसी नंबर पर निमंत्रण भेजा गया है। कृपया 1-2 मिनट बाद दोबारा प्रयास करें या लिंक मैन्युअल भेजें:${urlText}`;
+            }
+            if (lang.startsWith('ar')) {
+                return `تم إرسال دعوة لهذا الرقم قبل لحظات. الرجاء الانتظار دقيقة أو دقيقتين ثم المحاولة مرة أخرى أو إرسال الرابط يدويًا:${urlText}`;
+            }
+            return `An invite was sent to this number just now. Please wait 1-2 minutes before retrying, or share the link manually:${urlText}`;
+        }
         if (hint === 'twilio_trial_destination_not_verified') {
             if (lang.startsWith('hi')) {
                 return `Twilio ट्रायल खाता सिर्फ Verified नंबरों पर SMS भेज सकता है। Twilio कंसोल में इस नंबर को Verified Caller IDs में जोड़ें या अपग्रेड करें। मैन्युअल लिंक:${urlText}`;
