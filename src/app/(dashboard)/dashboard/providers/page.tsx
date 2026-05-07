@@ -1050,6 +1050,10 @@ export default function ProvidersPage() {
                             const remaining = Number(provider.temporary_unavailable_remaining_minutes || 0);
                             const status = provider.temporary_unavailable
                                 ? "unavailable"
+                                : provider.leave_status === "on_leave"
+                                    ? "on_leave"
+                                    : provider.leave_status === "upcoming"
+                                        ? "upcoming"
                                 : Number(provider.current_tasks_count || 0) > 0
                                     ? "busy"
                                     : "available";
@@ -1061,21 +1065,47 @@ export default function ProvidersPage() {
                                             "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border",
                                             status === "unavailable"
                                                 ? "bg-rose-50 text-rose-700 border-rose-200"
+                                                : status === "on_leave"
+                                                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                                                    : status === "upcoming"
+                                                        ? "bg-blue-50 text-blue-700 border-blue-200"
                                                 : status === "busy"
                                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                                     : "bg-emerald-50 text-emerald-700 border-emerald-200"
                                         )}>
-                                            {status === "unavailable" ? "Temporarily Unavailable" : status === "busy" ? "Busy" : "Available"}
+                                            {status === "unavailable"
+                                                ? "Temporarily Unavailable"
+                                                : status === "on_leave"
+                                                    ? "On Leave"
+                                                    : status === "upcoming"
+                                                        ? "Upcoming Leave"
+                                                        : status === "busy"
+                                                            ? "Busy"
+                                                            : "Available"}
                                         </span>
                                     </td>
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
-                                        {status === "unavailable" ? labelReason(provider.temporary_unavailable_reason) : "-"}
+                                        {status === "unavailable"
+                                            ? labelReason(provider.temporary_unavailable_reason)
+                                            : status === "on_leave" || status === "upcoming"
+                                                ? "Leave"
+                                                : "-"}
                                     </td>
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
-                                        {status === "unavailable" ? provider.temporary_unavailable_until || "-" : "-"}
+                                        {status === "unavailable"
+                                            ? provider.temporary_unavailable_until || "-"
+                                            : status === "on_leave"
+                                                ? provider.leave_until || "-"
+                                                : status === "upcoming"
+                                                    ? provider.leave_starts_at || "-"
+                                                    : "-"}
                                     </td>
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
-                                        {status === "unavailable" ? `Back in ${Math.max(0, remaining)} mins` : "-"}
+                                        {status === "unavailable"
+                                            ? `Back in ${Math.max(0, remaining)} mins`
+                                            : status === "upcoming"
+                                                ? "Scheduled"
+                                                : "-"}
                                     </td>
                                 </tr>
                             );
@@ -1114,6 +1144,8 @@ export default function ProvidersPage() {
                                             ? "bg-rose-50 text-rose-700 border-rose-200"
                                             : provider.leave_status === 'on_leave'
                                                 ? "bg-rose-50 text-rose-600 border-rose-100"
+                                                : provider.leave_status === 'upcoming'
+                                                    ? "bg-blue-50 text-blue-700 border-blue-200"
                                                 : Number(provider.current_tasks_count || 0) > 0
                                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                                     : "bg-emerald-50 text-emerald-600 border-emerald-100"
@@ -1122,6 +1154,8 @@ export default function ProvidersPage() {
                                             ? "Unavailable"
                                             : provider.leave_status === 'on_leave'
                                                 ? t('providers.on_leave')
+                                                : provider.leave_status === 'upcoming'
+                                                    ? "Upcoming"
                                                 : Number(provider.current_tasks_count || 0) > 0
                                                     ? "Busy"
                                                     : t('providers.available')}
