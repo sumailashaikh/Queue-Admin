@@ -74,6 +74,13 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
     const totalDuration = selectedServices.reduce((acc, s) => acc + (s.duration_minutes || 0), 0);
     const totalPrice = selectedServices.reduce((acc, s) => acc + (s.price || 0), 0);
     const selectedServiceIds = selectedServices.map((s) => s.id);
+    const getProviderDisplayName = (provider: any) => {
+        const directName = String(provider?.name || "").trim();
+        if (directName) return directName;
+        const fallbackBase = i18n.t(lang, "public.staff_fallback") || "Staff";
+        const shortId = String(provider?.id || "").slice(0, 6);
+        return shortId ? `${fallbackBase} #${shortId}` : fallbackBase;
+    };
     const eligibleProviders = providerInsights.filter((p) => {
         if (!selectedServiceIds.length) return true;
         if (!p.service_ids || p.service_ids.length === 0) return true;
@@ -769,7 +776,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     <option value="">{i18n.t(lang, 'public.auto_assign_best_available') || 'Select Staff'}</option>
                                     {visibleProviders.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.name} {isFutureAppointmentDate
+                                            {getProviderDisplayName(p)} {isFutureAppointmentDate
                                                 ? ''
                                                 : p.is_on_leave
                                                 ? `(${i18n.t(lang, 'public.status_unavailable_today') || 'Unavailable today'})`
@@ -782,7 +789,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
 
                                 {selectedProvider && (
                                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-                                        <p className="font-bold text-slate-900">{selectedProvider.name}</p>
+                                        <p className="font-bold text-slate-900">{getProviderDisplayName(selectedProvider)}</p>
                                         {isFutureAppointmentDate ? (
                                             <p className="mt-1">
                                                 {tSafe('public.provider_selected_for_date', 'Provider selected for your appointment date and time.')}
@@ -925,14 +932,6 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                         {(!isOpen && activeView === 'queue') ? i18n.t(lang, 'public.check_in_unavailable') : (activeView === 'queue' && !hasOpenQueue) ? i18n.t(lang, 'public.no_queue') : i18n.t(lang, 'public.continue')}
                                         {(isOpen || activeView === 'appointment') && hasOpenQueue && <ArrowRight className="h-4 w-4" />}
                                     </button>
-                                    {disableContinueForProvider && (
-                                        <p className="mt-2 text-center text-[11px] text-rose-700 font-semibold">
-                                            {tSafe(
-                                                'public.provider_on_leave_pick_another',
-                                                'Selected staff is unavailable or on leave. Please choose another staff member.'
-                                            )}
-                                        </p>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -998,7 +997,7 @@ export function PublicProfilePage({ slug }: PublicProfilePageProps) {
                                     {selectedProvider && (
                                         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{i18n.t(lang, 'public.selected_provider') || 'Selected Provider'}</p>
-                                            <p className="mt-1 text-sm font-bold text-slate-900">{selectedProvider.name}</p>
+                                            <p className="mt-1 text-sm font-bold text-slate-900">{getProviderDisplayName(selectedProvider)}</p>
                                             {!isFutureAppointmentDate && (
                                                 <p className="mt-1 text-xs text-slate-600">
                                                     {selectedProvider.is_on_leave
