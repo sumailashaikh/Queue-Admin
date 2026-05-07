@@ -774,7 +774,15 @@ export const i18n = {
      * @param key Dot-notated string (e.g., 'dashboard')
      */
     t: (lang: string = 'en', key: string, params?: Record<string, any>): string => {
-        const dictionary = dictionaries[lang] || dictionaries['en'];
+        const rawLang = String(lang || 'en').toLowerCase().trim();
+        const normalizedLang = rawLang.startsWith('ar') || rawLang.includes('arab')
+            ? 'ar'
+            : rawLang.startsWith('hi') || rawLang.includes('hindi')
+                ? 'hi'
+                : rawLang.startsWith('es') || rawLang.includes('spanish') || rawLang.includes('espa')
+                    ? 'es'
+                    : 'en';
+        const dictionary = dictionaries[normalizedLang] || dictionaries['en'];
         const keys = key.split('.');
 
         let result: any = dictionary;
