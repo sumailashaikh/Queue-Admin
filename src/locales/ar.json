@@ -201,6 +201,11 @@
   "providers": {
     "title": "مزودي الخدمات",
     "subtitle": "إدارة خبراء الخدمة وأوقات عملهم",
+    "leave_tracker_title": "متتبع الإجازات",
+    "upcoming_leaves": "الإجازات القادمة",
+    "past_leave_summary": "ملخص الإجازات السابقة",
+    "next_leave_dates": "تواريخ الإجازة القادمة",
+    "on_leave_today": "في إجازة اليوم",
     "search_placeholder": "البحث عن مزودين...",
     "add_provider": "إضافة مزود",
     "no_providers": "لا يوجد مزودين",

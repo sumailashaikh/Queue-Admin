@@ -190,6 +190,11 @@
   "providers": {
     "title": "Proveedores de Servicios",
     "subtitle": "Administra a tus expertos y sus horarios de trabajo",
+    "leave_tracker_title": "Seguimiento de permisos",
+    "upcoming_leaves": "Permisos próximos",
+    "past_leave_summary": "Resumen de permisos pasados",
+    "next_leave_dates": "Próximas fechas de permiso",
+    "on_leave_today": "De permiso hoy",
     "search_placeholder": "Buscar proveedores...",
     "add_provider": "A?adir Proveedor",
     "no_providers": "No se encontraron proveedores",

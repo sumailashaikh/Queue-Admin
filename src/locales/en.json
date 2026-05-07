@@ -267,6 +267,11 @@
   "providers": {
     "title": "Service Providers",
     "subtitle": "Manage Your Experts And Their Working Hours",
+    "leave_tracker_title": "Leave Tracker",
+    "upcoming_leaves": "Upcoming Leaves",
+    "past_leave_summary": "Past Leave Summary",
+    "next_leave_dates": "Next Leave Dates",
+    "on_leave_today": "On Leave Today",
     "search_placeholder": "Search Providers...",
     "add_provider": "Add Provider",
     "no_providers": "No Providers Found",

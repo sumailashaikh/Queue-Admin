@@ -202,6 +202,11 @@
   "providers": {
     "title": "सेवा प्रदाता",
     "subtitle": "अपने विशेषज्ञों और उनके काम के घंटों का प्रबंधन करें",
+    "leave_tracker_title": "लीव ट्रैकर",
+    "upcoming_leaves": "आने वाली छुट्टियां",
+    "past_leave_summary": "पिछली छुट्टी सारांश",
+    "next_leave_dates": "अगली छुट्टी की तारीखें",
+    "on_leave_today": "आज छुट्टी पर",
     "search_placeholder": "प्रदाताओं को खोजें...",
     "add_provider": "प्रदाता जोड़ें",
     "no_providers": "कोई प्रदाता नहीं मिला",
