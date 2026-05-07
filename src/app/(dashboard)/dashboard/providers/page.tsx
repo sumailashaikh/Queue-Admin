@@ -34,6 +34,13 @@ export default function ProvidersPage() {
     const { business } = useAuth();
     const { t, language } = useLanguage();
     const minLeaveDate = useMemo(() => new Date().toLocaleDateString("en-CA"), []);
+    const todayBlockDate = useMemo(
+        () =>
+            business?.timezone
+                ? new Date().toLocaleDateString("en-CA", { timeZone: business.timezone })
+                : new Date().toLocaleDateString("en-CA"),
+        [business?.timezone]
+    );
     const [providers, setProviders] = useState<ServiceProvider[]>([]);
     const [services, setServices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -550,6 +557,10 @@ export default function ProvidersPage() {
 
     const handleAddBlockTime = async () => {
         if (!selectedProvider || !blockForm.block_date || !blockForm.start_time || !blockForm.end_time) return;
+        if (blockForm.block_date !== todayBlockDate) {
+            showToast("Only current-day block out is allowed", "error");
+            return;
+        }
         setIsSubmitting(true);
         try {
             await providerService.addBlockTime(selectedProvider.id, blockForm as any);
@@ -1153,7 +1164,7 @@ export default function ProvidersPage() {
                             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 space-y-3">
                                 <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Block Time</h4>
                                 <div className="grid grid-cols-1 gap-2">
-                                    <input type="date" value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                    <input type="date" min={todayBlockDate} max={todayBlockDate} value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
                                     <div className="grid grid-cols-2 gap-2">
                                         <input type="time" value={blockForm.start_time} onChange={(e) => setBlockForm({ ...blockForm, start_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
                                         <input type="time" value={blockForm.end_time} onChange={(e) => setBlockForm({ ...blockForm, end_time: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
