@@ -90,6 +90,7 @@ export default function ProvidersPage() {
     const [isLeaveRequestsModalOpen, setIsLeaveRequestsModalOpen] = useState(false);
     const [isOpeningLeaveRequests, setIsOpeningLeaveRequests] = useState(false);
     const [processingLeaveId, setProcessingLeaveId] = useState<string | null>(null);
+    const [impactActionKey, setImpactActionKey] = useState<string | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
@@ -128,6 +129,11 @@ export default function ProvidersPage() {
         if (v === 'HALF_DAY') return tt('providers.half_day', 'Half Day');
         if (v === 'EMERGENCY') return tt('providers.emergency_time', 'Emergency (time)');
         return tt('providers.full_day', 'Full Day');
+    };
+    const localizeStatus = (value?: string) => {
+        const key = String(value || "").toLowerCase();
+        const translated = t(`status.${key}` as any);
+        return translated !== `status.${key}` ? translated : String(value || "").toUpperCase();
     };
 
     const getInviteNotifyFailMessage = (inviteUrl?: string, hint?: string | null) => {
@@ -1411,7 +1417,7 @@ export default function ProvidersPage() {
                                                             </p>
                                                         </div>
                                                         <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">
-                                                            {String(q.status || '').toUpperCase()}
+                                                            {localizeStatus(q.status)}
                                                         </span>
                                                     </div>
                                                 ))}
@@ -1461,7 +1467,7 @@ export default function ProvidersPage() {
                                                             </p>
                                                         </div>
                                                         <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-700">
-                                                            {String(a.status || '').toUpperCase()}
+                                                            {localizeStatus(a.status)}
                                                         </span>
                                                     </div>
 
@@ -1486,6 +1492,8 @@ export default function ProvidersPage() {
                                                                 <button
                                                                     disabled={!currentReassign || isSubmitting}
                                                                     onClick={async () => {
+                                                                        const actionKey = `reassign-${a.id}`;
+                                                                        setImpactActionKey(actionKey);
                                                                         setIsSubmitting(true);
                                                                         try {
                                                                             await appointmentService.reassign(a.id, currentReassign, selectedProvider.id);
@@ -1496,11 +1504,12 @@ export default function ProvidersPage() {
                                                                             showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to reassign'), 'error');
                                                                         } finally {
                                                                             setIsSubmitting(false);
+                                                                            setImpactActionKey(null);
                                                                         }
                                                                     }}
-                                                                    className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                                                                    className="px-4 py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50 hover:bg-slate-800 active:scale-[0.98]"
                                                                 >
-                                                                    {tt('providers.apply', 'Apply')}
+                                                                    {impactActionKey === `reassign-${a.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : tt('providers.apply', 'Apply')}
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1519,6 +1528,8 @@ export default function ProvidersPage() {
                                                                 <button
                                                                     disabled={!currentReschedule || isSubmitting}
                                                                     onClick={async () => {
+                                                                        const actionKey = `reschedule-${a.id}`;
+                                                                        setImpactActionKey(actionKey);
                                                                         setIsSubmitting(true);
                                                                         try {
                                                                             const iso = new Date(currentReschedule).toISOString();
@@ -1530,11 +1541,12 @@ export default function ProvidersPage() {
                                                                             showToast(parseApiMessage(e, 'appointments.error_reschedule', 'Failed to reschedule'), 'error');
                                                                         } finally {
                                                                             setIsSubmitting(false);
+                                                                            setImpactActionKey(null);
                                                                         }
                                                                     }}
-                                                                    className="px-4 py-2.5 rounded-xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                                                                    className="px-4 py-2.5 rounded-xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50 hover:bg-amber-700 active:scale-[0.98]"
                                                                 >
-                                                                    {tt('providers.apply', 'Apply')}
+                                                                    {impactActionKey === `reschedule-${a.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : tt('providers.apply', 'Apply')}
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1631,12 +1643,17 @@ export default function ProvidersPage() {
                                         <button
                                             disabled={isSubmitting}
                                             onClick={async () => {
-                                                await handleUpdateLeaveStatus(impactModal.leave.id, 'APPROVED');
-                                                setImpactModal({ isOpen: false, loading: false, leave: null, impact: null });
+                                                setImpactActionKey(`approve-${String(impactModal.leave?.id || "")}`);
+                                                try {
+                                                    await handleUpdateLeaveStatus(impactModal.leave.id, 'APPROVED');
+                                                    setImpactModal({ isOpen: false, loading: false, leave: null, impact: null });
+                                                } finally {
+                                                    setImpactActionKey(null);
+                                                }
                                             }}
-                                            className="px-5 py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 disabled:opacity-50"
+                                            className="px-5 py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 disabled:opacity-50 hover:bg-emerald-700 active:scale-[0.98]"
                                         >
-                                            {tt('providers.leave_tooltip_approve', 'Approve')}
+                                            {impactActionKey === `approve-${String(impactModal.leave?.id || "")}` ? <Loader2 className="h-4 w-4 animate-spin" /> : tt('providers.leave_tooltip_approve', 'Approve')}
                                         </button>
                                     )}
                                 </div>

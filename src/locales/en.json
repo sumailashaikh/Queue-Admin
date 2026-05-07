@@ -795,7 +795,11 @@
     "payment_mode_locked": "Payment mode is locked.",
     "whatsapp_attach_hint": "WhatsApp Web cannot auto-attach PDF in most desktop browsers. PDF is downloaded; please attach it in the WhatsApp chat.",
     "no_payment_setup": "No payment QR setup. Add UPI in Settings.",
-    "go_to_payment_settings": "Go to Payment Settings"
+    "go_to_payment_settings": "Go to Payment Settings",
+    "payment_recorded": "Payment recorded",
+    "service_completion_owner_label": "Service completion",
+    "completed_by": "Completed by",
+    "completion_in_progress": "Service is in progress or not completed yet."
   },
   "employee": {
     "dashboard": "Employee Dashboard",

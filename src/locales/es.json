@@ -696,7 +696,11 @@
     "payment_mode_locked": "El método de pago está bloqueado.",
     "whatsapp_attach_hint": "WhatsApp Web no puede adjuntar PDF automáticamente en la mayoría de navegadores de escritorio. Se descargó el PDF; adjúntalo en el chat.",
     "no_payment_setup": "No hay QR de pago configurado. Agrega UPI en Configuración.",
-    "go_to_payment_settings": "Ir a Configuración de Pago"
+    "go_to_payment_settings": "Ir a Configuración de Pago",
+    "payment_recorded": "Pago registrado",
+    "service_completion_owner_label": "Finalización del servicio",
+    "completed_by": "Completado por",
+    "completion_in_progress": "El servicio está en progreso o aún no se ha completado."
   },
   "employee": {
     "leave_success": "Solicitud de permiso enviada",

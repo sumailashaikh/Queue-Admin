@@ -708,7 +708,11 @@
     "payment_mode_locked": "भुगतान मोड लॉक है।",
     "whatsapp_attach_hint": "अधिकांश डेस्कटॉप ब्राउज़रों में WhatsApp Web PDF ऑटो-अटैच नहीं कर सकता। PDF डाउनलोड हो गया है, इसे चैट में अटैच करें।",
     "no_payment_setup": "पेमेंट QR सेटअप नहीं है। सेटिंग्स में UPI जोड़ें।",
-    "go_to_payment_settings": "पेमेंट सेटिंग्स पर जाएं"
+    "go_to_payment_settings": "पेमेंट सेटिंग्स पर जाएं",
+    "payment_recorded": "भुगतान दर्ज हो गया",
+    "service_completion_owner_label": "सेवा पूर्णता",
+    "completed_by": "पूरा किया",
+    "completion_in_progress": "सेवा अभी जारी है या अभी पूर्ण नहीं हुई है।"
   },
   "employee": {
     "dashboard": "कर्मचारी डैशबोर्ड",

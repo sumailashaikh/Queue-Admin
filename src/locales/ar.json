@@ -709,7 +709,11 @@
     "payment_mode_locked": "وضع الدفع مقفل.",
     "whatsapp_attach_hint": "لا يستطيع واتساب ويب إرفاق PDF تلقائيًا في أغلب متصفحات سطح المكتب. تم تنزيل ملف PDF، يرجى إرفاقه في المحادثة.",
     "no_payment_setup": "لا يوجد إعداد لرمز الدفع QR. أضف UPI من الإعدادات.",
-    "go_to_payment_settings": "اذهب إلى إعدادات الدفع"
+    "go_to_payment_settings": "اذهب إلى إعدادات الدفع",
+    "payment_recorded": "تم تسجيل الدفع",
+    "service_completion_owner_label": "اكتمال الخدمة",
+    "completed_by": "تم التنفيذ بواسطة",
+    "completion_in_progress": "الخدمة قيد التنفيذ أو لم تكتمل بعد."
   },
   "employee": {
     "dashboard": "لوحة الموظف",
