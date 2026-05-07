@@ -37,6 +37,8 @@ export default function AppointmentsPage() {
     const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, aptId: null as string | null, dateTime: '' });
     const [search, setSearch] = useState("");
     const autoSyncAttemptedRef = useRef<Set<string>>(new Set());
+    const isPreAcceptStatus = (status?: string) =>
+        ["pending", "scheduled", "requested", "rescheduled"].includes(String(status || "").toLowerCase());
 
     const isRTL = language === 'ar';
     const tSafe = (key: string, fallback: string, params?: Record<string, any>) => {
@@ -492,8 +494,15 @@ export default function AppointmentsPage() {
 
                                 {/* Actions */}
                                 <div className={cn("flex items-center gap-2 border-slate-100 flex-wrap", isRTL ? "md:border-r md:pr-6 pr-0 border-none justify-start" : "md:border-l md:pl-6 pl-0 border-none justify-start md:justify-end")}>
-                                    {(apt.status === 'pending' || apt.status === 'scheduled' || apt.status === 'requested' || apt.status === 'rescheduled') && (
+                                    {isPreAcceptStatus(apt.status) && (
                                         <>
+                                            <button
+                                                onClick={() => handleWhatsAppAction(apt, apt.status === 'rescheduled' ? 'reschedule' : 'approve')}
+                                                className="flex items-center justify-center h-10 w-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 active:scale-95"
+                                                title={apt.status === 'rescheduled' ? t('appointments.whatsapp_reschedule_msg') : t('appointments.whatsapp_approve')}
+                                            >
+                                                <Megaphone className="h-4.5 w-4.5" />
+                                            </button>
                                             <button
                                                 disabled={actionLoading === apt.id}
                                                 onClick={() => handleAccept(apt.id)}
@@ -501,13 +510,6 @@ export default function AppointmentsPage() {
                                             >
                                                 {actionLoading === apt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                 {t('appointments.accept')}
-                                            </button>
-                                            <button
-                                                onClick={() => handleWhatsAppAction(apt, apt.status === 'rescheduled' ? 'reschedule' : 'approve')}
-                                                className="flex items-center justify-center h-10 w-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all border border-blue-100 active:scale-95"
-                                                title={apt.status === 'rescheduled' ? t('appointments.whatsapp_reschedule_msg') : t('appointments.whatsapp_approve')}
-                                            >
-                                                <Megaphone className="h-4.5 w-4.5" />
                                             </button>
                                             <button
                                                 disabled={actionLoading === apt.id}
