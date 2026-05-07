@@ -281,7 +281,8 @@ export default function ProvidersPage() {
             return String(b.created_at || "").localeCompare(String(a.created_at || ""));
         });
     }, [leaveNotifications]);
-    const leaveRequestsBadgeCount = Math.max(prioritizedPendingAlerts.length, unreadLeaveCount);
+    // Keep bell count aligned with actionable pending requests shown in modal.
+    const leaveRequestsBadgeCount = prioritizedPendingAlerts.length;
 
     const markLeaveRead = async (id: string) => {
         try {

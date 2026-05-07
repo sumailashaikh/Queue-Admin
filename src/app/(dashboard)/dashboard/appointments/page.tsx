@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Calendar,
     User,
@@ -36,6 +36,7 @@ export default function AppointmentsPage() {
     const [cancelModal, setCancelModal] = useState({ isOpen: false, aptId: null as string | null });
     const [rescheduleModal, setRescheduleModal] = useState({ isOpen: false, aptId: null as string | null, dateTime: '' });
     const [search, setSearch] = useState("");
+    const autoSyncAttemptedRef = useRef<Set<string>>(new Set());
 
     const isRTL = language === 'ar';
     const tSafe = (key: string, fallback: string, params?: Record<string, any>) => {
@@ -82,6 +83,27 @@ export default function AppointmentsPage() {
         }, 30000);
         return () => clearInterval(interval);
     }, [fetchAppointments]);
+
+    // If an appointment is checked-in but queue entry is not visible yet,
+    // attempt one silent re-sync to avoid requiring a second manual click.
+    useEffect(() => {
+        const pendingSync = appointments.find(
+            (apt) =>
+                String(apt.status || "").toLowerCase() === "checked_in" &&
+                !apt.queue_entry &&
+                !autoSyncAttemptedRef.current.has(String(apt.id || ""))
+        );
+        if (!pendingSync?.id) return;
+
+        const id = String(pendingSync.id);
+        autoSyncAttemptedRef.current.add(id);
+        appointmentService
+            .updateStatus(id, "checked_in")
+            .then(() => fetchAppointments())
+            .catch(() => {
+                // Non-blocking: keep UI usable even if sync retry fails.
+            });
+    }, [appointments, fetchAppointments]);
 
     const handleUpdateStatus = async (id: string, status: AppointmentStatus) => {
         setActionLoading(id);
@@ -570,7 +592,9 @@ export default function AppointmentsPage() {
                                                 className="h-10 px-5 bg-[#0B1B3F] hover:bg-[#142A5A] text-white rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 shadow-sm ml-1"
                                             >
                                                 <CheckCheck className="h-4 w-4" />
-                                                {apt.status === 'checked_in' ? tSafe('appointments.sync_with_queue', 'Sync Queue') : t('appointments.check_in')}
+                                                {apt.status === 'checked_in'
+                                                    ? tSafe('appointments.sync_with_queue', 'Sync Queue')
+                                                    : tSafe('appointments.check_in_sync_queue', 'Check In & Sync Queue')}
                                             </button>
                                         </div>
                                     )}
