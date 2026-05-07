@@ -212,6 +212,8 @@
     "manage_leave": "إدارة الإجازات",
     "all_leave_requests_title": "كل طلبات الإجازة",
     "all_leave_requests_subtitle": "وافق أو ارفض الطلبات المعلقة من مكان واحد.",
+    "no_leave_requests_title": "لا توجد طلبات إجازة معلّقة",
+    "no_leave_requests_hint": "ستظهر طلبات الإجازة الجديدة هنا ليتسنى لك الموافقة أو الرفض بسرعة.",
     "notify_whatsapp": "إخطار عبر واتساب",
     "approve_and_notify": "موافقة وإخطار",
     "update_professional": "تحديث المهني",

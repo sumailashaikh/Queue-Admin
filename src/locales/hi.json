@@ -213,6 +213,8 @@
     "manage_leave": "छुट्टी प्रबंधित करें",
     "all_leave_requests_title": "सभी छुट्टी अनुरोध",
     "all_leave_requests_subtitle": "एक ही स्थान से लंबित अनुरोध स्वीकृत या अस्वीकृत करें।",
+    "no_leave_requests_title": "कोई लंबित छुट्टी अनुरोध नहीं",
+    "no_leave_requests_hint": "नए कर्मचारी छुट्टी अनुरोध यहां दिखेंगे ताकि आप तुरंत स्वीकृत/अस्वीकृत कर सकें।",
     "notify_whatsapp": "व्हाट्सएप के माध्यम से सूचित करें",
     "approve_and_notify": "अनुमोदित करें और सूचित करें",
     "update_professional": "पेशेवर को अपडेट करें",

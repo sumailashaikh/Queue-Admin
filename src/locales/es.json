@@ -201,6 +201,8 @@
     "manage_leave": "Gestionar Permisos",
     "all_leave_requests_title": "Todas las solicitudes de permiso",
     "all_leave_requests_subtitle": "Aprueba o rechaza solicitudes pendientes desde un solo lugar.",
+    "no_leave_requests_title": "No hay solicitudes de permiso pendientes",
+    "no_leave_requests_hint": "Las nuevas solicitudes de permiso aparecerán aquí para aprobar o rechazar rápidamente.",
     "notify_whatsapp": "Notificar por WhatsApp",
     "approve_and_notify": "Aprobar y Notificar",
     "update_professional": "Actualizar Profesional",

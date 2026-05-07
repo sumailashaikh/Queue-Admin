@@ -1008,7 +1008,16 @@ export default function ProvidersPage() {
                                 <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.role')}</label><input required type="text" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-slate-900/10" /></div>
                                 <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.department')}</label><input required type="text" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black outline-none focus:ring-2 focus:ring-slate-900/10" /></div>
                             </div>
-                            <div className="space-y-2"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('providers.phone_number')}</label><CountryPhoneInput value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} /></div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    {t('providers.phone_number')}
+                                </label>
+                                <CountryPhoneInput
+                                    value={formData.phone}
+                                    onChange={v => setFormData({ ...formData, phone: v })}
+                                    placeholder={t('providers.phone_number')}
+                                />
+                            </div>
                         </div>
                         <button disabled={isSubmitting} className="w-full py-5 bg-slate-900 text-white rounded-[24px] text-xs font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50">{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}{selectedProvider ? t('providers.save_changes') : t('providers.confirm_add')}</button>
                     </form>

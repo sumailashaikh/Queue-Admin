@@ -278,6 +278,8 @@
     "manage_leave": "Manage Leave",
     "all_leave_requests_title": "All Leave Requests",
     "all_leave_requests_subtitle": "Approve or reject pending requests from one place.",
+    "no_leave_requests_title": "No pending leave requests",
+    "no_leave_requests_hint": "New employee leave requests will appear here for quick approve/reject actions.",
     "notify_whatsapp": "Notify via WhatsApp",
     "approve_and_notify": "Approve & Notify",
     "update_professional": "Update Professional",

@@ -10,7 +10,6 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
     const { language, setLanguage, t } = useLanguage();
-    const [manualLanguage, setManualLanguage] = useState<string | null>(null);
     const [entries, setEntries] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [business, setBusiness] = useState<any>(null);
@@ -36,8 +35,8 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             setEntries(Array.isArray(res.entries) ? res.entries.filter(Boolean) : []);
             setError(null);
 
-            // Auto-set language only until user manually chooses a TV language.
-            if (!manualLanguage && res.business?.language && res.business.language !== language) {
+            // TV Mode should always follow owner/business selected language.
+            if (res.business?.language && res.business.language !== language) {
                 setLanguage(res.business.language, false);
             }
         } catch (err: any) {
@@ -45,7 +44,7 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
         } finally {
             setLoading(false);
         }
-    }, [slug, language, setLanguage, manualLanguage]);
+    }, [slug, language, setLanguage]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -133,26 +132,6 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
                     </div>
                 </div>
                 <div className={cn("flex flex-col", isRTL ? "items-center md:items-start text-center md:text-left" : "items-center md:items-end text-center md:text-right")}>
-                    <div className="mb-2 inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 p-1">
-                        {(["en", "hi", "ar", "es"] as const).map((code) => {
-                            const active = language === code;
-                            return (
-                                <button
-                                    key={code}
-                                    onClick={() => {
-                                        setManualLanguage(code);
-                                        setLanguage(code, false);
-                                    }}
-                                    className={cn(
-                                        "rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-colors",
-                                        active ? "bg-white text-slate-900" : "text-white/85 hover:bg-white/20"
-                                    )}
-                                >
-                                    {code}
-                                </button>
-                            );
-                        })}
-                    </div>
                     <p className="text-4xl md:text-6xl font-black tracking-tighter tabular-nums text-white leading-tight">
                         {currentTime.toLocaleTimeString(language === 'hi' ? 'hi-IN' : language === 'ar' ? 'ar-SA' : 'en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).replace(/\s*(AM|PM|ص|م)/i, '')}
                         <span className="text-xl md:text-3xl ml-1 md:ml-2 opacity-40 uppercase">
