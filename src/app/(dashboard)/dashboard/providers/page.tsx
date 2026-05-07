@@ -1050,6 +1050,8 @@ export default function ProvidersPage() {
                             const remaining = Number(provider.temporary_unavailable_remaining_minutes || 0);
                             const status = provider.temporary_unavailable
                                 ? "unavailable"
+                                : provider.temporary_unavailable_scheduled
+                                    ? "upcoming_break"
                                 : provider.leave_status === "on_leave"
                                     ? "on_leave"
                                     : provider.leave_status === "upcoming"
@@ -1065,6 +1067,8 @@ export default function ProvidersPage() {
                                             "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border",
                                             status === "unavailable"
                                                 ? "bg-rose-50 text-rose-700 border-rose-200"
+                                                : status === "upcoming_break"
+                                                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
                                                 : status === "on_leave"
                                                     ? "bg-rose-50 text-rose-700 border-rose-200"
                                                     : status === "upcoming"
@@ -1075,6 +1079,8 @@ export default function ProvidersPage() {
                                         )}>
                                             {status === "unavailable"
                                                 ? "Temporarily Unavailable"
+                                                : status === "upcoming_break"
+                                                    ? "Upcoming Break"
                                                 : status === "on_leave"
                                                     ? "On Leave"
                                                     : status === "upcoming"
@@ -1087,6 +1093,8 @@ export default function ProvidersPage() {
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
                                         {status === "unavailable"
                                             ? labelReason(provider.temporary_unavailable_reason)
+                                            : status === "upcoming_break"
+                                                ? labelReason(provider.temporary_unavailable_reason)
                                             : status === "on_leave" || status === "upcoming"
                                                 ? "Leave"
                                                 : "-"}
@@ -1094,6 +1102,8 @@ export default function ProvidersPage() {
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
                                         {status === "unavailable"
                                             ? provider.temporary_unavailable_until || "-"
+                                            : status === "upcoming_break"
+                                                ? provider.temporary_unavailable_starts_at || "-"
                                             : status === "on_leave"
                                                 ? provider.leave_until || "-"
                                                 : status === "upcoming"
@@ -1103,6 +1113,8 @@ export default function ProvidersPage() {
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
                                         {status === "unavailable"
                                             ? `Back in ${Math.max(0, remaining)} mins`
+                                            : status === "upcoming_break"
+                                                ? "Scheduled"
                                             : status === "upcoming"
                                                 ? "Scheduled"
                                                 : "-"}
@@ -1142,6 +1154,8 @@ export default function ProvidersPage() {
                                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
                                         provider.temporary_unavailable
                                             ? "bg-rose-50 text-rose-700 border-rose-200"
+                                            : provider.temporary_unavailable_scheduled
+                                                ? "bg-indigo-50 text-indigo-700 border-indigo-200"
                                             : provider.leave_status === 'on_leave'
                                                 ? "bg-rose-50 text-rose-600 border-rose-100"
                                                 : provider.leave_status === 'upcoming'
@@ -1152,6 +1166,8 @@ export default function ProvidersPage() {
                                     )}>
                                         {provider.temporary_unavailable
                                             ? "Unavailable"
+                                            : provider.temporary_unavailable_scheduled
+                                                ? "Upcoming Break"
                                             : provider.leave_status === 'on_leave'
                                                 ? t('providers.on_leave')
                                                 : provider.leave_status === 'upcoming'

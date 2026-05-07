@@ -16,6 +16,8 @@ export interface ServiceProvider {
   temporary_unavailable_reason?: string | null;
   temporary_unavailable_until?: string | null;
   temporary_unavailable_remaining_minutes?: number;
+  temporary_unavailable_scheduled?: boolean;
+  temporary_unavailable_starts_at?: string | null;
   services?: any[];
   translations?: Record<string, any>;
   created_at: string;
