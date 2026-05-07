@@ -692,6 +692,7 @@
     "whatsapp_next": "Alert: You're Next",
     "whatsapp_ready": "Alert: We're Ready",
     "check_in": "Check In",
+    "check_in_sync_queue": "Check In & Sync Queue",
     "sync_with_queue": "Sync With Queue",
     "active_in_queue": "Active In Queue",
     "pending": "Pending",

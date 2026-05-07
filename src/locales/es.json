@@ -599,6 +599,8 @@
     "whatsapp_next": "Alerta: Eres el Siguiente",
     "whatsapp_ready": "Alerta: Estamos Listos",
     "check_in": "Registrar Entrada",
+    "check_in_sync_queue": "Registrar y sincronizar cola",
+    "sync_with_queue": "Sincronizar con cola",
     "active_in_queue": "Activo en Cola",
     "pending": "Pendiente",
     "cancelled": "Cancelado",

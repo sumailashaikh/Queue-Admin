@@ -611,6 +611,7 @@
     "whatsapp_next": "تنبيه: أنت التالي",
     "whatsapp_ready": "تنبيه: نحن مستعدون",
     "check_in": "تسجيل الوصول",
+    "check_in_sync_queue": "تسجيل الوصول ومزامنة الطابور",
     "sync_with_queue": "مزامنة مع الطابور",
     "active_in_queue": "نشط في الطابور",
     "pending": "قيد الانتظار",

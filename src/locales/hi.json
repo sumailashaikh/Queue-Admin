@@ -607,6 +607,7 @@
     "whatsapp_next": "अलर्ट: आप अगले हैं",
     "whatsapp_ready": "अलर्ट: हम तैयार हैं",
     "check_in": "चेक इन",
+    "check_in_sync_queue": "चेक इन और क्यू सिंक करें",
     "sync_with_queue": "सिंक करें",
     "active_in_queue": "कतार में सक्रिय",
     "pending": "लंबित",
