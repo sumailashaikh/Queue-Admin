@@ -88,6 +88,8 @@ export default function ProvidersPage() {
     const [leaveNotifications, setLeaveNotifications] = useState<AppNotification[]>([]);
     const [pendingLeaveAlerts, setPendingLeaveAlerts] = useState<any[]>([]);
     const [isLeaveRequestsModalOpen, setIsLeaveRequestsModalOpen] = useState(false);
+    const [isOpeningLeaveRequests, setIsOpeningLeaveRequests] = useState(false);
+    const [processingLeaveId, setProcessingLeaveId] = useState<string | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
@@ -651,6 +653,7 @@ export default function ProvidersPage() {
             showToast(leaveUiText.reasonRequired, "error");
             return;
         }
+        setProcessingLeaveId(String(leaveId));
         setIsSubmitting(true);
         try {
             const resp = await providerService.updateLeaveStatus(leaveId, status, status === 'REJECTED' ? reason : undefined);
@@ -685,6 +688,7 @@ export default function ProvidersPage() {
             }
         } finally {
             setIsSubmitting(false);
+            setProcessingLeaveId(null);
         }
     };
 
@@ -903,13 +907,19 @@ export default function ProvidersPage() {
                     <div className="relative w-full sm:w-auto shrink-0">
                         <button
                             type="button"
+                            disabled={isOpeningLeaveRequests}
                             onClick={async () => {
-                                await fetchLeaveNotifications();
                                 setIsLeaveRequestsModalOpen(true);
+                                setIsOpeningLeaveRequests(true);
+                                try {
+                                    await fetchLeaveNotifications();
+                                } finally {
+                                    setIsOpeningLeaveRequests(false);
+                                }
                             }}
-                            className="w-full sm:w-auto h-10 px-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 flex items-center justify-center gap-2 shadow-sm hover:bg-indigo-100"
+                            className="w-full sm:w-auto h-10 px-4 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 flex items-center justify-center gap-2 shadow-sm hover:bg-indigo-100 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            <CalendarOff className="h-4 w-4" />
+                            {isOpeningLeaveRequests ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarOff className="h-4 w-4" />}
                             <span className="text-xs font-bold">{tt("dashboard.leave_requests", "Leave Requests")}</span>
                             {leaveRequestsBadgeCount > 0 && (
                                 <span className="min-w-5 h-5 px-1 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center">
@@ -1235,19 +1245,21 @@ export default function ProvidersPage() {
                                         {isPending && (
                                             <>
                                                 <button
+                                                    disabled={isSubmitting || processingLeaveId === String(leave.id)}
                                                     onClick={() => handleUpdateLeaveStatus(leave.id, 'APPROVED')}
-                                                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                                     title={leaveUiText.approve}
                                                 >
-                                                    <CheckCircle2 className="h-4 w-4" />
+                                                    {processingLeaveId === String(leave.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                                                 </button>
                                                 <button
+                                                    disabled={isSubmitting || processingLeaveId === String(leave.id)}
                                                     onClick={() => setRejectModal({
                                                         isOpen: true,
                                                         leaveId: leave.id,
                                                         reason: ""
                                                     })}
-                                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                                     title={leaveUiText.reject}
                                                 >
                                                     <X className="h-4 w-4" />
@@ -1304,14 +1316,16 @@ export default function ProvidersPage() {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                disabled={isSubmitting}
+                                                disabled={isSubmitting || processingLeaveId === String(row.leave_id)}
                                                 onClick={() => handleApproveFromRequestsModal(row)}
                                                 className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
                                             >
-                                                {tt("providers.approve", "Approve")}
+                                                {(processingLeaveId === String(row.leave_id))
+                                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    : tt("providers.approve", "Approve")}
                                             </button>
                                             <button
-                                                disabled={isSubmitting}
+                                                disabled={isSubmitting || processingLeaveId === String(row.leave_id)}
                                                 onClick={() => setRejectModal({ isOpen: true, leaveId: row.leave_id, reason: "" })}
                                                 className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
                                             >
