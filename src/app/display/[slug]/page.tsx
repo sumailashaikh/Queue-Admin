@@ -36,15 +36,19 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             setError(null);
 
             // TV Mode should always follow owner/business selected language.
-            const rawBusinessLanguage = String(res.business?.language || '').toLowerCase();
-            const normalizedBusinessLanguage =
-                rawBusinessLanguage.startsWith('en') ? 'en' :
-                rawBusinessLanguage.startsWith('ar') ? 'ar' :
-                rawBusinessLanguage.startsWith('hi') ? 'hi' :
-                rawBusinessLanguage.startsWith('es') ? 'es' :
-                null;
-            if (normalizedBusinessLanguage && normalizedBusinessLanguage !== language) {
-                setLanguage(normalizedBusinessLanguage, false);
+            const normalizeLang = (value: any): string | null => {
+                const raw = String(value || '').toLowerCase().trim();
+                if (!raw) return null;
+                if (raw.startsWith('en') || raw.includes('english')) return 'en';
+                if (raw.startsWith('ar') || raw.includes('arab')) return 'ar';
+                if (raw.startsWith('hi') || raw.includes('hindi')) return 'hi';
+                if (raw.startsWith('es') || raw.includes('spanish') || raw.includes('espa')) return 'es';
+                return null;
+            };
+            const localUiLanguage = typeof window !== 'undefined' ? localStorage.getItem('ui_language') : null;
+            const preferredLanguage = normalizeLang(localUiLanguage) || normalizeLang(res.business?.language);
+            if (preferredLanguage && preferredLanguage !== language) {
+                setLanguage(preferredLanguage, false);
             }
         } catch (err: any) {
             setError(err.message);

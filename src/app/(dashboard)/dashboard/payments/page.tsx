@@ -83,13 +83,17 @@ export default function PaymentsPage() {
             return selectedEntry.queue_entry_services.map((s) => ({
                 name: normalizeServiceName(s.services?.name),
                 amount: Number(s.price || 0),
-                duration: Number(s.duration_minutes || 0)
+                duration: Number(s.duration_minutes || 0),
+                taskStatus: String(s.task_status || "pending").toLowerCase(),
+                staffName: s.service_providers?.name || null
             }));
         }
         return [{
             name: normalizeServiceName(selectedEntry.service_name),
             amount: Number(selectedEntry.total_price || 0),
-            duration: Number(selectedEntry.total_duration_minutes || 0)
+            duration: Number(selectedEntry.total_duration_minutes || 0),
+            taskStatus: String(selectedEntry.status || "waiting").toLowerCase(),
+            staffName: selectedEntry.service_providers?.name || null
         }];
     }, [selectedEntry, t]);
 
@@ -97,6 +101,18 @@ export default function PaymentsPage() {
         () => lineItems.reduce((sum, item) => sum + Number(item.amount || 0), 0),
         [lineItems]
     );
+    const completedByLabel = useMemo(() => {
+        const names = Array.from(
+            new Set(
+                lineItems
+                    .filter((item) => ["done", "completed"].includes(String(item.taskStatus || "").toLowerCase()))
+                    .map((item) => String(item.staffName || "").trim())
+                    .filter(Boolean)
+            )
+        );
+        if (names.length === 0) return null;
+        return names.join(", ");
+    }, [lineItems]);
 
     const invoiceNumber = useMemo(() => {
         if (!selectedEntry) return "";
@@ -484,6 +500,12 @@ export default function PaymentsPage() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-3">
+                                    {isPaidLocked && (
+                                        <div className="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider bg-emerald-50 border border-emerald-200 text-emerald-700">
+                                            <Receipt className="h-4 w-4" />
+                                            {tr("payments.payment_recorded", "Payment recorded")}
+                                        </div>
+                                    )}
                                     <button
                                         onClick={shareInvoiceOnWhatsApp}
                                         disabled={!isPaidLocked}
@@ -499,36 +521,46 @@ export default function PaymentsPage() {
                                             ? tr("payments.share_whatsapp", "Share On WhatsApp")
                                             : tr("payments.share_after_paid", "Share After Payment")}
                                     </button>
-                                    <button
-                                        onClick={() => markPayment("qr")}
-                                        disabled={updatingPayment !== null || (isPaidLocked && currentPaymentMethod !== "qr")}
-                                        className={cn(
-                                            "inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm",
-                                            updatingPayment !== null || (isPaidLocked && currentPaymentMethod !== "qr")
-                                                ? "bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed"
-                                                : currentPaymentMethod === "qr"
-                                                    ? "border border-sky-300 bg-sky-600 text-white cursor-default"
-                                                    : "border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 hover:border-sky-300 active:scale-[0.99] cursor-pointer"
-                                        )}
-                                    >
-                                        {updatingPayment === "qr" ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-                                        {currentPaymentMethod === "qr" ? tr("payments.paid_via_qr", "Paid via QR") : tr("payments.mark_qr_paid", "Mark QR Paid")}
-                                    </button>
-                                    <button
-                                        onClick={() => markPayment("cash")}
-                                        disabled={updatingPayment !== null || (isPaidLocked && currentPaymentMethod !== "cash")}
-                                        className={cn(
-                                            "inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm",
-                                            updatingPayment !== null || (isPaidLocked && currentPaymentMethod !== "cash")
-                                                ? "bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed"
-                                                : currentPaymentMethod === "cash"
-                                                    ? "border border-emerald-300 bg-emerald-600 text-white cursor-default"
-                                                    : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 active:scale-[0.99] cursor-pointer"
-                                        )}
-                                    >
-                                        {updatingPayment === "cash" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
-                                        {currentPaymentMethod === "cash" ? tr("payments.paid_in_cash", "Paid in Cash") : tr("payments.mark_cash_paid", "Mark Cash Paid")}
-                                    </button>
+                                    {!isPaidLocked && (
+                                        <>
+                                            <button
+                                                onClick={() => markPayment("qr")}
+                                                disabled={updatingPayment !== null}
+                                                className={cn(
+                                                    "inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm",
+                                                    updatingPayment !== null
+                                                        ? "bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed"
+                                                        : "border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 hover:border-sky-300 active:scale-[0.99] cursor-pointer"
+                                                )}
+                                            >
+                                                {updatingPayment === "qr" ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+                                                {tr("payments.mark_qr_paid", "Mark QR Paid")}
+                                            </button>
+                                            <button
+                                                onClick={() => markPayment("cash")}
+                                                disabled={updatingPayment !== null}
+                                                className={cn(
+                                                    "inline-flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm",
+                                                    updatingPayment !== null
+                                                        ? "bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed"
+                                                        : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 active:scale-[0.99] cursor-pointer"
+                                                )}
+                                            >
+                                                {updatingPayment === "cash" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
+                                                {tr("payments.mark_cash_paid", "Mark Cash Paid")}
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                        {tr("payments.service_completion_owner_label", "Service completion")}
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                                        {completedByLabel
+                                            ? `${tr("payments.completed_by", "Completed by")}: ${completedByLabel}`
+                                            : tr("payments.completion_in_progress", "Service is in progress or not completed yet.")}
+                                    </p>
                                 </div>
                             </>
                         )}

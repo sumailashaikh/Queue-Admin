@@ -57,7 +57,7 @@ export default function ProvidersPage() {
     const [leavesData, setLeavesData] = useState<any[]>([]);
     const [resignations, setResignations] = useState<any[]>([]);
     const [leaveFormData, setLeaveFormData] = useState({ start_date: "", end_date: "", leave_type: "holiday", note: "" });
-    const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "", custom_message: "" });
+    const [inviteFormData, setInviteFormData] = useState({ name: "", phone: "", custom_message: "", ui_language: "en" });
     
     const [formData, setFormData] = useState({ 
         name: "", 
@@ -833,7 +833,7 @@ export default function ProvidersPage() {
                 showToast(translated);
             }
             setIsInviteModalOpen(false);
-            setInviteFormData({ name: "", phone: "", custom_message: "" });
+            setInviteFormData({ name: "", phone: "", custom_message: "", ui_language: language || "en" });
             await fetchProviders();
         } catch (error: any) {
             const data = error.response?.data;
@@ -942,7 +942,7 @@ export default function ProvidersPage() {
                             <span dir="ltr">({pendingResignationCount})</span>
                         </button>
                     )}
-                    <button onClick={() => { setInviteFormData({ name: "", phone: "", custom_message: "" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
+                    <button onClick={() => { setInviteFormData({ name: "", phone: "", custom_message: "", ui_language: language || "en" }); setIsInviteModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition-all"><MessageSquare className="h-4 w-4" />{t('providers.invite_staff')}</button>
                     <button onClick={() => { setError(null); setSelectedProvider(null); setFormData({ name: "", phone: "", role: "", department: "", translations: {} }); setIsModalOpen(true); }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-slate-800 transition-all"><UserPlus className="h-4 w-4" />{t('providers.add_provider')}</button>
                 </div>
             </div>
@@ -1724,6 +1724,19 @@ export default function ProvidersPage() {
                                     onChange={(v) => setInviteFormData({ ...inviteFormData, phone: v })}
                                 />
                                 <p className="text-[9px] font-semibold text-slate-500 ml-1">{t('providers.invite_phone_country_hint')}</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('public.language_label')}</label>
+                                <select
+                                    value={inviteFormData.ui_language}
+                                    onChange={(v) => setInviteFormData({ ...inviteFormData, ui_language: v.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm font-black focus:ring-2 focus:ring-slate-900/10 outline-none"
+                                >
+                                    <option value="en">English</option>
+                                    <option value="es">Español</option>
+                                    <option value="hi">Hindi</option>
+                                    <option value="ar">العربية</option>
+                                </select>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.invite_msg_label')}</label>
