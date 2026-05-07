@@ -36,8 +36,15 @@ export default function PublicTVDisplayPage({ params }: { params: Promise<{ slug
             setError(null);
 
             // TV Mode should always follow owner/business selected language.
-            if (res.business?.language && res.business.language !== language) {
-                setLanguage(res.business.language, false);
+            const rawBusinessLanguage = String(res.business?.language || '').toLowerCase();
+            const normalizedBusinessLanguage =
+                rawBusinessLanguage.startsWith('en') ? 'en' :
+                rawBusinessLanguage.startsWith('ar') ? 'ar' :
+                rawBusinessLanguage.startsWith('hi') ? 'hi' :
+                rawBusinessLanguage.startsWith('es') ? 'es' :
+                null;
+            if (normalizedBusinessLanguage && normalizedBusinessLanguage !== language) {
+                setLanguage(normalizedBusinessLanguage, false);
             }
         } catch (err: any) {
             setError(err.message);

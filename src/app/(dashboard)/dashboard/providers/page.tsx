@@ -229,8 +229,11 @@ export default function ProvidersPage() {
             setLeaveNotifications(leaveOnly.length > 0 ? leaveOnly : all.slice(0, 20));
             if (business?.id) {
                 const alerts = await providerService.getLeaveAlerts(business.id);
-                const pendingOnly = (alerts || []).filter(
-                    (row: any) => String(row?.leave_status || "").toUpperCase() === "PENDING"
+                const pendingOnly = (alerts || []).filter((row: any) =>
+                    String(row?.leave_status || "")
+                        .toUpperCase()
+                        .replace(/\s+/g, "_")
+                        .startsWith("PENDING")
                 );
                 setPendingLeaveAlerts(pendingOnly);
             } else {
@@ -1222,10 +1225,10 @@ export default function ProvidersPage() {
                                 )}
                             </div>
                             {leavesData.map((leave: any) => {
-                                const rawStatus = String(leave.status || 'PENDING').toUpperCase();
+                                const rawStatus = String(leave.status || 'PENDING').toUpperCase().replace(/\s+/g, '_');
                                 const statusKey = rawStatus.toLowerCase();
-                                const isPending = rawStatus === 'PENDING';
-                                const isApproved = rawStatus === 'APPROVED';
+                                const isPending = rawStatus.startsWith('PENDING');
+                                const isApproved = rawStatus.startsWith('APPROVED');
                                 const isRejected = rawStatus === 'REJECTED';
                                 return (
                                 <div key={leave.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between gap-3">
@@ -1623,7 +1626,7 @@ export default function ProvidersPage() {
                                 ) : null}
 
                                 <div className="flex justify-end gap-3 pt-2">
-                                    {String(impactModal.leave?.status || '').toUpperCase() === 'PENDING' && (
+                                    {String(impactModal.leave?.status || '').toUpperCase().replace(/\s+/g, '_').startsWith('PENDING') && (
                                         <button
                                             disabled={isSubmitting}
                                             onClick={async () => {
