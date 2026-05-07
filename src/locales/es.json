@@ -184,6 +184,9 @@
     "past_leave_summary": "Resumen de permisos pasados",
     "next_leave_dates": "Próximas fechas de permiso",
     "on_leave_today": "De permiso hoy",
+    "available_today": "Disponible hoy",
+    "next_approved_plans": "Próximos planes aprobados",
+    "no_upcoming_approved_leaves": "No hay permisos aprobados próximos",
     "block_outs": "Bloqueos de horario",
     "emergency_leave_count_label": "Permisos de emergencia"
   },

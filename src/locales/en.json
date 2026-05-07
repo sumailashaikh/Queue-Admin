@@ -261,6 +261,9 @@
     "past_leave_summary": "Past Leave Summary",
     "next_leave_dates": "Next Leave Dates",
     "on_leave_today": "On Leave Today",
+    "available_today": "Available Today",
+    "next_approved_plans": "Next approved plans",
+    "no_upcoming_approved_leaves": "No upcoming approved leaves",
     "block_outs": "Block Outs",
     "emergency_leave_count_label": "Emergency leaves"
   },

@@ -36,6 +36,10 @@ export default function ProviderAnalyticsPage() {
     // Modal State
     const [selectedProvider, setSelectedProvider] = useState<ProviderAnalytics | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const tt = (key: string, fallback: string) => {
+        const translated = t(key);
+        return translated === key ? fallback : translated;
+    };
 
     const fetchAnalytics = useCallback(async () => {
         if (!business?.id) return;
@@ -352,7 +356,7 @@ export default function ProviderAnalyticsPage() {
                                 <div className="mt-3 rounded-2xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-4 shadow-sm">
                                     <div className="flex items-center justify-between gap-3 mb-3">
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                                            Leave Tracker
+                                            {tt('provider_analytics.leave_tracker_title', 'Leave Tracker')}
                                         </p>
                                         <span className={cn(
                                             "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider",
@@ -360,24 +364,26 @@ export default function ProviderAnalyticsPage() {
                                                 ? "border-rose-200 bg-rose-50 text-rose-700"
                                                 : "border-emerald-200 bg-emerald-50 text-emerald-700"
                                         )}>
-                                            {p.on_leave_today ? "On Leave Today" : "Available Today"}
+                                            {p.on_leave_today
+                                                ? tt('provider_analytics.on_leave_today', 'On Leave Today')
+                                                : tt('provider_analytics.available_today', 'Available Today')}
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                                         <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Upcoming Leaves</p>
+                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{tt('provider_analytics.upcoming_leaves', 'Upcoming Leaves')}</p>
                                             <p className="text-lg font-black text-slate-900 mt-1">{Number(p.upcoming_leave_count || 0)}</p>
-                                            <p className="text-[10px] font-semibold text-slate-500 mt-1">Next approved plans</p>
+                                            <p className="text-[10px] font-semibold text-slate-500 mt-1">{tt('provider_analytics.next_approved_plans', 'Next approved plans')}</p>
                                         </div>
                                         <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Past Leave Summary</p>
+                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{tt('provider_analytics.past_leave_summary', 'Past Leave Summary')}</p>
                                             <p className="text-xs font-bold text-slate-900 mt-2 wrap-break-word leading-tight">{getPastLeaveSummary(p)}</p>
                                         </div>
                                         <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Next Leave Dates</p>
+                                            <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">{tt('provider_analytics.next_leave_dates', 'Next Leave Dates')}</p>
                                             <div className="space-y-2">
                                                 {getUpcomingLeavePreview(p).length === 0 ? (
-                                                    <p className="text-[11px] font-semibold text-slate-500">No upcoming approved leaves</p>
+                                                    <p className="text-[11px] font-semibold text-slate-500">{tt('provider_analytics.no_upcoming_approved_leaves', 'No upcoming approved leaves')}</p>
                                                 ) : (
                                                     getUpcomingLeavePreview(p).map((leave, idx) => {
                                                         const pill = leaveTypePill(leave.type);

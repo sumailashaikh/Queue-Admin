@@ -196,6 +196,9 @@
     "past_leave_summary": "पिछली छुट्टी सारांश",
     "next_leave_dates": "अगली छुट्टी की तारीखें",
     "on_leave_today": "आज छुट्टी पर",
+    "available_today": "आज उपलब्ध",
+    "next_approved_plans": "अगली स्वीकृत योजनाएं",
+    "no_upcoming_approved_leaves": "कोई आगामी स्वीकृत छुट्टियां नहीं",
     "block_outs": "ब्लॉक आउट",
     "emergency_leave_count_label": "इमरजेंसी छुट्टियां"
   },

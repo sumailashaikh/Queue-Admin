@@ -195,6 +195,9 @@
     "past_leave_summary": "ملخص الإجازات السابقة",
     "next_leave_dates": "تواريخ الإجازة القادمة",
     "on_leave_today": "في إجازة اليوم",
+    "available_today": "متاح اليوم",
+    "next_approved_plans": "الخطط المعتمدة القادمة",
+    "no_upcoming_approved_leaves": "لا توجد إجازات معتمدة قادمة",
     "block_outs": "فترات الحظر",
     "emergency_leave_count_label": "إجازات الطوارئ"
   },
