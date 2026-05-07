@@ -1754,7 +1754,7 @@ export default function ProvidersPage() {
                                 <p className="text-[9px] font-semibold text-slate-500 ml-1">{t('providers.invite_phone_country_hint')}</p>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('public.language_label')}</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('providers.invite_language_label')}</label>
                                 <select
                                     value={inviteFormData.ui_language}
                                     onChange={(v) => setInviteFormData({ ...inviteFormData, ui_language: v.target.value })}

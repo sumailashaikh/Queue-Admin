@@ -394,6 +394,7 @@
     "invite_msg_placeholder": "Write a custom welcome message for the employee...",
     "invite_msg_label": "Invitation Message",
     "custom_invite_hint": "This message will be sent via WhatsApp/SMS to the employee.",
+    "invite_language_label": "Invite language",
     "invite_phone_country_hint": "Choose the country code above so the number is sent in full international format (required for SMS/WhatsApp).",
     "leave_tooltip_approve": "Approve",
     "leave_tooltip_reject": "Decline",
