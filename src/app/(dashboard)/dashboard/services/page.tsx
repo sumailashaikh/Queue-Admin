@@ -15,7 +15,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, validateLanguage } from "@/lib/utils";
 
 type ServiceItem = {
   id: string;
@@ -44,7 +44,7 @@ const emptyForm: FormState = {
 
 export default function ServicesPage() {
   const { business } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -111,6 +111,10 @@ export default function ServicesPage() {
     const duration = Number(form.duration_minutes);
     if (Number.isNaN(price) || Number.isNaN(duration) || price < 0 || duration < 0) {
       showToast(t("services.err_negative_values"), "error");
+      return;
+    }
+    if (!validateLanguage(form.name.trim(), language) || !validateLanguage(form.description.trim(), language)) {
+      showToast(t("common.err_invalid_chars"), "error");
       return;
     }
 
