@@ -367,6 +367,12 @@ function EmployeeDashboardContent() {
         if (lower.includes('unable to validate leave conflicts right now')) {
             return t('providers.err_leave_conflict_validation_unavailable' as any, {}, effectiveUiLanguage as any);
         }
+        if (
+            lower.includes('active leave or temporary unavailable status during this time') ||
+            lower.includes('block time overlaps an existing approved leave or block-out')
+        ) {
+            return t('providers.err_blockout_overlap' as any, {}, effectiveUiLanguage as any);
+        }
         if (lower.includes('clock-in failed due to supabase permission policy')) {
             return safeLocal('employee.err_clockin_permission', {
                 en: 'Clock-in failed. Please contact support to update backend permissions.',
@@ -822,7 +828,7 @@ function EmployeeDashboardContent() {
                 showToast(t("providers.all_fields_required"), "error");
                 return;
             }
-            const blockDate = todayDate;
+            const blockDate = leaveFormData.start_date || todayDate;
             const toMinutes = (value: string) => {
                 const [h, m] = String(value || "00:00").split(":").map(Number);
                 return (Number(h) || 0) * 60 + (Number(m) || 0);
@@ -843,6 +849,14 @@ function EmployeeDashboardContent() {
                 setLeaveFormData({ start_date: "", end_date: "", leave_type: "planned", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "", request_type: "leave" } as any);
                 fetchData();
             } catch (error: any) {
+                const overlapStart = String(error?.response?.data?.existing_start || "").trim();
+                const overlapEnd = String(error?.response?.data?.existing_end || "").trim();
+                if (overlapStart && overlapEnd) {
+                    const from = new Date(overlapStart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                    const to = new Date(overlapEnd).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                    showToast(`Employee already unavailable from ${from} to ${to}. Please choose another time.`, "error");
+                    return;
+                }
                 const key = String(error?.response?.data?.message_key || "").trim();
                 if (key) {
                     showToast(t(key as any, {}, effectiveUiLanguage as any), "error");
@@ -1582,19 +1596,10 @@ function EmployeeDashboardContent() {
                                             <input 
                                                 required
                                                 type="date"
-                                                min={String((leaveFormData as any).request_type || "leave") === "block_out" ? todayDate : minLeaveDate}
-                                                max={String((leaveFormData as any).request_type || "leave") === "block_out" ? todayDate : undefined}
-                                                value={String((leaveFormData as any).request_type || "leave") === "block_out" ? todayDate : leaveFormData.start_date}
-                                                disabled={String((leaveFormData as any).request_type || "leave") === "block_out"}
+                                                min={minLeaveDate}
+                                                value={leaveFormData.start_date}
                                                 onChange={e => {
                                                     const nextDate = e.target.value;
-                                                    if (String((leaveFormData as any).request_type || "leave") === "block_out") {
-                                                        setLeaveFormData({
-                                                            ...leaveFormData,
-                                                            start_date: todayDate
-                                                        });
-                                                        return;
-                                                    }
                                                     setLeaveFormData({
                                                         ...leaveFormData,
                                                         start_date: nextDate,

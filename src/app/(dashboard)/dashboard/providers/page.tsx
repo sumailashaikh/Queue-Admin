@@ -131,6 +131,11 @@ export default function ProvidersPage() {
 
     const parseApiMessage = (error: any, fallbackKey: string, fallbackText: string) => {
         const data = error?.response?.data;
+        const messageKey = String(data?.message_key || "").trim();
+        if (messageKey && messageKey.includes(".")) {
+            const translatedByKey = t(messageKey as any, data);
+            if (translatedByKey !== messageKey) return translatedByKey;
+        }
         const raw = String(data?.message || error?.message || "").trim();
         if (!raw) {
             const fallback = t(fallbackKey as any);
@@ -139,6 +144,14 @@ export default function ProvidersPage() {
         if (/\s/.test(raw)) return raw; // Human readable server sentence
         const translated = t(raw as any, data);
         if (translated !== raw) return translated;
+        const lower = raw.toLowerCase();
+        if (
+            lower.includes("active leave or temporary unavailable status during this time") ||
+            lower.includes("overlaps an existing approved leave or block-out")
+        ) {
+            const mapped = t("providers.err_blockout_overlap" as any);
+            if (mapped !== "providers.err_blockout_overlap") return mapped;
+        }
         const fallback = t(fallbackKey as any);
         return fallback === fallbackKey ? fallbackText : fallback;
     };
@@ -667,10 +680,6 @@ export default function ProvidersPage() {
             showToast("End time must be after start time", "error");
             return;
         }
-        if (blockForm.block_date !== todayBlockDate) {
-            showToast("Only current-day block out is allowed", "error");
-            return;
-        }
         setIsSubmitting(true);
         try {
             await providerService.addBlockTime(selectedProvider.id, {
@@ -684,6 +693,14 @@ export default function ProvidersPage() {
             setBlockForm({ block_date: "", start_time: "", end_time: "", reason: "lunch_break", note: "", duration: "30" });
             showToast("Block time added");
         } catch (error: any) {
+            const overlapStart = String(error?.response?.data?.existing_start || "").trim();
+            const overlapEnd = String(error?.response?.data?.existing_end || "").trim();
+            if (overlapStart && overlapEnd) {
+                const from = new Date(overlapStart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                const to = new Date(overlapEnd).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                showToast(`Employee already unavailable from ${from} to ${to}. Please choose another time.`, "error");
+                return;
+            }
             const key = String(error?.response?.data?.message_key || "").trim();
             if (key) {
                 showToast(t(key as any), "error");
@@ -1518,7 +1535,7 @@ export default function ProvidersPage() {
                             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 space-y-3">
                                 <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest">Temporary Unavailable / Block Out</h4>
                                 <div className="grid grid-cols-1 gap-2">
-                                    <input type="date" min={todayBlockDate} max={todayBlockDate} value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
+                                    <input type="date" min={todayBlockDate} value={blockForm.block_date} onChange={(e) => setBlockForm({ ...blockForm, block_date: e.target.value })} className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold" />
                                     <select
                                         value={blockForm.reason}
                                         onChange={(e) => setBlockForm({ ...blockForm, reason: e.target.value })}
