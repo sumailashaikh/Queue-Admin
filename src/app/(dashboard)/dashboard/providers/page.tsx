@@ -165,6 +165,25 @@ export default function ProvidersPage() {
         }),
         [t, language],
     );
+    const liveAvailabilityI18n = useMemo(
+        () => ({
+            title: tt("providers.live_title", "Live Employee Availability"),
+            colEmployeeName: tt("providers.live_col_employee_name", "Employee Name"),
+            colCurrentStatus: tt("providers.live_col_current_status", "Current Status"),
+            colReason: tt("providers.live_col_reason", "Reason"),
+            colAvailableAfter: tt("providers.live_col_available_after", "Available After"),
+            colRemaining: tt("providers.live_col_remaining_time", "Remaining Time"),
+            statusUnavailable: tt("providers.live_status_temporarily_unavailable", "Temporarily Unavailable"),
+            statusUpcomingBreak: tt("providers.live_status_upcoming_break", "Upcoming Break"),
+            statusOnLeave: tt("providers.live_status_on_leave", "On Leave"),
+            statusUpcomingLeave: tt("providers.live_status_upcoming_leave", "Upcoming Leave"),
+            statusBusy: tt("providers.live_status_busy", "Busy"),
+            statusAvailable: tt("providers.live_status_available", "Available"),
+            reasonLeave: tt("providers.live_reason_leave", "Leave"),
+            backIn: (mins: number) => tt("providers.live_back_in_mins", `Back in ${mins} mins`).replace("{{mins}}", String(mins)),
+        }),
+        [t, language],
+    );
 
     const localizeLeaveType = (leaveType?: string) => {
         const v = String(leaveType || '').toLowerCase();
@@ -1050,8 +1069,16 @@ export default function ProvidersPage() {
     const pendingResignationCount = resignations.filter((r: any) => String(r?.status || '').toUpperCase() === 'PENDING').length;
     const labelReason = (reason?: string | null) => {
         const key = String(reason || "other").toLowerCase();
-        const found = blockoutReasons.find((r) => r.value === key);
-        return found?.label || key.replace(/_/g, " ");
+        const reasonMap: Record<string, string> = {
+            lunch_break: tt("providers.block_reason_lunch_break", "Lunch Break"),
+            tea_break: tt("providers.block_reason_tea_break", "Tea Break"),
+            outside_work: tt("providers.block_reason_outside_work", "Outside Work"),
+            emergency: tt("providers.block_reason_emergency", "Emergency"),
+            meeting: tt("providers.block_reason_meeting", "Meeting"),
+            personal_work: tt("providers.block_reason_personal_work", "Personal Work"),
+            other: tt("providers.block_reason_other", "Other"),
+        };
+        return reasonMap[key] || key.replace(/_/g, " ");
     };
 
     if (loading) {
@@ -1111,15 +1138,15 @@ export default function ProvidersPage() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-x-auto">
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Live Employee Availability</h3>
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">{liveAvailabilityI18n.title}</h3>
                 <table className="w-full min-w-[720px]">
                     <thead>
                         <tr className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            <th className="py-2 pr-3">Employee Name</th>
-                            <th className="py-2 pr-3">Current Status</th>
-                            <th className="py-2 pr-3">Reason</th>
-                            <th className="py-2 pr-3">Available After</th>
-                            <th className="py-2 pr-3">Remaining Time</th>
+                            <th className="py-2 pr-3">{liveAvailabilityI18n.colEmployeeName}</th>
+                            <th className="py-2 pr-3">{liveAvailabilityI18n.colCurrentStatus}</th>
+                            <th className="py-2 pr-3">{liveAvailabilityI18n.colReason}</th>
+                            <th className="py-2 pr-3">{liveAvailabilityI18n.colAvailableAfter}</th>
+                            <th className="py-2 pr-3">{liveAvailabilityI18n.colRemaining}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1166,7 +1193,7 @@ export default function ProvidersPage() {
                                       : "-";
                             const remainingCol =
                                 status === "unavailable"
-                                    ? `Back in ${Math.max(0, remaining)} mins`
+                                    ? liveAvailabilityI18n.backIn(Math.max(0, remaining))
                                     : status === "upcoming_break"
                                       ? liveRemainingCopy.breakSched
                                     : status === "upcoming"
@@ -1208,16 +1235,16 @@ export default function ProvidersPage() {
                                                     : "bg-emerald-50 text-emerald-700 border-emerald-200"
                                         )}>
                                             {status === "unavailable"
-                                                ? "Temporarily Unavailable"
+                                                ? liveAvailabilityI18n.statusUnavailable
                                                 : status === "upcoming_break"
-                                                    ? "Upcoming Break"
+                                                    ? liveAvailabilityI18n.statusUpcomingBreak
                                                 : status === "on_leave"
-                                                    ? "On Leave"
+                                                    ? liveAvailabilityI18n.statusOnLeave
                                                     : status === "upcoming"
-                                                        ? "Upcoming Leave"
+                                                        ? liveAvailabilityI18n.statusUpcomingLeave
                                                         : status === "busy"
-                                                            ? "Busy"
-                                                            : "Available"}
+                                                            ? liveAvailabilityI18n.statusBusy
+                                                            : liveAvailabilityI18n.statusAvailable}
                                         </span>
                                     </td>
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">
@@ -1226,7 +1253,7 @@ export default function ProvidersPage() {
                                             : status === "upcoming_break"
                                                 ? labelReason(provider.temporary_unavailable_reason)
                                             : status === "on_leave" || status === "upcoming"
-                                                ? "Leave"
+                                                ? liveAvailabilityI18n.reasonLeave
                                                 : "-"}
                                     </td>
                                     <td className="py-2.5 pr-3 text-slate-700 font-semibold">{availAfter}</td>
@@ -1277,16 +1304,16 @@ export default function ProvidersPage() {
                                                     : "bg-emerald-50 text-emerald-600 border-emerald-100"
                                     )}>
                                         {provider.temporary_unavailable
-                                            ? "Unavailable"
+                                            ? liveAvailabilityI18n.statusUnavailable
                                             : provider.temporary_unavailable_scheduled
-                                                ? "Upcoming Break"
+                                                ? liveAvailabilityI18n.statusUpcomingBreak
                                             : provider.leave_status === 'on_leave'
-                                                ? t('providers.on_leave')
+                                                ? liveAvailabilityI18n.statusOnLeave
                                                 : provider.leave_status === 'upcoming'
-                                                    ? "Upcoming"
+                                                    ? liveAvailabilityI18n.statusUpcomingLeave
                                                 : Number(provider.current_tasks_count || 0) > 0
-                                                    ? "Busy"
-                                                    : t('providers.available')}
+                                                    ? liveAvailabilityI18n.statusBusy
+                                                    : liveAvailabilityI18n.statusAvailable}
                                     </div>
                                     <div className="flex gap-1">
                                         <button type="button" onClick={() => handleEdit(provider)} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors active:scale-90" aria-label={t('common.edit')}>

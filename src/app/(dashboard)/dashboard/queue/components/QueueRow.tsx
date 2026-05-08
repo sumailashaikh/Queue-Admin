@@ -86,6 +86,9 @@ export const QueueRow: React.FC<QueueRowProps> = ({
     const expectedTime = new Date(new Date(baseDateStr).getTime() + delayMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     const delayKey = `delay_notified_${item.id}`;
+    /** WhatsApp quick actions need a stored number (walk-ins can omit phone). */
+    const waDigits = String(item.phone ?? "").replace(/\D/g, "");
+    const canOpenWhatsApp = Boolean(business && waDigits.length >= 10);
     const [hasNotifiedDelay, setHasNotifiedDelay] = useState(() => {
         if (typeof window !== 'undefined') return sessionStorage.getItem(delayKey) === 'true';
         return false;
@@ -223,46 +226,67 @@ export const QueueRow: React.FC<QueueRowProps> = ({
                         {item.status === 'waiting' && hasOpenServiceTask && (
                             <div className="flex items-center gap-1.5 border-r border-slate-100 pr-2">
                                 <button
+                                    type="button"
                                     onClick={() => {
-                                        if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
-                                        const cleanPhone = item.phone.replace(/\D/g, '');
+                                        if (!canOpenWhatsApp) {
+                                            onShowToast(t('queue.whatsapp_needs_phone_hint'), "error");
+                                            return;
+                                        }
+                                        const cleanPhone = waDigits;
                                         const name = item.customer_name || t('queue.guest');
-                                        const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business.name }));
+                                        const message = encodeURIComponent(t('queue.wa_delay_msg', { name, business: business!.name }));
                                         window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                         sessionStorage.setItem(delayKey, 'true');
                                         setHasNotifiedDelay(true);
                                     }}
                                     className={cn(
                                         "h-8 w-8 flex items-center justify-center rounded-full transition-all active:scale-90 shrink-0",
-                                        isDelayed && !hasNotifiedDelay ? "bg-amber-100 text-amber-600 animate-pulse" : "bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10"
+                                        !canOpenWhatsApp && "opacity-45 cursor-not-allowed",
+                                        canOpenWhatsApp && isDelayed && !hasNotifiedDelay ? "bg-amber-100 text-amber-600 animate-pulse" : canOpenWhatsApp ? "bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10" : "bg-slate-50 text-slate-400"
                                     )}
-                                    title={t('queue.whatsapp_delay_alert')}
+                                    title={canOpenWhatsApp ? t('queue.whatsapp_delay_alert') : t('queue.whatsapp_needs_phone_hint')}
                                 >
                                     <Timer className="h-4 w-4" />
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => {
-                                        if (!item.phone || !business) { onShowToast(t('queue.no_phone'), "error"); return; }
-                                        const cleanPhone = item.phone.replace(/\D/g, '');
+                                        if (!canOpenWhatsApp) {
+                                            onShowToast(t('queue.whatsapp_needs_phone_hint'), "error");
+                                            return;
+                                        }
+                                        const cleanPhone = waDigits;
                                         const name = item.customer_name || t('queue.guest');
-                                        const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business.name }));
+                                        const message = encodeURIComponent(t('queue.wa_next_msg', { name, business: business!.name }));
                                         window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                     }}
-                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-[#25D366] hover:bg-[#25D366]/10 transition-all active:scale-90 shrink-0"
-                                    title={t('queue.whatsapp_youre_next')}
+                                    className={cn(
+                                        "h-8 w-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-all active:scale-90 shrink-0",
+                                        canOpenWhatsApp ? "hover:text-[#25D366] hover:bg-[#25D366]/10" : "opacity-45 cursor-not-allowed"
+                                    )}
+                                    title={canOpenWhatsApp ? t('queue.whatsapp_youre_next') : t('queue.whatsapp_needs_phone_hint')}
                                 >
                                     <Megaphone className="h-4 w-4" />
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => {
-                                        if (!item.phone || !business) return;
-                                        const cleanPhone = item.phone.replace(/\D/g, '');
+                                        if (!canOpenWhatsApp) {
+                                            onShowToast(t('queue.whatsapp_needs_phone_hint'), "error");
+                                            return;
+                                        }
+                                        const cleanPhone = waDigits;
                                         const name = item.customer_name || t('queue.guest');
-                                        const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business.name }));
+                                        const message = encodeURIComponent(t('queue.wa_ready_msg', { name, business: business!.name }));
                                         window.open(`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${message}`, '_blank');
                                     }}
-                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white transition-all active:scale-90 border border-[#25D366]/20 shrink-0"
-                                    title={t('queue.whatsapp_turn_ready')}
+                                    className={cn(
+                                        "h-8 w-8 flex items-center justify-center rounded-full border transition-all active:scale-90 shrink-0",
+                                        canOpenWhatsApp
+                                            ? "bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white border-[#25D366]/20"
+                                            : "bg-slate-50 text-slate-300 border-slate-100 opacity-45 cursor-not-allowed"
+                                    )}
+                                    title={canOpenWhatsApp ? t('queue.whatsapp_turn_ready') : t('queue.whatsapp_needs_phone_hint')}
                                 >
                                     <MessageCircle className="h-4 w-4 fill-current opacity-20" />
                                 </button>

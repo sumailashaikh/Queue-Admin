@@ -956,7 +956,7 @@ export default function LiveQueuePage() {
 
 const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] }: any) => {
     const { t } = useLanguage();
-    const [data, setData] = useState({ name: "", phone: "", noPhone: false, serviceIds: [] as string[], providerId: "" });
+    const [data, setData] = useState({ name: "", phone: "", serviceIds: [] as string[], providerId: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
     if (!isOpen) return null;
@@ -968,16 +968,20 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
             setLocalError("Please select at least one service");
             return;
         }
+        if (!String(data.phone || "").trim()) {
+            setLocalError(t("queue.phone_required_for_walkin"));
+            return;
+        }
         setLocalError(null);
         setIsSubmitting(true);
         try {
             await onSubmit({
                 name: data.name,
-                phone: data.noPhone ? null : (data.phone || null),
+                phone: data.phone || null,
                 serviceIds: data.serviceIds,
                 providerId: data.providerId || undefined
             });
-            setData({ name: "", phone: "", noPhone: false, serviceIds: [], providerId: "" });
+            setData({ name: "", phone: "", serviceIds: [], providerId: "" });
         } finally {
             setIsSubmitting(false);
         }
@@ -1009,24 +1013,15 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
                             className="w-full px-5 py-4 bg-slate-50 rounded-2xl text-sm font-bold outline-none border-2 border-transparent focus:border-primary/20"
                         />
                     </div>
-                    {!data.noPhone && (
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
-                            <CountryPhoneInput
-                                value={data.phone}
-                                onChange={(full) => setData({ ...data, phone: full })}
-                                placeholder={t('queue.whatsapp_number_placeholder')}
-                            />
-                        </div>
-                    )}
-                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={data.noPhone}
-                            onChange={(e) => setData({ ...data, noPhone: e.target.checked })}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('queue.whatsapp_number')}</label>
+                        <CountryPhoneInput
+                            value={data.phone}
+                            onChange={(full) => setData({ ...data, phone: full })}
+                            placeholder={t('queue.whatsapp_number_placeholder')}
+                            required
                         />
-                        {t('queue.no_phone')}
-                    </label>
+                    </div>
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">{t('services.title')}</label>
                         <div className="max-h-36 overflow-auto bg-slate-50 rounded-2xl border border-slate-200 p-3 space-y-2">
