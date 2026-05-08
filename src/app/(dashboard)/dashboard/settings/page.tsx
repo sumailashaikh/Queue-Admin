@@ -418,16 +418,16 @@ export default function SettingsPage() {
                         <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-800">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1 flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-slate-700 dark:text-slate-100 shrink-0" strokeWidth={2.25} aria-hidden />
-                                General Staff Time
+                                {t('settings.general_staff_time')}
                             </label>
                             <p className="text-[11px] text-slate-500 pl-1">
-                                This common timing is applied for all staff members.
+                                {t('settings.general_staff_time_hint')}
                             </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1 flex items-center gap-1.5">
                                         <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300 shrink-0" strokeWidth={2.25} />
-                                        Staff Open At
+                                        {t('settings.staff_open_at')}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -441,7 +441,7 @@ export default function SettingsPage() {
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider ml-1 flex items-center gap-1.5">
                                         <Clock className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300 shrink-0" strokeWidth={2.25} />
-                                        Staff Close At
+                                        {t('settings.staff_close_at')}
                                     </label>
                                     <div className="relative">
                                         <input

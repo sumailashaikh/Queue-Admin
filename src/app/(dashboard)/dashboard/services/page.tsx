@@ -61,10 +61,9 @@ export default function ServicesPage() {
   };
 
   const loadServices = async () => {
-    if (!business?.id) return;
     setIsLoading(true);
     try {
-      const res = await api.get<ServiceItem[]>(`/businesses/${business.id}/services`);
+      const res = await api.get<ServiceItem[]>("/services/my");
       setServices(res?.data || []);
     } catch {
       showToast(t("services.err_add"), "error");
@@ -126,10 +125,23 @@ export default function ServicesPage() {
       };
 
       if (editing?.id) {
-        await api.put(`/services/${editing.id}`, payload);
+        const original = services.find((s) => s.id === editing.id);
+        if (original) {
+          const hasChanges =
+            payload.name !== String(original.name || "").trim() ||
+            String(payload.description || "") !== String(original.description || "").trim() ||
+            Number(payload.price) !== Number(original.price || 0) ||
+            Number(payload.duration_minutes) !== Number(original.duration_minutes || 0) ||
+            Boolean(payload.is_active) !== (original.is_active !== false);
+          if (!hasChanges) {
+            showToast(t("services.no_changes_detected"), "error");
+            return;
+          }
+        }
+        await api.patch(`/services/${editing.id}`, payload);
         showToast(t("services.success_update"));
       } else {
-        await api.post(`/businesses/${business.id}/services`, payload);
+        await api.post("/services", { ...payload, business_id: business?.id });
         showToast(t("services.success_add"));
       }
       setModalOpen(false);
