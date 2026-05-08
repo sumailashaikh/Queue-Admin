@@ -344,8 +344,7 @@ export default function AppointmentsPage() {
             {/* Notification Bar (Replacement for alert) */}
             {message && (
                 <div className={cn(
-                    "fixed top-6 z-200 px-6 py-4 rounded-[24px] shadow-2xl flex items-center gap-3 animate-in duration-500",
-                    isRTL ? "left-6 slide-in-from-left-10" : "right-6 slide-in-from-right-10",
+                    "fixed top-6 left-1/2 -translate-x-1/2 z-200 w-[92vw] max-w-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300",
                     message.type === 'success' ? "bg-slate-900 text-white" : "bg-red-600 text-white"
                 )}>
                     {message.type === 'success' ? <CheckCheck className="h-5 w-5 text-emerald-400" /> : <AlertCircle className="h-5 w-5" />}

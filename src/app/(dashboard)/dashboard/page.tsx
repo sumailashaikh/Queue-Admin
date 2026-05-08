@@ -639,8 +639,8 @@ export default function DashboardPage() {
         )}
         {/* Dashboard Toast Notifications */}
         {(isCopied || toastMessage) && (
-          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-200 animate-in fade-in slide-in-from-top-4 duration-300 w-[92vw] max-w-md">
+            <div className="bg-emerald-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl shadow-2xl flex items-center gap-3 border-2 border-emerald-400/50 backdrop-blur-md">
               <CheckCircle2 className="h-5 w-5 text-white/50" />
               <p className="text-sm font-bold uppercase tracking-wider">
                 {toastMessage || t("dashboard.link_copied_toast")}

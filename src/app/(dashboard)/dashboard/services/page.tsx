@@ -52,6 +52,7 @@ export default function ServicesPage() {
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmDeleteService, setConfirmDeleteService] = useState<ServiceItem | null>(null);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
@@ -166,11 +167,12 @@ export default function ServicesPage() {
     try {
       await api.delete(`/services/${serviceId}`);
       setServices((prev) => prev.filter((s) => s.id !== serviceId));
-      showToast(t("services.confirm_delete"));
+      showToast(t("services.success_update"));
     } catch {
       showToast(t("services.delete_fail"), "error");
     } finally {
       setDeleteId(null);
+      setConfirmDeleteService(null);
     }
   };
 
@@ -263,7 +265,7 @@ export default function ServicesPage() {
                   {t("common.edit")}
                 </button>
                 <button
-                  onClick={() => onDelete(service.id)}
+                  onClick={() => setConfirmDeleteService(service)}
                   disabled={deleteId === service.id}
                   className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-colors disabled:opacity-50"
                 >
@@ -277,6 +279,34 @@ export default function ServicesPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {confirmDeleteService && (
+        <div className="fixed inset-0 z-130 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 sm:p-6">
+            <h3 className="text-lg font-black text-slate-900">{t("services.delete_title")}</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              {t("services.delete_desc", { name: confirmDeleteService.name || t("services.service_placeholder") })}
+            </p>
+            <div className="mt-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteService(null)}
+                disabled={deleteId === confirmDeleteService.id}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 disabled:opacity-50"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={() => onDelete(confirmDeleteService.id)}
+                disabled={deleteId === confirmDeleteService.id}
+                className="px-4 py-2.5 rounded-xl bg-rose-600 text-white text-sm font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              >
+                {deleteId === confirmDeleteService.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {t("services.confirm_delete")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -369,7 +399,7 @@ export default function ServicesPage() {
       {toast && (
         <div
           className={cn(
-            "fixed right-4 top-20 z-140 px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg",
+            "fixed top-6 left-1/2 -translate-x-1/2 z-140 px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg max-w-[92vw] text-center",
             toast.type === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white",
           )}
         >

@@ -1954,7 +1954,7 @@ function EmployeeDashboardContent() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         className={cn(
-                            "fixed bottom-24 left-6 right-6 z-220 p-4 rounded-2xl shadow-xl border flex items-center gap-3 md:left-auto md:right-8 md:bottom-8 md:w-80",
+                            "fixed top-6 left-1/2 -translate-x-1/2 z-220 w-[92vw] max-w-md p-4 rounded-2xl shadow-xl border flex items-center gap-3",
                             toast.type === 'success' ? "bg-emerald-600 border-emerald-500 text-white" : "bg-rose-600 border-rose-500 text-white"
                         )}
                     >

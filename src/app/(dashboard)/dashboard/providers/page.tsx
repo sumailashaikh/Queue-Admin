@@ -2387,7 +2387,7 @@ export default function ProvidersPage() {
 
             {/* Toast */}
             {toast && (
-                <div className="fixed z-200 bottom-6 left-4 right-4 sm:bottom-auto sm:top-6 sm:right-6 sm:left-auto max-w-md mx-auto sm:mx-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-right-8 duration-300">
+                <div className="fixed z-200 top-6 left-1/2 -translate-x-1/2 w-[92vw] max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className={cn(
                         "px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-2xl border flex items-start gap-3 backdrop-blur-xl bg-white/95",
                         toast.type === 'error' ? "border-rose-100 text-rose-700" : "border-emerald-100 text-emerald-700"

@@ -214,7 +214,7 @@ export default function DashboardLayout({
                     </main>
                 </div>
                 {headerToast && (
-                    <div className="fixed top-20 right-6 z-210 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-xl">
+                    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-210 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-xl w-[92vw] max-w-md text-center animate-in fade-in slide-in-from-top-4 duration-300">
                         {headerToast}
                     </div>
                 )}

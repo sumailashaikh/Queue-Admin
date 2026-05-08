@@ -890,7 +890,7 @@ export default function LiveQueuePage() {
             {/* Dashboard Toast Notifications */}
             {
                 toast && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-3 sm:px-0 z-[200] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="fixed top-6 left-1/2 -translate-x-1/2 px-3 sm:px-0 z-200 animate-in fade-in slide-in-from-top-4 duration-300">
                         <div className={cn(
                             "max-w-[calc(100vw-1.5rem)] sm:max-w-md px-4 py-3 sm:px-6 sm:py-4 rounded-2xl sm:rounded-3xl shadow-2xl flex items-start gap-3 border-2 backdrop-blur-md transition-all",
                             toast.type === 'success'
@@ -902,7 +902,7 @@ export default function LiveQueuePage() {
                             ) : (
                                 <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
                             )}
-                            <p className="text-sm sm:text-[15px] font-semibold leading-snug whitespace-normal break-words">
+                            <p className="text-sm sm:text-[15px] font-semibold leading-snug whitespace-normal wrap-break-word">
                                 {toast.message}
                             </p>
                         </div>
@@ -988,7 +988,7 @@ const WalkInModal = ({ isOpen, onClose, onSubmit, services = [], providers = [] 
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-visible p-8 space-y-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{t('queue.add_walk_in')}</h2>
@@ -1141,7 +1141,7 @@ const ManagementModal = ({ isOpen, onClose, onSubmit, formData, setFormData, isS
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200/50">
                 <div className="p-8 space-y-8">
                     <div className="flex items-center justify-between">
@@ -1239,7 +1239,7 @@ const DeleteDialog = ({ isOpen, onClose, onConfirm, queueName, isDeleting }: any
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-120 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200/50">
                 <div className="p-10 text-center space-y-8">
                     <div className="h-24 w-24 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto text-red-600 transition-transform hover:scale-110 duration-500">
@@ -1276,7 +1276,7 @@ const ResetDialog = ({ isOpen, onClose, onConfirm, isDeleting }: any) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-120 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200/50">
                 <div className="p-8 text-center space-y-6">
                     <div className="h-20 w-20 bg-amber-50 rounded-[32px] flex items-center justify-center text-amber-500 mx-auto">

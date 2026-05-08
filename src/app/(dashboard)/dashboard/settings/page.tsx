@@ -642,9 +642,9 @@ export default function SettingsPage() {
 
             {/* Toast Notification */}
             {toastMessage && (
-                <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-200 animate-in fade-in slide-in-from-top-4 duration-300 w-[92vw] max-w-md">
                     <div className={cn(
-                        "px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all text-white",
+                        "px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl shadow-2xl flex items-center gap-3 border-2 backdrop-blur-md transition-all text-white",
                         toastType === 'error' ? "bg-red-500 border-red-400/50" : "bg-emerald-500 border-emerald-400/50"
                     )}>
                         {toastType === 'error' ? <AlertTriangle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
