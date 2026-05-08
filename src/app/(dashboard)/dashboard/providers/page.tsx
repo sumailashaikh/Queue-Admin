@@ -162,6 +162,8 @@ export default function ProvidersPage() {
             startsTomorrow: tt("providers.live_remaining_starts_tomorrow", "Starts tomorrow"),
             breakSched: tt("providers.live_remaining_break_scheduled", "Break scheduled"),
             leaveSched: tt("providers.live_remaining_leave_scheduled", "Scheduled"),
+            breakAt: tt("providers.live_remaining_break_at", "Break at {{time}}"),
+            leaveAt: tt("providers.live_remaining_leave_at", "Leave starts {{time}}"),
         }),
         [t, language],
     );
@@ -1085,6 +1087,12 @@ export default function ProvidersPage() {
         };
         return reasonMap[key] || key.replace(/_/g, " ");
     };
+    const extractTimePart = (value?: string | null): string | null => {
+        const text = String(value || "").trim();
+        if (!text) return null;
+        const hit = text.match(/\b(\d{2}:\d{2})\b/);
+        return hit ? hit[1] : null;
+    };
 
     if (loading) {
         return <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4"><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('dashboard.loading')}</p></div>;
@@ -1200,15 +1208,30 @@ export default function ProvidersPage() {
                                 status === "unavailable"
                                     ? liveAvailabilityI18n.backIn(Math.max(0, remaining))
                                     : status === "upcoming_break"
-                                      ? liveRemainingCopy.breakSched
+                                      ? (() => {
+                                            const tPart = extractTimePart(String(provider.temporary_unavailable_starts_at || ""));
+                                            return tPart
+                                                ? liveRemainingCopy.breakAt.replace("{{time}}", tPart)
+                                                : liveRemainingCopy.breakSched;
+                                        })()
                                     : status === "upcoming"
                                       ? /^\d{4}-\d{2}-\d{2}$/.test(startYmd)
                                         ? startYmd === tzTomorrow
                                             ? liveRemainingCopy.startsTomorrow
                                             : startYmd === tzToday
                                               ? liveRemainingCopy.startsToday
-                                              : liveRemainingCopy.leaveSched
-                                        : liveRemainingCopy.leaveSched
+                                              : (() => {
+                                                    const tPart = extractTimePart(String(provider.leave_starts_at || ""));
+                                                    return tPart
+                                                        ? liveRemainingCopy.leaveAt.replace("{{time}}", tPart)
+                                                        : liveRemainingCopy.leaveSched;
+                                                })()
+                                        : (() => {
+                                              const tPart = extractTimePart(String(provider.leave_starts_at || ""));
+                                              return tPart
+                                                  ? liveRemainingCopy.leaveAt.replace("{{time}}", tPart)
+                                                  : liveRemainingCopy.leaveSched;
+                                          })()
                                       : "-";
                             return (
                                 <tr

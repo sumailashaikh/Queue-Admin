@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
     Calendar,
     User,
-    Bell,
     CheckCircle2,
     XCircle,
     Loader2,
@@ -533,13 +532,6 @@ export default function AppointmentsPage() {
 
                                     {(apt.status === 'confirmed' || (apt.status === 'checked_in' && !apt.queue_entry)) && (
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleWhatsAppAction(apt, 'alert')}
-                                                className="flex items-center justify-center h-10 w-10 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-all border border-amber-100 active:scale-95"
-                                                title={t('appointments.whatsapp_notify_next')}
-                                            >
-                                                <Bell className="h-4.5 w-4.5" />
-                                            </button>
                                             <button
                                                 onClick={() => handleWhatsAppAction(apt, 'call')}
                                                 className="flex items-center justify-center h-10 w-10 bg-[#25D366]/10 text-[#25D366] rounded-xl hover:bg-[#25D366] hover:text-white transition-all border border-[#25D366]/20 active:scale-90"
