@@ -166,3 +166,51 @@ export function formatLeaveDateRange(
   if (!b || a === b) return a;
   return `${a} – ${b}`;
 }
+
+/** Calendar date YYYY-MM-DD in an IANA timezone (for leave vs "today" in business TZ). */
+export function getCalendarDateYmdInTimeZone(
+  timeZone?: string,
+  date: Date = new Date(),
+): string {
+  const tz =
+    timeZone?.trim() ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  return date.toLocaleDateString("en-CA", { timeZone: tz });
+}
+
+export function addCalendarDaysToYmd(ymd: string, deltaDays: number): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return ymd;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  return dt.toISOString().slice(0, 10);
+}
+
+/**
+ * One line for leave alerts / tables: "Tomorrow · May 9, 2026" when start is tomorrow in business TZ.
+ */
+export function formatLeaveAlertRelativeLine(
+  leaveDateField: string,
+  language: string,
+  timeZone: string | undefined,
+  labels: { today: string; tomorrow: string },
+): string {
+  const raw = String(leaveDateField || "").trim();
+  if (!raw) return "";
+  const hasRange = raw.includes(" to ");
+  const start = hasRange
+    ? raw.split(" to ")[0]?.trim().slice(0, 10)
+    : raw.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) return raw;
+  const endPart = hasRange ? raw.split(" to ")[1]?.trim().slice(0, 10) : "";
+  const today = getCalendarDateYmdInTimeZone(timeZone);
+  const tomorrow = addCalendarDaysToYmd(today, 1);
+  const prettyRange =
+    hasRange && endPart && /^\d{4}-\d{2}-\d{2}$/.test(endPart)
+      ? formatLeaveDateRange(start, endPart, language)
+      : formatLeaveDate(start, language);
+  if (start === today) return `${labels.today} · ${prettyRange}`;
+  if (start === tomorrow) return `${labels.tomorrow} · ${prettyRange}`;
+  return prettyRange;
+}

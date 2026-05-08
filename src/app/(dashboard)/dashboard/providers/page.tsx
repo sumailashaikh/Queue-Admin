@@ -19,7 +19,15 @@ import {
     MessageSquare,
     ShieldCheck,
 } from "lucide-react";
-import { cn, formatCurrency, validateLanguage, formatLeaveDateRange } from "@/lib/utils";
+import {
+    cn,
+    formatCurrency,
+    validateLanguage,
+    formatLeaveDateRange,
+    getCalendarDateYmdInTimeZone,
+    addCalendarDaysToYmd,
+    formatLeaveAlertRelativeLine,
+} from "@/lib/utils";
 import { CountryPhoneInput } from "@/components/CountryPhoneInput";
 import { useAuth } from "@/hooks/useAuth";
 import { providerService, ServiceProvider } from "@/services/providerService";
@@ -139,6 +147,24 @@ export default function ProvidersPage() {
         const translated = t(key as any);
         return translated === key ? fallback : translated;
     };
+
+    const leaveRelativeLabels = useMemo(
+        () => ({
+            today: tt("providers.relative_today", "Today"),
+            tomorrow: tt("providers.relative_tomorrow", "Tomorrow"),
+        }),
+        [t, language],
+    );
+
+    const liveRemainingCopy = useMemo(
+        () => ({
+            startsToday: tt("providers.live_remaining_starts_today", "Starts later today"),
+            startsTomorrow: tt("providers.live_remaining_starts_tomorrow", "Starts tomorrow"),
+            breakSched: tt("providers.live_remaining_break_scheduled", "Break scheduled"),
+            leaveSched: tt("providers.live_remaining_leave_scheduled", "Scheduled"),
+        }),
+        [t, language],
+    );
 
     const localizeLeaveType = (leaveType?: string) => {
         const v = String(leaveType || '').toLowerCase();
@@ -303,8 +329,12 @@ export default function ProvidersPage() {
         [leaveNotifications]
     );
     const prioritizedPendingAlerts = useMemo(() => {
-        const today = new Date().toISOString().slice(0, 10);
-        const extractStart = (leaveDate: string) => String(leaveDate || "").split(" to ")[0]?.trim();
+        const today = getCalendarDateYmdInTimeZone(business?.timezone);
+        const extractStart = (leaveDate: string) =>
+            String(leaveDate || "")
+                .split(" to ")[0]
+                ?.trim()
+                .slice(0, 10);
         return [...pendingLeaveAlerts].sort((a: any, b: any) => {
             const aStart = extractStart(a?.leave_date);
             const bStart = extractStart(b?.leave_date);
@@ -313,7 +343,7 @@ export default function ProvidersPage() {
             if (aIsToday !== bIsToday) return aIsToday ? -1 : 1;
             return String(bStart || "").localeCompare(String(aStart || ""));
         });
-    }, [pendingLeaveAlerts]);
+    }, [pendingLeaveAlerts, business?.timezone]);
     const sortedLeaveNotifications = useMemo(() => {
         return [...leaveNotifications].sort((a, b) => {
             if (a.is_read !== b.is_read) return a.is_read ? 1 : -1;
@@ -1106,8 +1136,61 @@ export default function ProvidersPage() {
                                 : Number(provider.current_tasks_count || 0) > 0
                                     ? "busy"
                                     : "available";
+                            const startYmd = String(provider.leave_starts_at || "").slice(0, 10);
+                            const tzToday = getCalendarDateYmdInTimeZone(business?.timezone);
+                            const tzTomorrow = addCalendarDaysToYmd(tzToday, 1);
+                            const availAfter =
+                                status === "unavailable"
+                                    ? provider.temporary_unavailable_until || "-"
+                                    : status === "upcoming_break"
+                                      ? formatLeaveAlertRelativeLine(
+                                            String(provider.temporary_unavailable_starts_at || ""),
+                                            language,
+                                            business?.timezone,
+                                            leaveRelativeLabels,
+                                        ) || "-"
+                                    : status === "on_leave"
+                                      ? formatLeaveAlertRelativeLine(
+                                            String(provider.leave_until || ""),
+                                            language,
+                                            business?.timezone,
+                                            leaveRelativeLabels,
+                                        ) || "-"
+                                    : status === "upcoming"
+                                      ? formatLeaveAlertRelativeLine(
+                                            String(provider.leave_starts_at || ""),
+                                            language,
+                                            business?.timezone,
+                                            leaveRelativeLabels,
+                                        ) || "-"
+                                      : "-";
+                            const remainingCol =
+                                status === "unavailable"
+                                    ? `Back in ${Math.max(0, remaining)} mins`
+                                    : status === "upcoming_break"
+                                      ? liveRemainingCopy.breakSched
+                                    : status === "upcoming"
+                                      ? /^\d{4}-\d{2}-\d{2}$/.test(startYmd)
+                                        ? startYmd === tzTomorrow
+                                            ? liveRemainingCopy.startsTomorrow
+                                            : startYmd === tzToday
+                                              ? liveRemainingCopy.startsToday
+                                              : liveRemainingCopy.leaveSched
+                                        : liveRemainingCopy.leaveSched
+                                      : "-";
                             return (
-                                <tr key={`live-${provider.id}`} className="border-t border-slate-100 text-sm">
+                                <tr
+                                    key={`live-${provider.id}`}
+                                    className={cn(
+                                        "border-t text-sm transition-colors",
+                                        status === "unavailable" && "border-rose-100 bg-rose-50/35",
+                                        status === "upcoming_break" && "border-amber-100 bg-amber-50/55",
+                                        status === "on_leave" && "border-rose-100 bg-rose-50/25",
+                                        status === "upcoming" && "border-sky-100 bg-sky-50/45",
+                                        status === "busy" && "border-amber-100/80 bg-amber-50/25",
+                                        status === "available" && "border-slate-100",
+                                    )}
+                                >
                                     <td className="py-2.5 pr-3 font-bold text-slate-900">{provider.name}</td>
                                     <td className="py-2.5 pr-3">
                                         <span className={cn(
@@ -1115,7 +1198,7 @@ export default function ProvidersPage() {
                                             status === "unavailable"
                                                 ? "bg-rose-50 text-rose-700 border-rose-200"
                                                 : status === "upcoming_break"
-                                                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                                    ? "bg-amber-50 text-amber-800 border-amber-200"
                                                 : status === "on_leave"
                                                     ? "bg-rose-50 text-rose-700 border-rose-200"
                                                     : status === "upcoming"
@@ -1146,26 +1229,8 @@ export default function ProvidersPage() {
                                                 ? "Leave"
                                                 : "-"}
                                     </td>
-                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">
-                                        {status === "unavailable"
-                                            ? provider.temporary_unavailable_until || "-"
-                                            : status === "upcoming_break"
-                                                ? provider.temporary_unavailable_starts_at || "-"
-                                            : status === "on_leave"
-                                                ? provider.leave_until || "-"
-                                                : status === "upcoming"
-                                                    ? provider.leave_starts_at || "-"
-                                                    : "-"}
-                                    </td>
-                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">
-                                        {status === "unavailable"
-                                            ? `Back in ${Math.max(0, remaining)} mins`
-                                            : status === "upcoming_break"
-                                                ? "Scheduled"
-                                            : status === "upcoming"
-                                                ? "Scheduled"
-                                                : "-"}
-                                    </td>
+                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">{availAfter}</td>
+                                    <td className="py-2.5 pr-3 text-slate-700 font-semibold">{remainingCol}</td>
                                 </tr>
                             );
                         })}
@@ -1202,7 +1267,7 @@ export default function ProvidersPage() {
                                         provider.temporary_unavailable
                                             ? "bg-rose-50 text-rose-700 border-rose-200"
                                             : provider.temporary_unavailable_scheduled
-                                                ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                                ? "bg-amber-50 text-amber-800 border-amber-200"
                                             : provider.leave_status === 'on_leave'
                                                 ? "bg-rose-50 text-rose-600 border-rose-100"
                                                 : provider.leave_status === 'upcoming'
@@ -1628,27 +1693,36 @@ export default function ProvidersPage() {
                                     </div>
                                 </div>
                             ) : prioritizedPendingAlerts.map((row: any) => (
-                                <div key={`all-req-${row.leave_id}`} className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                                <div key={`all-req-${row.leave_id}`} className="rounded-xl border border-amber-100 bg-amber-50/50 p-3 shadow-sm">
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
                                             <p className="text-sm font-bold text-slate-900">{row.employee_name}</p>
-                                            <p className="text-[11px] font-semibold text-slate-600 mt-0.5">{row.leave_date}</p>
+                                            <p className="text-[11px] font-semibold text-slate-600 mt-0.5">
+                                                {formatLeaveAlertRelativeLine(
+                                                    String(row.leave_date || ""),
+                                                    language,
+                                                    business?.timezone,
+                                                    leaveRelativeLabels,
+                                                )}
+                                            </p>
                                             {row.note && <p className="text-[11px] text-slate-500 mt-1">{row.note}</p>}
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 shrink-0">
                                             <button
+                                                type="button"
                                                 disabled={isSubmitting || processingLeaveId === String(row.leave_id)}
                                                 onClick={() => handleApproveFromRequestsModal(row)}
-                                                className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
+                                                className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm transition-all duration-150 hover:bg-emerald-700 hover:shadow-md active:scale-[0.97] active:bg-emerald-800 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                                             >
                                                 {(processingLeaveId === String(row.leave_id))
                                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                                     : tt("providers.approve", "Approve")}
                                             </button>
                                             <button
+                                                type="button"
                                                 disabled={isSubmitting || processingLeaveId === String(row.leave_id)}
                                                 onClick={() => setRejectModal({ isOpen: true, leaveId: row.leave_id, reason: "" })}
-                                                className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider disabled:opacity-50"
+                                                className="px-3 py-2 rounded-lg bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm transition-all duration-150 hover:bg-rose-700 hover:shadow-md active:scale-[0.97] active:bg-rose-800 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
                                             >
                                                 {tt("providers.reject", "Reject")}
                                             </button>
