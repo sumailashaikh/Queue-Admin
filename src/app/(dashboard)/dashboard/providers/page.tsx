@@ -175,10 +175,10 @@ export default function ProvidersPage() {
             colRemaining: tt("providers.live_col_remaining_time", "Remaining Time"),
             statusUnavailable: tt("providers.live_status_temporarily_unavailable", "Temporarily Unavailable"),
             statusUpcomingBreak: tt("providers.live_status_upcoming_break", "Upcoming Break"),
-            statusOnLeave: tt("providers.live_status_on_leave", "On Leave"),
+            statusOnLeave: tt("providers.live_status_on_leave", "On Leave Now"),
             statusUpcomingLeave: tt("providers.live_status_upcoming_leave", "Upcoming Leave"),
             statusBusy: tt("providers.live_status_busy", "Busy"),
-            statusAvailable: tt("providers.live_status_available", "Available"),
+            statusAvailable: tt("providers.live_status_available", "Available Now"),
             reasonLeave: tt("providers.live_reason_leave", "Leave"),
             backIn: (mins: number) => tt("providers.live_back_in_mins", `Back in ${mins} mins`).replace("{{mins}}", String(mins)),
         }),
@@ -682,7 +682,12 @@ export default function ProvidersPage() {
             setBlockForm({ block_date: "", start_time: "", end_time: "", reason: "lunch_break", note: "", duration: "30" });
             showToast("Block time added");
         } catch (error: any) {
-            showToast(error?.response?.data?.message || "Failed to add block time", "error");
+            const key = String(error?.response?.data?.message_key || "").trim();
+            if (key) {
+                showToast(t(key as any), "error");
+            } else {
+                showToast(error?.response?.data?.message || "Failed to add block time", "error");
+            }
         } finally {
             setIsSubmitting(false);
         }
