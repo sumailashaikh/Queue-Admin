@@ -205,7 +205,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "Show Initial",
                 leave_view_all: "View More",
                 leave_view_less: "View Less",
-                general_staff_timing: "General Staff Timing",
+                business_timing: "Business Timing",
                 shift_hours: "Shift Hours"
             },
             ar: {
@@ -240,7 +240,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "عرض أولي",
                 leave_view_all: "عرض المزيد",
                 leave_view_less: "عرض أقل",
-                general_staff_timing: "توقيت الموظفين العام",
+                business_timing: "توقيت العمل",
                 shift_hours: "ساعات الدوام"
             },
             hi: {
@@ -275,7 +275,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "शुरुआती दिखाएं",
                 leave_view_all: "और देखें",
                 leave_view_less: "कम देखें",
-                general_staff_timing: "जनरल स्टाफ टाइमिंग",
+                business_timing: "बिजनेस टाइमिंग",
                 shift_hours: "शिफ्ट घंटे"
             },
             es: {
@@ -310,7 +310,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "Mostrar inicial",
                 leave_view_all: "Ver mas",
                 leave_view_less: "Ver menos",
-                general_staff_timing: "Horario general del personal",
+                business_timing: "Horario del negocio",
                 shift_hours: "Horas de turno"
             }
         };
@@ -1147,8 +1147,8 @@ function EmployeeDashboardContent() {
         return new Intl.DateTimeFormat("en-CA", { timeZone: businessTimeZone }).format(parsed);
     };
     const todayStr = toDayKey(new Date());
-    const ownerStaffOpenTime = String((employeeBusiness as any)?.staff_open_time || employeeBusiness?.open_time || "").slice(0, 5);
-    const ownerStaffCloseTime = String((employeeBusiness as any)?.staff_close_time || employeeBusiness?.close_time || "").slice(0, 5);
+    const ownerStaffOpenTime = String(employeeBusiness?.open_time || "").slice(0, 5);
+    const ownerStaffCloseTime = String(employeeBusiness?.close_time || "").slice(0, 5);
     const languageToLocale: Record<string, string> = {
         en: "en-US",
         ar: "ar-AE",
@@ -1363,7 +1363,7 @@ function EmployeeDashboardContent() {
                             >
                                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <CalendarClock className="h-3.5 w-3.5" /> {scheduleI18n.general_staff_timing}
+                                        <CalendarClock className="h-3.5 w-3.5" /> {scheduleI18n.business_timing}
                                     </p>
                                     <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{scheduleI18n.shift_hours}</p>
