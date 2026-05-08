@@ -219,6 +219,8 @@
     "live_remaining_starts_tomorrow": "Empieza mañana",
     "live_remaining_break_scheduled": "Descanso programado",
     "live_remaining_leave_scheduled": "Programado",
+    "live_remaining_break_at": "Descanso a las {{time}}",
+    "live_remaining_leave_at": "Permiso inicia a las {{time}}",
     "live_title": "Disponibilidad en vivo del personal",
     "live_col_employee_name": "Nombre del empleado",
     "live_col_current_status": "Estado actual",

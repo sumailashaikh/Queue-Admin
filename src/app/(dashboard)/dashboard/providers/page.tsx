@@ -1104,11 +1104,32 @@ export default function ProvidersPage() {
         };
         return reasonMap[key] || key.replace(/_/g, " ");
     };
+    const languageToLocale: Record<string, string> = {
+        en: "en-US",
+        ar: "ar-AE",
+        hi: "hi-IN",
+        es: "es-ES",
+    };
+    const formatTimePartForLocale = (timeValue?: string | null): string | null => {
+        const text = String(timeValue || "").trim();
+        if (!text) return null;
+        const raw = text.match(/\b(\d{2}):(\d{2})\b/);
+        if (!raw) return null;
+        const hour = Number(raw[1]);
+        const minute = Number(raw[2]);
+        if (!Number.isFinite(hour) || !Number.isFinite(minute)) return `${raw[1]}:${raw[2]}`;
+        const dt = new Date(2000, 0, 1, hour, minute, 0, 0);
+        return new Intl.DateTimeFormat(languageToLocale[language] || "en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        }).format(dt);
+    };
     const extractTimePart = (value?: string | null): string | null => {
         const text = String(value || "").trim();
         if (!text) return null;
         const hit = text.match(/\b(\d{2}:\d{2})\b/);
-        return hit ? hit[1] : null;
+        return hit ? formatTimePartForLocale(hit[1]) : null;
     };
 
     if (loading) {

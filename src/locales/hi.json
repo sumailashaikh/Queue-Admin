@@ -231,6 +231,8 @@
     "live_remaining_starts_tomorrow": "कल शुरू होगी",
     "live_remaining_break_scheduled": "ब्रेक निर्धारित",
     "live_remaining_leave_scheduled": "निर्धारित",
+    "live_remaining_break_at": "{{time}} पर ब्रेक",
+    "live_remaining_leave_at": "{{time}} पर छुट्टी शुरू",
     "live_title": "लाइव कर्मचारी उपलब्धता",
     "live_col_employee_name": "कर्मचारी नाम",
     "live_col_current_status": "वर्तमान स्थिति",

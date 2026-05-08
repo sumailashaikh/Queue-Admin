@@ -205,7 +205,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "Show Initial",
                 leave_view_all: "View More",
                 leave_view_less: "View Less",
-                owner_staff_timing: "Owner Staff Timing",
+                general_staff_timing: "General Staff Timing",
                 shift_hours: "Shift Hours"
             },
             ar: {
@@ -240,7 +240,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "عرض أولي",
                 leave_view_all: "عرض المزيد",
                 leave_view_less: "عرض أقل",
-                owner_staff_timing: "توقيت الموظفين من المالك",
+                general_staff_timing: "توقيت الموظفين العام",
                 shift_hours: "ساعات الدوام"
             },
             hi: {
@@ -275,7 +275,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "शुरुआती दिखाएं",
                 leave_view_all: "और देखें",
                 leave_view_less: "कम देखें",
-                owner_staff_timing: "ओनर स्टाफ टाइमिंग",
+                general_staff_timing: "जनरल स्टाफ टाइमिंग",
                 shift_hours: "शिफ्ट घंटे"
             },
             es: {
@@ -310,7 +310,7 @@ function EmployeeDashboardContent() {
                 leave_view_initial: "Mostrar inicial",
                 leave_view_all: "Ver mas",
                 leave_view_less: "Ver menos",
-                owner_staff_timing: "Horario del personal del propietario",
+                general_staff_timing: "Horario general del personal",
                 shift_hours: "Horas de turno"
             }
         };
@@ -1363,7 +1363,7 @@ function EmployeeDashboardContent() {
                             >
                                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <CalendarClock className="h-3.5 w-3.5" /> {scheduleI18n.owner_staff_timing}
+                                        <CalendarClock className="h-3.5 w-3.5" /> {scheduleI18n.general_staff_timing}
                                     </p>
                                     <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
                                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{scheduleI18n.shift_hours}</p>

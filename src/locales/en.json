@@ -296,6 +296,8 @@
     "live_remaining_starts_tomorrow": "Starts tomorrow",
     "live_remaining_break_scheduled": "Break scheduled",
     "live_remaining_leave_scheduled": "Scheduled",
+    "live_remaining_break_at": "Break at {{time}}",
+    "live_remaining_leave_at": "Leave starts {{time}}",
     "live_title": "Live Employee Availability",
     "live_col_employee_name": "Employee Name",
     "live_col_current_status": "Current Status",

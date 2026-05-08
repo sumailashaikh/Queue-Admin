@@ -230,6 +230,8 @@
     "live_remaining_starts_tomorrow": "يبدأ غدًا",
     "live_remaining_break_scheduled": "استراحة مجدولة",
     "live_remaining_leave_scheduled": "مجدول",
+    "live_remaining_break_at": "الاستراحة عند {{time}}",
+    "live_remaining_leave_at": "تبدأ الإجازة عند {{time}}",
     "live_title": "توفر الموظفين المباشر",
     "live_col_employee_name": "اسم الموظف",
     "live_col_current_status": "الحالة الحالية",
