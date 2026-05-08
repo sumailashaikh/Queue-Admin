@@ -765,7 +765,7 @@
     "duration_label": "Duration (Mins)",
     "activate": "Activate Service",
     "delete_title": "Delete Service?",
-    "delete_desc": "Are You Sure You Want To Remove '{name}'? This Cannot Be Undone.",
+    "delete_desc": "Are You Sure You Want To Remove '{{name}}'? This Cannot Be Undone.",
     "confirm_delete": "Confirm Delete",
     "delete_error": "Service Not Found Or Already Deleted.",
     "delete_fail": "Failed To Delete Service.",
