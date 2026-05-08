@@ -393,7 +393,7 @@ export default function AppointmentsPage() {
                         const { date, time } = formatDateTime(apt.start_time);
 
                         return (
-                            <div key={apt.id} className="group relative bg-white border border-slate-200 rounded-3xl p-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col md:flex-row md:items-center gap-6 overflow-hidden">
+                            <div key={apt.id} className="group relative bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 flex flex-col md:flex-row md:items-center gap-4 sm:gap-6 overflow-hidden">
                                 {/* Side Status Color */}
                                 <div className={cn(
                                     "absolute top-0 bottom-0 w-1.5 transition-colors duration-500",
@@ -406,7 +406,7 @@ export default function AppointmentsPage() {
                                 )} />
 
                                 {/* Time/Date Column */}
-                                <div className={cn("flex flex-col space-y-2 min-w-[130px] shrink-0 border-slate-100", isRTL ? "md:border-l md:pl-6 border-l pr-0" : "md:border-r md:pr-6 border-r")}>
+                                <div className={cn("flex flex-col space-y-2 min-w-0 sm:min-w-[130px] shrink-0 border-slate-100 pb-2 md:pb-0 border-none", isRTL ? "md:border-l md:pl-6 pr-0" : "md:border-r md:pr-6")}>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight mb-1">{date}</p>
 
                                     <p className={cn("text-2xl font-black tracking-tighter tabular-nums leading-none", apt.is_delayed ? "text-slate-400 line-through" : "text-slate-900")}>
@@ -448,10 +448,10 @@ export default function AppointmentsPage() {
                                         </h3>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-6">
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 max-w-[300px]">
+                                    <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+                                        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100 w-full sm:w-auto sm:max-w-[300px] min-w-0">
                                             <CalendarDays className="h-4 w-4 text-indigo-600 shrink-0" />
-                                            <span className="text-xs font-bold text-slate-700 truncate">
+                                            <span className="text-xs font-bold text-slate-700 wrap-break-word">
                                                 {getTranslatedServiceNames(apt)}
                                             </span>
                                         </div>

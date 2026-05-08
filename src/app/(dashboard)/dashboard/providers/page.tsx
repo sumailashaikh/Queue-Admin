@@ -1167,9 +1167,142 @@ export default function ProvidersPage() {
                 </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm overflow-x-auto">
+            <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm overflow-hidden">
                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">{liveAvailabilityI18n.title}</h3>
-                <table className="w-full min-w-[720px]">
+                <div className="space-y-2 md:hidden">
+                    {filteredProviders.map((provider) => {
+                        const remaining = Number(provider.temporary_unavailable_remaining_minutes || 0);
+                        const status = provider.temporary_unavailable
+                            ? "unavailable"
+                            : provider.temporary_unavailable_scheduled
+                                ? "upcoming_break"
+                            : provider.leave_status === "on_leave"
+                                ? "on_leave"
+                                : provider.leave_status === "upcoming"
+                                    ? "upcoming"
+                            : Number(provider.current_tasks_count || 0) > 0
+                                ? "busy"
+                                : "available";
+                        const startYmd = String(provider.leave_starts_at || "").slice(0, 10);
+                        const tzToday = getCalendarDateYmdInTimeZone(business?.timezone);
+                        const tzTomorrow = addCalendarDaysToYmd(tzToday, 1);
+                        const availAfter =
+                            status === "unavailable"
+                                ? provider.temporary_unavailable_until || "-"
+                                : status === "upcoming_break"
+                                  ? formatLeaveAlertRelativeLine(
+                                        String(provider.temporary_unavailable_starts_at || ""),
+                                        language,
+                                        business?.timezone,
+                                        leaveRelativeLabels,
+                                    ) || "-"
+                                : status === "on_leave"
+                                  ? formatLeaveAlertRelativeLine(
+                                        String(provider.leave_until || ""),
+                                        language,
+                                        business?.timezone,
+                                        leaveRelativeLabels,
+                                    ) || "-"
+                                : status === "upcoming"
+                                  ? formatLeaveAlertRelativeLine(
+                                        String(provider.leave_starts_at || ""),
+                                        language,
+                                        business?.timezone,
+                                        leaveRelativeLabels,
+                                    ) || "-"
+                                  : "-";
+                        const remainingCol =
+                            status === "unavailable"
+                                ? liveAvailabilityI18n.backIn(Math.max(0, remaining))
+                                : status === "upcoming_break"
+                                  ? (() => {
+                                        const tPart = extractTimePart(String(provider.temporary_unavailable_starts_at || ""));
+                                        return tPart
+                                            ? liveRemainingCopy.breakAt.replace("{{time}}", tPart)
+                                            : liveRemainingCopy.breakSched;
+                                    })()
+                                : status === "upcoming"
+                                  ? /^\d{4}-\d{2}-\d{2}$/.test(startYmd)
+                                    ? startYmd === tzTomorrow
+                                        ? liveRemainingCopy.startsTomorrow
+                                        : startYmd === tzToday
+                                          ? liveRemainingCopy.startsToday
+                                          : (() => {
+                                                const tPart = extractTimePart(String(provider.leave_starts_at || ""));
+                                                return tPart
+                                                    ? liveRemainingCopy.leaveAt.replace("{{time}}", tPart)
+                                                    : liveRemainingCopy.leaveSched;
+                                            })()
+                                    : (() => {
+                                          const tPart = extractTimePart(String(provider.leave_starts_at || ""));
+                                          return tPart
+                                              ? liveRemainingCopy.leaveAt.replace("{{time}}", tPart)
+                                              : liveRemainingCopy.leaveSched;
+                                      })()
+                                  : "-";
+                        return (
+                            <div
+                                key={`live-mobile-${provider.id}`}
+                                className={cn(
+                                    "rounded-xl border p-3",
+                                    status === "unavailable" && "border-rose-100 bg-rose-50/35",
+                                    status === "upcoming_break" && "border-amber-100 bg-amber-50/55",
+                                    status === "on_leave" && "border-rose-100 bg-rose-50/25",
+                                    status === "upcoming" && "border-sky-100 bg-sky-50/45",
+                                    status === "busy" && "border-amber-100/80 bg-amber-50/25",
+                                    status === "available" && "border-slate-100 bg-white",
+                                )}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <p className="text-sm font-bold text-slate-900 wrap-break-word pr-2">{provider.name}</p>
+                                    <span className={cn(
+                                        "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border shrink-0",
+                                        status === "unavailable"
+                                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                                            : status === "upcoming_break"
+                                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                            : status === "on_leave"
+                                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                                : status === "upcoming"
+                                                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                                            : status === "busy"
+                                                ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    )}>
+                                        {status === "unavailable"
+                                            ? liveAvailabilityI18n.statusUnavailable
+                                            : status === "upcoming_break"
+                                                ? liveAvailabilityI18n.statusUpcomingBreak
+                                            : status === "on_leave"
+                                                ? liveAvailabilityI18n.statusOnLeave
+                                                : status === "upcoming"
+                                                    ? liveAvailabilityI18n.statusUpcomingLeave
+                                                : status === "busy"
+                                                    ? liveAvailabilityI18n.statusBusy
+                                                    : liveAvailabilityI18n.statusAvailable}
+                                    </span>
+                                </div>
+                                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                                    <span className="text-slate-500">{liveAvailabilityI18n.colReason}</span>
+                                    <span className="text-slate-700 font-semibold text-right wrap-break-word">
+                                        {status === "unavailable"
+                                            ? labelReason(provider.temporary_unavailable_reason)
+                                            : status === "upcoming_break"
+                                                ? labelReason(provider.temporary_unavailable_reason)
+                                            : status === "on_leave" || status === "upcoming"
+                                                ? liveAvailabilityI18n.reasonLeave
+                                                : "-"}
+                                    </span>
+                                    <span className="text-slate-500">{liveAvailabilityI18n.colAvailableAfter}</span>
+                                    <span className="text-slate-700 font-semibold text-right wrap-break-word">{availAfter}</span>
+                                    <span className="text-slate-500">{liveAvailabilityI18n.colRemaining}</span>
+                                    <span className="text-slate-700 font-semibold text-right wrap-break-word">{remainingCol}</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <table className="hidden md:table w-full">
                     <thead>
                         <tr className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400">
                             <th className="py-2 pr-3">{liveAvailabilityI18n.colEmployeeName}</th>
@@ -1263,7 +1396,7 @@ export default function ProvidersPage() {
                                         status === "available" && "border-slate-100",
                                     )}
                                 >
-                                    <td className="py-2.5 pr-3 font-bold text-slate-900">{provider.name}</td>
+                                    <td className="py-2.5 pr-3 font-bold text-slate-900 wrap-break-word">{provider.name}</td>
                                     <td className="py-2.5 pr-3">
                                         <span className={cn(
                                             "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider border",
@@ -1320,8 +1453,8 @@ export default function ProvidersPage() {
                     </div>
                 ) : (
                     filteredProviders.map(provider => (
-                        <div key={provider.id} className={cn("group bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-5", !provider.is_active && "opacity-60 grayscale")}>
-                            <div className="flex items-start justify-between gap-3">
+                        <div key={provider.id} className={cn("group bg-white border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-4 sm:gap-5", !provider.is_active && "opacity-60 grayscale")}>
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className="h-14 w-14 lg:h-16 lg:w-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 capitalize">{provider.name.charAt(0)}</div>
                                     <div className="min-w-0 flex-1">
@@ -1333,7 +1466,7 @@ export default function ProvidersPage() {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
+                                <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2">
                                     <div className={cn(
                                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
                                         provider.temporary_unavailable
@@ -1360,7 +1493,7 @@ export default function ProvidersPage() {
                                                     ? liveAvailabilityI18n.statusBusy
                                                     : liveAvailabilityI18n.statusAvailable}
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 shrink-0">
                                         <button type="button" onClick={() => handleEdit(provider)} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors active:scale-90" aria-label={t('common.edit')}>
                                             <Settings className="h-4 w-4" />
                                         </button>

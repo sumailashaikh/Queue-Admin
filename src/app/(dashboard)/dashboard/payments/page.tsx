@@ -446,7 +446,33 @@ export default function PaymentsPage() {
                                             <Download className="h-4 w-4" />
                                         </button>
                                     </div>
-                                    <div className="overflow-x-auto">
+                                    <div className="md:hidden divide-y divide-slate-100">
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("payments.customer_name", "Customer Name")}</p>
+                                            <p className="mt-1 font-semibold text-slate-800 wrap-break-word">{selectedEntry.customer_name || tr("payments.guest", "Guest")}</p>
+                                        </div>
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("payments.phone", "Phone")}</p>
+                                            <p className="mt-1 font-semibold text-slate-800 wrap-break-word">{selectedEntry.phone || "-"}</p>
+                                        </div>
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("payments.ticket", "Ticket")}</p>
+                                            <p className="mt-1 font-semibold text-slate-800 wrap-break-word">{selectedEntry.ticket_number || "-"}</p>
+                                        </div>
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("payments.invoice", "Invoice")}</p>
+                                            <p className="mt-1 font-semibold text-slate-800 wrap-break-word">{invoiceNumber}</p>
+                                        </div>
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("payments.payment_method", "Payment Method")}</p>
+                                            <p className="mt-1 font-semibold text-slate-800 uppercase wrap-break-word">{selectedEntry.payment_method || "unpaid"}</p>
+                                        </div>
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("payments.amount", "Amount")}</p>
+                                            <p className="mt-1 font-bold text-slate-900 wrap-break-word">{format(totalAmount)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="hidden md:block overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <tbody className="divide-y divide-slate-100">
                                                 <tr>

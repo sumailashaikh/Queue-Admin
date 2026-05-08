@@ -189,7 +189,7 @@ export default function ProviderAnalyticsPage() {
                                 setDate(new Date()); // Reset to current period on range change
                             }}
                             className={cn(
-                                "px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all text-center whitespace-nowrap",
+                                "px-3 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-bold capitalize transition-all text-center whitespace-nowrap",
                                 range === r
                                     ? "bg-slate-900 text-white shadow-md shadow-slate-200"
                                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
@@ -211,7 +211,7 @@ export default function ProviderAnalyticsPage() {
                         >
                             <ChevronLeft className="h-5 w-5 text-slate-600" />
                         </button>
-                        <div className="flex flex-col items-center min-w-[160px]">
+                    <div className="flex flex-col items-center min-w-0 sm:min-w-[160px]">
                             <span className="text-lg font-bold text-slate-900 tracking-tight">
                                 {periodLabel()}
                             </span>
@@ -324,31 +324,31 @@ export default function ProviderAnalyticsPage() {
                                 {/* Stats Grid - 2x2 on mobile, 4 in a row on desktop */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7 gap-2 w-full min-w-0">
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.services')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{p.services_completed}</span>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.services')}</p>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block">{p.services_completed}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.revenue')}</p>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.revenue')}</p>
                                         <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatCurrency(p.total_revenue, business?.currency, language)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.avg_time')}</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.avg_time')}</p>
                                         <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatDuration(p.avg_service_time_minutes, t)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.active_mins')}</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.active_mins')}</p>
                                         <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatDuration(Math.round(p.total_active_minutes), t)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.total_hours')}</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.total_hours')}</p>
                                         <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{getDisplayWorkingHoursText(p)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.working_days')}</p>
-                                        <span className="font-bold text-slate-900 text-sm truncate block">{getDisplayWorkingDays(p)}</span>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.working_days')}</p>
+                                        <span className="font-bold text-slate-900 text-sm wrap-break-word block">{getDisplayWorkingDays(p)}</span>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl px-3 py-2 min-w-0">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 truncate">{t('provider_analytics.leaves')}</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5 wrap-break-word">{t('provider_analytics.leaves')}</p>
                                         <span className="font-bold text-slate-900 text-sm wrap-break-word block leading-tight">{formatLeaveText(p)}</span>
                                     </div>
                                 </div>

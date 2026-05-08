@@ -318,7 +318,7 @@
     "err_vip_leave_requires_owner": "Hay clientes VIP reservados en este horario. Se requiere aprobación del dueño para continuar.",
     "err_emergency_leave_requires_handling": "Tienes citas en este horario. Reasigna o reprograma antes de enviar una ausencia de emergencia/medio día.",
     "err_leave_overlap": "Ya existe una solicitud de ausencia para esas fechas.",
-    "err_blockout_overlap": "Este bloqueo se superpone con un permiso/bloqueo aprobado existente. Elige otro horario.",
+    "err_blockout_overlap": "Este horario ya está bloqueado (permiso/descanso). Elige otro horario.",
     "err_blockout_active_exists": "Ya hay un bloqueo activo en este momento. Finalízalo o elimínalo antes de crear otro.",
     "err_leave_conflict_validation_schema": "La verificacion de conflicto de ausencias no esta disponible porque la configuracion de asignacion de citas esta incompleta. Contacta al propietario/admin.",
     "err_leave_conflict_validation_unavailable": "La verificacion de conflicto de ausencias no esta disponible temporalmente. Intentalo de nuevo en breve.",
