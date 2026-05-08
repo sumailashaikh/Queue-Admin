@@ -95,7 +95,15 @@ export default function DashboardLayout({
                 }
                 if (apptRes.status === "fulfilled") {
                     pendingApptCount = (apptRes.value || []).filter((a: any) =>
-                        ["pending", "requested"].includes(String(a?.status || "").toLowerCase())
+                        ["pending", "requested", "rescheduled"].includes(String(a?.status || "").toLowerCase()) ||
+                        (
+                            String(a?.status || "").toLowerCase() === "confirmed" &&
+                            !a?.queue_entry
+                        ) ||
+                        (
+                            String(a?.status || "").toLowerCase() === "checked_in" &&
+                            !a?.queue_entry
+                        )
                     ).length;
                 }
             }

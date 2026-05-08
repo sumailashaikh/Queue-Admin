@@ -842,8 +842,13 @@ function EmployeeDashboardContent() {
                 showToast(t("providers.success_availability"));
                 setLeaveFormData({ start_date: "", end_date: "", leave_type: "planned", leave_kind: "FULL_DAY", start_time: "", end_time: "", note: "", request_type: "leave" } as any);
                 fetchData();
-            } catch {
-                showToast(t("providers.err_availability"), "error");
+            } catch (error: any) {
+                const key = String(error?.response?.data?.message_key || "").trim();
+                if (key) {
+                    showToast(t(key as any, {}, effectiveUiLanguage as any), "error");
+                } else {
+                    showToast(parseApiMessage(error, "providers.err_availability"), "error");
+                }
             } finally {
                 setIsSubmitting(false);
             }
